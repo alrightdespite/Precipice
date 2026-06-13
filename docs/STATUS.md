@@ -19,10 +19,10 @@ None.
 
 ## Next
 
-Phase 1: DataService
-- Implement DataService (ProfileStore session lock, migrations, CRUD)
-- Dependencies: rokit run wally install (see IR-03 in docs/04_RULINGS.md)
-- Spec: docs/specs/DataService.md
+Phase 2: SlotService + SeedService
+- SeedService: read salt from DataStore, call SeedResolver.setSalt(), expose getCurrentWeekSeed()
+- SlotService: slot state machine, offline income settlement on join
+- Spec: docs/specs/SlotService.md, docs/specs/SeedService.md
 
 ## Open questions
 
@@ -30,5 +30,4 @@ None currently.
 
 ## Known blockers
 
-- `wally install` not yet run — Packages/ dir absent. ProfileStore unavailable until Phase 1 setup.
 - `lune`/`rokit` require PATH addition on Windows (IR-02): `$env:PATH += ";$env:USERPROFILE\.rokit\bin"`

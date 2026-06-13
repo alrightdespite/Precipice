@@ -5,6 +5,7 @@ local process = require("@lune/process")
 local spec = require("spec")
 
 -- Load all spec files — they register suites into the shared spec instance
+require("specs/DataService")
 require("specs/DataIntegrity")
 require("specs/RemotesGuard")
 require("specs/OfflineIncome")

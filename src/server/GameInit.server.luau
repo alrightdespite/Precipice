@@ -17,19 +17,34 @@ RemoteService.init()
 local DataService = require(ServerScriptService.Server.Services.DataService)
 DataService.init()
 
--- ── 5. SeedService ────────────────────────────────────────────────────────
+-- ── 5. ClockService (Phase 4) ─────────────────────────────────────────────
+-- TODO Phase 4: ClockService.init() goes here before GlobalJobService.
+
+-- ── 5b. GlobalJobService ──────────────────────────────────────────────────
+local GlobalJobService = require(ServerScriptService.Server.Services.GlobalJobService)
+GlobalJobService.init()
+
+-- ── 5c. SynthCountService ─────────────────────────────────────────────────
+local SynthCountService = require(ServerScriptService.Server.Services.SynthCountService)
+SynthCountService.init()
+
+-- ── 5d. PatentService ─────────────────────────────────────────────────────
+local PatentService = require(ServerScriptService.Server.Services.PatentService)
+PatentService.init()
+
+-- ── 6. SeedService ────────────────────────────────────────────────────────
 local SeedService = require(ServerScriptService.Server.Services.SeedService)
 SeedService.init()
 
--- ── 6. VaultService ───────────────────────────────────────────────────────
+-- ── 7. VaultService ───────────────────────────────────────────────────────
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
 VaultService.init()
 
--- ── 7. SlotService ────────────────────────────────────────────────────────
+-- ── 8. SlotService ────────────────────────────────────────────────────────
 local SlotService = require(ServerScriptService.Server.Services.SlotService)
 SlotService.init()
 
--- ── 8. LabService ─────────────────────────────────────────────────────────
+-- ── 9. LabService ─────────────────────────────────────────────────────────
 local LabService = require(ServerScriptService.Server.Services.LabService)
 LabService.init()
 
@@ -61,4 +76,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 3 — VaultService + LabService)")
+print("GameInit: boot complete (Phase 3 + GlobalJobService)")

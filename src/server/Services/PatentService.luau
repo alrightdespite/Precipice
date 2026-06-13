@@ -1,0 +1,262 @@
+-- PatentService: compound patent ownership, challenges, defense windows, dividends.
+-- DataStore: Patents, key "patent:{compoundId}" per compound.
+-- Pure window/immunity math delegated to PatentWindow (Core).
+-- All dependencies injected for Lune testability — no Roblox globals at module level.
+-- See docs/specs/PatentService.md, §15, H1, R2, R3, R12, R13.
+
+-- ── Injected state ─────────────────────────────────────────────────────────
+
+local _ds: any = nil -- DataStore("Patents")
+local _scs: any = nil -- SynthCountService
+local _rs: any = nil -- RemoteService
+local _compounds: any = nil -- Compounds data table (for sweep iteration)
+local _pw: any = nil -- PatentWindow module
+
+-- ── Module ─────────────────────────────────────────────────────────────────
+
+local PatentService = {}
+
+-- Test injection helpers. Production uses init().
+function PatentService._setDs(ds: any)
+	_ds = ds
+end
+function PatentService._setScs(scs: any)
+	_scs = scs
+end
+function PatentService._setRs(rs: any)
+	_rs = rs
+end
+function PatentService._setCompounds(c: any)
+	_compounds = c
+end
+function PatentService._setPw(pw: any)
+	_pw = pw
+end
+
+-- ── Internal helpers ───────────────────────────────────────────────────────
+
+-- Deep-enough copy for patent records: top-level fields + a fresh challengeQueue array.
+local function copyRecord(record: any): any
+	return {
+		compoundId = record.compoundId,
+		tier = record.tier,
+		holderId = record.holderId,
+		firstClaimantId = record.firstClaimantId,
+		challenge = record.challenge, -- immutable value; replaced, never mutated
+		immunityUntil = record.immunityUntil,
+		synthLeaderId = record.synthLeaderId,
+		challengeQueue = { table.unpack(record.challengeQueue or {}) },
+		dividendPaidThruWeek = record.dividendPaidThruWeek,
+	}
+end
+
+-- ── Public API ─────────────────────────────────────────────────────────────
+
+-- Called by SlotService on every natural reveal (§14, isNatural = true).
+-- player: Player (or mock {UserId} in tests)
+-- compoundId: the synthesised compound
+-- data: player profile (unused here; tier read from Compounds authoritative source)
+-- now: injectable for tests; defaults to os.time() in production
+function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _data: any, now: number?)
+	now = now or os.time()
+	local userId = player.UserId
+
+	-- Step 1: record completion in SynthCounts (SEPARATE write, different key — never
+	-- nest DataStore calls inside an UpdateAsync transform).
+	_scs.recordCompletion(compoundId, userId, now)
+
+	-- Peek at current record to learn the holder/challenger IDs needed for count queries.
+	-- (Cannot read DataStore inside an UpdateAsync transform in production.)
+	local peek = _ds:GetAsync("patent:" .. compoundId)
+
+	-- Pre-fetch counts so they are available inside the UpdateAsync closure.
+	local myCount = _scs.getCountForUser(compoundId, userId, 30, now)
+	local holderCount = peek and _scs.getCountForUser(compoundId, peek.holderId, 30, now) or 0
+	local challengerCount = (peek and peek.challenge)
+		and _scs.getCountForUser(compoundId, peek.challenge.challengerId, 30, now)
+		or 0
+
+	-- Outcome flags written by the UpdateAsync closure; read below to fire remotes.
+	local didClaim = false
+	local challengeOpened = false
+	local challengeWindowEnd: number? = nil
+
+	_ds:UpdateAsync("patent:" .. compoundId, function(record)
+		-- ── First ever claim ──────────────────────────────────────────────
+		if record == nil then
+			didClaim = true
+			local compound = _compounds[compoundId]
+			return {
+				compoundId = compoundId,
+				tier = compound and compound.tier or 1,
+				holderId = userId,
+				firstClaimantId = userId,
+				challenge = nil,
+				immunityUntil = nil,
+				synthLeaderId = userId,
+				challengeQueue = {},
+				dividendPaidThruWeek = nil,
+			}
+		end
+
+		-- ── Immunity: new holder cannot be challenged yet ─────────────────
+		if _pw.isInImmunity(record, now) then
+			return nil
+		end
+
+		-- ── Challenge already active ──────────────────────────────────────
+		if _pw.isChallengeActive(record, now) then
+			-- Already the challenger or the holder: no-op
+			if userId == record.challenge.challengerId or userId == record.holderId then
+				return nil
+			end
+			-- Third party: queue if count exceeds BOTH holder and current challenger (§15)
+			if myCount > holderCount and myCount > challengerCount then
+				local alreadyQueued = false
+				for _, q in ipairs(record.challengeQueue or {}) do
+					if q.challengerId == userId then
+						alreadyQueued = true
+						break
+					end
+				end
+				if not alreadyQueued then
+					local newRecord = copyRecord(record)
+					table.insert(newRecord.challengeQueue, { challengerId = userId })
+					return newRecord
+				end
+			end
+			return nil
+		end
+
+		-- ── No active challenge, no immunity: open one if warranted ───────
+		if userId == record.holderId then
+			return nil -- can't challenge your own patent
+		end
+		if myCount > holderCount then
+			local newRecord = copyRecord(record)
+			newRecord.challenge = _pw.newChallenge(record, userId, now)
+			challengeOpened = true
+			challengeWindowEnd = newRecord.challenge.windowEnd
+			return newRecord
+		end
+
+		-- Synthesis counted; no state change needed
+		return nil
+	end)
+
+	-- Fire remotes after UpdateAsync (outside the transform, outside any lock).
+	if _rs then
+		if didClaim then
+			_rs.getEvent("PatentClaim"):FireClient(player, compoundId, userId, true)
+			-- TODO Phase 10: AnnouncementService.announce() for world-first T4+
+		elseif challengeOpened then
+			_rs.getEvent("PatentChallengeAlert"):FireClient(player, compoundId, challengeWindowEnd)
+		end
+	end
+end
+
+-- Called by GlobalJobService as the "decaySweep" step of PatentDividendSweep (H1, R2).
+-- Runs every sweepIntervalSeconds (900s). Iterates the finite compound set.
+-- now: injectable for tests; defaults to os.time() in production.
+function PatentService.runDecaySweep(now: number?)
+	now = now or os.time()
+
+	for compoundId, _ in pairs(_compounds) do
+		local patentKey = "patent:" .. compoundId
+
+		-- Cheap pre-filter: skip unclaimed or non-expired compounds
+		local peek = _ds:GetAsync(patentKey)
+		if peek == nil then
+			continue
+		end
+		if not _pw.windowExpired(peek, now) then
+			continue
+		end
+
+		-- Pre-fetch counts before UpdateAsync transform (no DS reads inside transform)
+		local holderCount = _scs.getCountForUser(compoundId, peek.holderId, 30, now)
+		local challengerCount = _scs.getCountForUser(
+			compoundId,
+			peek.challenge.challengerId,
+			30,
+			now
+		)
+
+		local winnerId = (challengerCount > holderCount) and peek.challenge.challengerId
+			or peek.holderId
+
+		_ds:UpdateAsync(patentKey, function(record)
+			if record == nil then
+				return nil
+			end
+			-- Guard: another server may have already resolved this window
+			if not _pw.windowExpired(record, now) then
+				return nil
+			end
+
+			local newRecord = copyRecord(record)
+			newRecord.holderId = winnerId
+			newRecord.synthLeaderId = winnerId
+			newRecord.challenge = nil
+			newRecord.immunityUntil = nil
+
+			-- Process challengeQueue: pop front and open a new window immediately,
+			-- OR apply immunity to the new holder if queue is empty.
+			if #newRecord.challengeQueue > 0 then
+				local next = table.remove(newRecord.challengeQueue, 1)
+				-- newRecord.tier is still correct (unchanged from copyRecord)
+				newRecord.challenge = _pw.newChallenge(newRecord, next.challengerId, now)
+				-- No immunity: queued challenger had priority
+			else
+				newRecord.immunityUntil = now + _pw.immunitySeconds
+			end
+
+			return newRecord
+		end)
+
+		-- TODO Phase 10: fire PatentResolved to relevant players via AnnouncementService
+	end
+end
+
+-- Simple read — used by UI remotes and tests.
+function PatentService.getRecord(compoundId: string): any
+	return _ds:GetAsync("patent:" .. compoundId)
+end
+
+-- Monday job step 1 (R3 mandated order: dividends → Sprint archive → seed).
+-- weekKey: e.g. "2026-W24" — uniquely identifies this payout run.
+function PatentService.payDividends(_weekKey: string, _now: number?)
+	-- TODO Phase 6: dividend payout via PendingCredits per R3 step 1
+end
+
+-- ── Production init ────────────────────────────────────────────────────────
+
+function PatentService.init()
+	local DataStoreService = game:GetService("DataStoreService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local ServerScriptService = game:GetService("ServerScriptService")
+
+	_ds = DataStoreService:GetDataStore("Patents")
+	_pw = require(ReplicatedStorage.Shared.Core.PatentWindow)
+	_compounds = require(ReplicatedStorage.Shared.Data.Compounds)
+	_scs = require(ServerScriptService.Server.Services.SynthCountService)
+	_rs = require(ServerScriptService.Server.Services.RemoteService)
+
+	-- Wire PatentQuery C2S remote
+	local patentQueryFn = _rs.getFunction("PatentQuery")
+	patentQueryFn.OnServerInvoke = function(_player: Player, compoundId: any)
+		if type(compoundId) ~= "string" then
+			return nil
+		end
+		return PatentService.getRecord(compoundId)
+	end
+
+	-- Register PatentDividendSweep with GlobalJobService.
+	-- TODO Phase 4: wire ClockService tick to attempt PatentDividendSweep claim every 900s
+	-- Pattern: GlobalJobService.getInstance():runJob({
+	--   name = "PatentDividendSweep",
+	--   steps = {{ name = "decaySweep", fn = function() PatentService.runDecaySweep() end }},
+	-- }, "sweep:" .. math.floor(os.time() / 900))
+end
+
+return PatentService

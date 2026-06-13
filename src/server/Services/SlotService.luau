@@ -10,6 +10,7 @@ local DataService = require(ServerScriptService.Server.Services.DataService)
 local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 local SeedService = require(ServerScriptService.Server.Services.SeedService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
+local PatentService = require(ServerScriptService.Server.Services.PatentService)
 local SlotMachine = require(ReplicatedStorage.Shared.Core.SlotMachine)
 local OfflineIncome = require(ReplicatedStorage.Shared.Core.OfflineIncome)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
@@ -337,7 +338,7 @@ local function wireRemotes()
 			awardedId = compoundId
 			isNatural = nat
 			-- TODO Phase 6: RankService.scoreNaturalCompletion(userId, compoundId)
-			-- TODO Phase 6: PatentService.recordNaturalSynthesis(userId, compoundId)
+			PatentService.recordNaturalSynthesis(player, compoundId, data)
 		end)
 
 		if failErr then

@@ -145,6 +145,25 @@ local Manifest: { RemoteEntry } = {
 		payloadDesc = "compoundId: string, windowEnd: number",
 	},
 	{
+		name = "PatentChallenged",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "compoundId: string, challengerId: number",
+	},
+	{
+		name = "PatentResolved",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "compoundId: string, winnerId: number",
+	},
+	{
+		name = "PatentQuery",
+		kind = "Function",
+		direction = "C2S",
+		rateLimit = 2,
+		payloadDesc = "compoundId: string → record: PatentRecord?",
+	},
+	{
 		name = "FormulaLogRequest",
 		kind = "Function",
 		direction = "C2S",

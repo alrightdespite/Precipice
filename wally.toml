@@ -1,0 +1,11 @@
+[package]
+name = "deepwell/precipice"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "server"
+
+[dependencies]
+ProfileStore = "MadStudioRoblox/ProfileStore@1.0.0"
+Promise = "evaera/promise@4.0.0"
+Signal = "sleitnick/signal@1.5.0"
+t = "osyrisrblx/t@3.1.1"

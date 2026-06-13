@@ -35,7 +35,7 @@ Non-natural completions still award the compound and passive income.
 
 ## Slot caps
 
-Base: 1 extraction, 2 synthesis. Gamepass/prestige expansions tracked in `GameConfig.luau`. SlotService reads cap from profile (prestige level) + monetization (gamepass flag) on each slot action.
+Base: `GameConfig.BASE_SLOTS` (5). All slots are universal — any slot can run extraction or synthesis. Gamepass expansions tracked in `GameConfig.luau`. SlotService reads cap on each slot action (Phase 11: MonetizationService integration).
 
 ## Remotes used
 

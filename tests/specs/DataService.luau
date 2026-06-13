@@ -14,13 +14,14 @@ describe("ProfileTemplate — DEFAULT shape", function()
 		expect(d.schemaVersion).toBe(GameConfig.SCHEMA_VERSION)
 	end)
 
-	it("has all 14 top-level keys", function()
+	it("has all 15 top-level keys", function()
 		local required = {
 			"schemaVersion",
 			"balances",
 			"vault",
 			"formulaLog",
 			"slots",
+			"lastSeenAt",
 			"rank",
 			"sprintPoints",
 			"streak",

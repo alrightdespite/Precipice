@@ -10,6 +10,8 @@ require("specs/DataIntegrity")
 require("specs/RemotesGuard")
 require("specs/OfflineIncome")
 require("specs/TimerMath")
+require("specs/SeedService")
+require("specs/SlotService")
 
 print("\n=== PRECIPICE test suite ===")
 local passed = spec.run()

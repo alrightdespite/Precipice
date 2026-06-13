@@ -26,7 +26,9 @@ Every profile and global record carries `schemaVersion: number` (integer). Migra
     failedPairs: { [pairKey: string]: true },      -- prevents re-analysis fee
   },
 
-  slots: SlotRecord[],          -- see below; index 1..N where N = current slot cap
+  lastSeenAt: number,           -- unix seconds; stamped on logout, used for offline settle
+
+  slots: SlotRecord[],          -- dense array; each record carries stable .index (1..cap)
 
   rank: {
     currentRun: number,
@@ -83,7 +85,9 @@ Every profile and global record carries `schemaVersion: number` (integer). Migra
 
 ```
 {
-  compoundId: string,
+  index: number,            -- stable slot position 1..cap; used in C2S remotes
+  kind: "extraction"|"synthesis",
+  compoundId: string,       -- the compound being produced
   workRemaining: number,    -- seconds at online rate; never a fixed end timestamp
   lastTickAt: number,       -- unix seconds
   mode: "online"|"offline"|"joint",

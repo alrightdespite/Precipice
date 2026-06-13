@@ -21,6 +21,8 @@ ProfileTemplate.DEFAULT = {
 
 	slots = {},
 
+	lastSeenAt = 0,
+
 	rank = {
 		currentRun = 0,
 		lifetime = 0,

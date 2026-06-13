@@ -16,6 +16,7 @@ require("specs/LabAnalysis")
 require("specs/GlobalJobService")
 require("specs/SynthCountService")
 require("specs/PatentService")
+require("specs/MarketService")
 
 print("\n=== PRECIPICE test suite ===")
 local passed = spec.run()

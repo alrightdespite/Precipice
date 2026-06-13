@@ -48,6 +48,10 @@ SlotService.init()
 local LabService = require(ServerScriptService.Server.Services.LabService)
 LabService.init()
 
+-- ── 9b. MarketService ────────────────────────────────────────────────────
+local MarketService = require(ServerScriptService.Server.Services.MarketService)
+MarketService.init()
+
 -- ── 9–N. Remaining services (wired up in Phases 4–11) ─────────────────────
 -- ClockService, GlobalJobService, IncomeService,
 -- LabService, RecipeService, MarketService, PatentService, SyndicateService,
@@ -76,4 +80,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 3 + GlobalJobService)")
+print("GameInit: boot complete (Phase 3 + GlobalJobService + MarketService)")

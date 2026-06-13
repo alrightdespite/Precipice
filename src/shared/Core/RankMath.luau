@@ -11,8 +11,6 @@
 --   claimScore = 500 (once per compound ever)
 --   DAILY_MARKET_CAP = 1000, DAILY_VAULT_CAP = 500
 
-local EconomyParams = require(script.Parent.Parent.Data.EconomyParams)
-
 local PRODUCTION_SCORES: { [number]: number } = {
 	[1] = 0,
 	[2] = 3,

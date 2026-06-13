@@ -21,12 +21,20 @@ DataService.init()
 local SeedService = require(ServerScriptService.Server.Services.SeedService)
 SeedService.init()
 
--- ── 6. SlotService ────────────────────────────────────────────────────────
+-- ── 6. VaultService ───────────────────────────────────────────────────────
+local VaultService = require(ServerScriptService.Server.Services.VaultService)
+VaultService.init()
+
+-- ── 7. SlotService ────────────────────────────────────────────────────────
 local SlotService = require(ServerScriptService.Server.Services.SlotService)
 SlotService.init()
 
--- ── 7–N. Remaining services (wired up in Phases 3–11) ─────────────────────
--- ClockService, GlobalJobService, IncomeService, VaultService,
+-- ── 8. LabService ─────────────────────────────────────────────────────────
+local LabService = require(ServerScriptService.Server.Services.LabService)
+LabService.init()
+
+-- ── 9–N. Remaining services (wired up in Phases 4–11) ─────────────────────
+-- ClockService, GlobalJobService, IncomeService,
 -- LabService, RecipeService, MarketService, PatentService, SyndicateService,
 -- JointSynthService, ExoticService, RankService, SprintService,
 -- LeaderboardService, ContractService, StreakService, PrestigeService,
@@ -53,4 +61,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 2)")
+print("GameInit: boot complete (Phase 3 — VaultService + LabService)")

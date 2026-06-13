@@ -12,6 +12,7 @@ require("specs/OfflineIncome")
 require("specs/TimerMath")
 require("specs/SeedService")
 require("specs/SlotService")
+require("specs/LabAnalysis")
 
 print("\n=== PRECIPICE test suite ===")
 local passed = spec.run()

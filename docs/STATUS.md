@@ -14,6 +14,8 @@
 - [x] Task 6: PRECIPICE_CLOSE — 33/33 tests green, 0 selene errors, 0 stylua diffs, final commit
 - [x] Task 7: PRECIPICE_PHASE1 — DataService (ProfileStore sessions, migrations, PendingCredits drain); 46/46 tests green
 - [x] Task 8: PRECIPICE_PHASE2 — SeedService (salt read/generate/persist, SeedResolver wiring); SlotMachine (pure state machine, Lune-tested); SlotService (remotes, offline settle, heartbeat tick)
+- [x] Task 9: PRECIPICE_PHASE3_VAULT — VaultService (vault mutations, instant sell, VaultUpdate); SlotService refactor (all data.vault writes go through VaultService); 83/83 tests green
+- [x] Task 10: PRECIPICE_PHASE3_LAB — LabAnalysis pure core (pairKey, getRefusal, getFee, getResidueAmount, getButtonState); LabService (LabAnalyze remote, fee/refusal/rush/residue/discovery flow); 118/118 tests green
 
 ## In progress
 
@@ -21,10 +23,9 @@ None.
 
 ## Next
 
-Phase 3: VaultService + LabService
-- VaultService: inventory reads, residue, instant sell remote
-- LabService: analysis flow, fees, discovery, residue, refusal rules
-- Specs: docs/specs/VaultService.md, docs/specs/LabService.md
+Phase 4: PatentService + RankService
+- PatentService: 30-day window, claim flow, challenge triggers, defense windows, sweep
+- RankService: score sources, caps, titles (stubs exist for Phase 6 TODOs in SlotService and LabService)
 
 ## Known issues
 

@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataService = require(ServerScriptService.Server.Services.DataService)
 local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 local SeedService = require(ServerScriptService.Server.Services.SeedService)
+local VaultService = require(ServerScriptService.Server.Services.VaultService)
 local SlotMachine = require(ReplicatedStorage.Shared.Core.SlotMachine)
 local OfflineIncome = require(ReplicatedStorage.Shared.Core.OfflineIncome)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
@@ -82,8 +83,7 @@ local function settleOfflineForPlayer(userId: number)
 				local workDone = math.min(slot.workRemaining, effectiveCap * OFFLINE_RATE)
 				local newWork = math.max(0, slot.workRemaining - workDone)
 				if newWork <= 0 then
-					data.vault.compounds[slot.compoundId] =
-						(data.vault.compounds[slot.compoundId] or 0) + 1
+					VaultService.applyAward(data, slot.compoundId, 1)
 				else
 					table.insert(newSlots, {
 						index = slot.index,
@@ -116,8 +116,10 @@ local function settleOfflineForPlayer(userId: number)
 				offlineResult.breakdown
 			)
 		end
-		-- Push current slot state to client
 		local data = DataService.getProfile(userId)
+		-- Push vault state (may include compounds awarded offline)
+		VaultService.fireVaultUpdate(player, data)
+		-- Push current slot state to client
 		for _, slot in ipairs(data.slots) do
 			fireSlotUpdate(player, slot)
 		end
@@ -232,7 +234,7 @@ local function wireRemotes()
 				end
 			end
 			for cid, qty in pairs(required) do
-				data.vault.compounds[cid] -= qty
+				VaultService.applyDeduct(data, cid, qty)
 			end
 
 			local resultCompound = Compounds[resultId]
@@ -252,7 +254,7 @@ local function wireRemotes()
 			if slotErr then
 				-- Refund inputs if slot setup failed
 				for cid, qty in pairs(required) do
-					data.vault.compounds[cid] = (data.vault.compounds[cid] or 0) + qty
+					VaultService.applyAward(data, cid, qty)
 				end
 				failErr = slotErr
 				return
@@ -270,6 +272,8 @@ local function wireRemotes()
 		if failErr then
 			return false, failErr
 		end
+		-- Vault changed (inputs consumed); push update
+		VaultService.fireVaultUpdate(player, DataService.getProfile(userId))
 		if newSlotRecord then
 			fireSlotUpdate(player, newSlotRecord)
 		end
@@ -329,16 +333,17 @@ local function wireRemotes()
 				return
 			end
 			data.slots = newSlots
-			data.vault.compounds[compoundId] = (data.vault.compounds[compoundId] or 0) + 1
+			VaultService.applyAward(data, compoundId, 1)
 			awardedId = compoundId
 			isNatural = nat
-			-- TODO Phase 4: RankService.scoreNaturalCompletion(userId, compoundId)
-			-- TODO Phase 4: PatentService.recordNaturalSynthesis(userId, compoundId)
+			-- TODO Phase 6: RankService.scoreNaturalCompletion(userId, compoundId)
+			-- TODO Phase 6: PatentService.recordNaturalSynthesis(userId, compoundId)
 		end)
 
 		if failErr then
 			return nil, failErr
 		end
+		VaultService.fireVaultUpdate(player, DataService.getProfile(userId))
 		fireSlotCleared(player, slotIndex)
 		return { compoundId = awardedId, isNatural = isNatural }, nil
 	end

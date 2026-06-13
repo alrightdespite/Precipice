@@ -1,6 +1,6 @@
 # Status
 
-## Current phase: Phase 4 complete -> Phase 5 next
+## Current phase: Phase 5 complete -> Phase 6 next
 
 **Last updated:** 2026-06-13
 
@@ -17,6 +17,7 @@
 - [x] Task 9: PRECIPICE_PHASE3_VAULT -- VaultService (vault mutations, instant sell, VaultUpdate); SlotService refactor (all data.vault writes go through VaultService); 83/83 tests green
 - [x] Task 10: PRECIPICE_PHASE3_LAB -- LabAnalysis pure core (pairKey, getRefusal, getFee, getResidueAmount, getButtonState); LabService (LabAnalyze remote, fee/refusal/rush/residue/discovery flow); 118/118 tests green
 - [x] Task 11: PRECIPICE_PHASE4 -- GlobalJobService (H1 CAS lock/ledger/resume, NoopJob); SynthCountService (30-day rolling counts, per-user queries, prune-on-write); PatentService (first-claim, challenge/immunity/queue, decay sweep, two-pass multi-party race); SlotService wired to PatentService.recordNaturalSynthesis; Manifest +3 patent remotes; 156/156 tests green
+- [x] Task 12: PRECIPICE_PHASE5 -- MarketService (createListing/cancelListing/buyListing/browseTier CAS purchase R13, hourly expiry sweep, PendingCredits offline seller/expiry paths, per-tier DataStore index H4, listing fee + seller proceeds via MarketMath); 170/170 tests green
 
 ## In progress
 
@@ -24,10 +25,12 @@ None.
 
 ## Next
 
-Phase 5: MarketService
-- `MarketMath` Core module (listing bounds R7, fee calculation)
-- `MarketService`: atomic purchase CAS (R13), listing CRUD, 7-day expiry-to-vault, PendingCredits payout on sale, per-compound stats/badges, rank-from-sales with 1,000/day cap
-- Tests: concurrent-purchase scenario (two buyers, one listing -- deterministic CAS winner); PendingCredits delivered across login; fee/bounds math
+Phase 6: RankService + SprintService + LeaderboardService + ContractService + StreakService
+- `RankService`: lifetime rank tracking, prestige-run counter, RankUpdate remote
+- `SprintService`: weekly sprint scores, sprint archive on epoch rotation
+- `LeaderboardService`: ordered score tables for sprint and chiefs boards, LeaderboardRequest remote
+- `ContractService`: daily contract refresh (GlobalJobService DailyContractRefresh job), ContractUpdate remote
+- `StreakService`: daily login streak, safeUntil grace window, StreakUpdate remote
 
 ## Known issues
 

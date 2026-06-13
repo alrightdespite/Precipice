@@ -1,21 +1,22 @@
 # Status
 
-## Current phase: Phase 2 complete → Phase 3 next
+## Current phase: Phase 4 complete -> Phase 5 next
 
 **Last updated:** 2026-06-13
 
 ## Done
 
-- [x] Task 1: PRECIPICE_SCAFFOLD — rokit.toml, wally.toml, default.project.json, .gitignore, directory tree
-- [x] Task 2: PRECIPICE_DATA — data/gen/export_data.py, all 7 generated Data/ modules
-- [x] Task 3: PRECIPICE_CORE — Remotes/Manifest, RemoteService, GameInit, Config/GameConfig, Config/EconomyConstants, Core/TimerMath, Core/RecipeResolver, Core/SeedResolver, Core/MarketMath, Core/PatentWindow, Core/RankMath, Core/OfflineIncome
-- [x] Task 4: PRECIPICE_TESTS — tests/spec.luau, mocks/MockDataStore, mocks/MockClock, tests/run.luau, specs/DataIntegrity, specs/RemotesGuard, specs/OfflineIncome, specs/TimerMath
-- [x] Task 5: PRECIPICE_DOCS — docs/00_INDEX through 06_WORKFLOW, all 24 service stubs, DataService.md, SlotService.md, ui/ stubs, data/ stubs, root CLAUDE.md
-- [x] Task 6: PRECIPICE_CLOSE — 33/33 tests green, 0 selene errors, 0 stylua diffs, final commit
-- [x] Task 7: PRECIPICE_PHASE1 — DataService (ProfileStore sessions, migrations, PendingCredits drain); 46/46 tests green
-- [x] Task 8: PRECIPICE_PHASE2 — SeedService (salt read/generate/persist, SeedResolver wiring); SlotMachine (pure state machine, Lune-tested); SlotService (remotes, offline settle, heartbeat tick)
-- [x] Task 9: PRECIPICE_PHASE3_VAULT — VaultService (vault mutations, instant sell, VaultUpdate); SlotService refactor (all data.vault writes go through VaultService); 83/83 tests green
-- [x] Task 10: PRECIPICE_PHASE3_LAB — LabAnalysis pure core (pairKey, getRefusal, getFee, getResidueAmount, getButtonState); LabService (LabAnalyze remote, fee/refusal/rush/residue/discovery flow); 118/118 tests green
+- [x] Task 1: PRECIPICE_SCAFFOLD -- rokit.toml, wally.toml, default.project.json, .gitignore, directory tree
+- [x] Task 2: PRECIPICE_DATA -- data/gen/export_data.py, all 7 generated Data/ modules
+- [x] Task 3: PRECIPICE_CORE -- Remotes/Manifest, RemoteService, GameInit, Config/GameConfig, Config/EconomyConstants, Core/TimerMath, Core/RecipeResolver, Core/SeedResolver, Core/MarketMath, Core/PatentWindow, Core/RankMath, Core/OfflineIncome
+- [x] Task 4: PRECIPICE_TESTS -- tests/spec.luau, mocks/MockDataStore, mocks/MockClock, tests/run.luau, specs/DataIntegrity, specs/RemotesGuard, specs/OfflineIncome, specs/TimerMath
+- [x] Task 5: PRECIPICE_DOCS -- docs/00_INDEX through 06_WORKFLOW, all 24 service stubs, DataService.md, SlotService.md, ui/ stubs, data/ stubs, root CLAUDE.md
+- [x] Task 6: PRECIPICE_CLOSE -- 33/33 tests green, 0 selene errors, 0 stylua diffs, final commit
+- [x] Task 7: PRECIPICE_PHASE1 -- DataService (ProfileStore sessions, migrations, PendingCredits drain); 46/46 tests green
+- [x] Task 8: PRECIPICE_PHASE2 -- SeedService (salt read/generate/persist, SeedResolver wiring); SlotMachine (pure state machine, Lune-tested); SlotService (remotes, offline settle, heartbeat tick)
+- [x] Task 9: PRECIPICE_PHASE3_VAULT -- VaultService (vault mutations, instant sell, VaultUpdate); SlotService refactor (all data.vault writes go through VaultService); 83/83 tests green
+- [x] Task 10: PRECIPICE_PHASE3_LAB -- LabAnalysis pure core (pairKey, getRefusal, getFee, getResidueAmount, getButtonState); LabService (LabAnalyze remote, fee/refusal/rush/residue/discovery flow); 118/118 tests green
+- [x] Task 11: PRECIPICE_PHASE4 -- GlobalJobService (H1 CAS lock/ledger/resume, NoopJob); SynthCountService (30-day rolling counts, per-user queries, prune-on-write); PatentService (first-claim, challenge/immunity/queue, decay sweep, two-pass multi-party race); SlotService wired to PatentService.recordNaturalSynthesis; Manifest +3 patent remotes; 156/156 tests green
 
 ## In progress
 
@@ -23,9 +24,10 @@ None.
 
 ## Next
 
-Phase 4: PatentService + RankService
-- PatentService: 30-day window, claim flow, challenge triggers, defense windows, sweep
-- RankService: score sources, caps, titles (stubs exist for Phase 6 TODOs in SlotService and LabService)
+Phase 5: MarketService
+- `MarketMath` Core module (listing bounds R7, fee calculation)
+- `MarketService`: atomic purchase CAS (R13), listing CRUD, 7-day expiry-to-vault, PendingCredits payout on sale, per-compound stats/badges, rank-from-sales with 1,000/day cap
+- Tests: concurrent-purchase scenario (two buyers, one listing -- deterministic CAS winner); PendingCredits delivered across login; fee/bounds math
 
 ## Known issues
 

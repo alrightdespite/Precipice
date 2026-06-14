@@ -346,8 +346,12 @@ local function wireRemotes()
 			isNatural = nat
 			if isNatural then
 				RankService.scoreNaturalCompletion(player, data, compoundId, os.time())
+				-- Grant T4 joint qualification on first natural T4+ completion (§17)
+				local compound = Compounds[compoundId]
+				if compound and compound.tier >= 4 and not data.prestige.jointQualLifetime then
+					data.prestige.jointQualLifetime = true
+				end
 				if _eventService then
-					local compound = Compounds[compoundId]
 					local fluxSource = if compound and compound.tier == 1 then "extraction" else "synthesis"
 					_eventService.awardFlux(player, data, fluxSource, compound and compound.tier, os.time())
 				end

@@ -33,6 +33,10 @@ local migrations: { [number]: (data: any) -> () } = {
 			end
 		end
 	end,
+	[3] = function(_data)
+		-- syndicate field added in schemaVersion 4.
+		-- Reconcile() handles new fields; no action needed here.
+	end,
 }
 
 local STORE_NAME = "PlayerData_v1"

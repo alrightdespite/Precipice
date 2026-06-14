@@ -24,7 +24,7 @@ return {
 	MAX_SLOTS = 10,
 
 	-- Schema version (H8)
-	SCHEMA_VERSION = 3,
+	SCHEMA_VERSION = 4,
 
 	-- Monday job epoch DataStore key
 	GLOBAL_JOBS_KEY = "GlobalJobs",

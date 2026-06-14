@@ -82,6 +82,10 @@ EventService.init()
 SlotService._setEventService(EventService)
 PatentService._setEventService(EventService)
 
+-- ── 17. SyndicateService ──────────────────────────────────────────────────
+local SyndicateService = require(ServerScriptService.Server.Services.SyndicateService)
+SyndicateService.init()
+
 -- ── Post-profile-load hooks ────────────────────────────────────────────────
 DataService.onProfileLoaded:Connect(function(userId)
 	local player = Players:GetPlayerByUserId(userId)
@@ -96,6 +100,13 @@ DataService.onProfileLoaded:Connect(function(userId)
 		MonetizationService.grantArchiveUses(player, data, os.time())
 	end
 	EventService.onLogin(player, data)
+	SyndicateService.checkPendingInvite(player)
+	if data.syndicate then
+		local record = SyndicateService.getRecord(data.syndicate.id)
+		if record then
+			SyndicateService.fireSyndicateUpdate(player, record)
+		end
+	end
 end)
 
 -- ── 9–N. Remaining services (wired up in Phases 4–11) ─────────────────────
@@ -126,4 +137,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 9 — Events)")
+print("GameInit: boot complete (Phase 10A — SyndicateService)")

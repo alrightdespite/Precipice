@@ -7,7 +7,7 @@ local ProfileTemplate = {}
 -- Hard-copied by ProfileStore.New as the DataStore template.
 -- Never mutate this table at runtime.
 ProfileTemplate.DEFAULT = {
-	schemaVersion = 3,
+	schemaVersion = 4,
 
 	balances = { pellets = 0, catalysts = 0 },
 
@@ -53,6 +53,8 @@ ProfileTemplate.DEFAULT = {
 		extractionFluxToday = { date = "", count = 0 },
 		milestoneClaimed = {},
 	},
+
+	syndicate = nil, -- nil = not in a syndicate; { id, role } when populated
 
 	pendingCreditsApplied = {},
 }

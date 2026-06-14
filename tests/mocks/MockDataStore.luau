@@ -39,4 +39,10 @@ function MockDataStore:IncrementAsync(key: string, delta: number): number
 	return current
 end
 
+function MockDataStore:RemoveAsync(key: string): any
+	local prev = self._data[key]
+	self._data[key] = nil
+	return prev
+end
+
 return MockDataStore

@@ -24,7 +24,7 @@ return {
 	MAX_SLOTS = 10,
 
 	-- Schema version (H8)
-	SCHEMA_VERSION = 2,
+	SCHEMA_VERSION = 3,
 
 	-- Monday job epoch DataStore key
 	GLOBAL_JOBS_KEY = "GlobalJobs",
@@ -46,6 +46,7 @@ return {
 	GAMEPASS_EXPANDED_LAB = 0, -- +2 slots (5→7)
 	GAMEPASS_EXTENDED_OFFLINE = 0, -- offline cap 12h→24h
 	GAMEPASS_COMPOUND_ARCHIVE = 0, -- one archive synthesis per month per compound
+	GAMEPASS_EVENT_PASS = 0, -- 400 Robux: 2× Flux + event pass cosmetics
 
 	-- Developer Product IDs (doc §25) — replace with real IDs before launch
 	PRODUCT_TIMER_SKIP = 0, -- 75 Robux: instantly complete one personal slot

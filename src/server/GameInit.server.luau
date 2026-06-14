@@ -76,6 +76,12 @@ PrestigeService.init()
 local MonetizationService = require(ServerScriptService.Server.Services.MonetizationService)
 MonetizationService.init()
 
+-- ── 16. EventService ──────────────────────────────────────────────────────
+local EventService = require(ServerScriptService.Server.Services.EventService)
+EventService.init()
+SlotService._setEventService(EventService)
+PatentService._setEventService(EventService)
+
 -- ── Post-profile-load hooks ────────────────────────────────────────────────
 DataService.onProfileLoaded:Connect(function(userId)
 	local player = Players:GetPlayerByUserId(userId)
@@ -89,6 +95,7 @@ DataService.onProfileLoaded:Connect(function(userId)
 	if MonetizationService.ownsGamepass(data, "compoundArchive") then
 		MonetizationService.grantArchiveUses(player, data, os.time())
 	end
+	EventService.onLogin(player, data)
 end)
 
 -- ── 9–N. Remaining services (wired up in Phases 4–11) ─────────────────────
@@ -119,4 +126,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 8 — Monetization)")
+print("GameInit: boot complete (Phase 9 — Events)")

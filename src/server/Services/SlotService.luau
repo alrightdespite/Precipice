@@ -25,8 +25,13 @@ local TICK_INTERVAL = 1 -- seconds between server ticks
 
 local _loaded: { [number]: boolean } = {} -- userIds with active, ready sessions
 local _tickAccum = 0
+local _eventService: any = nil
 
 local SlotService = {}
+
+function SlotService._setEventService(es: any)
+	_eventService = es
+end
 
 -- ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -75,7 +80,8 @@ local function settleOfflineForPlayer(userId: number)
 			end
 		end
 
-		local result = OfflineIncome.settle(slotInputs, offlineSeconds, capSeconds)
+		local multiplier = if _eventService then _eventService.getIncomeMultiplier(data) else 1.0
+		local result = OfflineIncome.settle(slotInputs, offlineSeconds, capSeconds, multiplier)
 		data.balances.pellets += result.total
 
 		-- Apply offline work-unit drain; award compounds that completed offline
@@ -340,8 +346,16 @@ local function wireRemotes()
 			isNatural = nat
 			if isNatural then
 				RankService.scoreNaturalCompletion(player, data, compoundId, os.time())
+				if _eventService then
+					local compound = Compounds[compoundId]
+					local fluxSource = if compound and compound.tier == 1 then "extraction" else "synthesis"
+					_eventService.awardFlux(player, data, fluxSource, compound and compound.tier, os.time())
+				end
 			end
 			PatentService.recordNaturalSynthesis(player, compoundId, data)
+			-- TODO Phase 9b: validate event compound access (blueprintAccess or archiveAccess)
+			-- EventService.canSynthesizeCompound(data, compoundId) should gate this.
+			-- For now, event compounds can be started by anyone with inputs (no gate).
 			-- Contract progress counts for all reveals (natural and non-natural per §19)
 			local revealTier = Compounds[compoundId] and Compounds[compoundId].tier or 0
 			ContractService.recordProgress(player, data, "synthesis_t" .. revealTier, 1)

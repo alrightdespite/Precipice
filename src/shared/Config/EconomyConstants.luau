@@ -149,4 +149,22 @@ return {
 	STREAK_REPEATING_INTERVAL = 7, -- every 7 days from day 35 onward
 	STREAK_REPEATING_CATALYSTS = 1,
 	STREAK_REPEATING_RANK = 75,
+
+	-- Flux earn rates (doc §29)
+	FLUX_EXTRACTION_PER_COMPLETION = 1,
+	FLUX_EXTRACTION_DAILY_CAP = 50, -- cap applied AFTER multipliers (never raised)
+	-- Synthesis Flux = RankMath.PRODUCTION_SCORES[tier]
+
+	-- Event pass Flux multiplier (doc §29)
+	EVENT_PASS_FLUX_MULTIPLIER = 2,
+
+	-- Event income multiplier (doc §29)
+	EVENT_INCOME_MULTIPLIER = 1.5,
+
+	-- Community milestone reward (doc §29)
+	EVENT_MILESTONE_CATALYSTS = 25,
+
+	-- Event patent rules (doc §29)
+	EVENT_FIRST_RUN_PATENTS_PERMANENT = true,
+	-- During re-runs: fully contested per standard tier rules (PatentWindow)
 }

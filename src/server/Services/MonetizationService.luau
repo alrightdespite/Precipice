@@ -41,6 +41,7 @@ function MonetizationService.refreshGamepasses(player: Player, data: any)
 		expandedLab     = _gameConfig.GAMEPASS_EXPANDED_LAB,
 		extendedOffline = _gameConfig.GAMEPASS_EXTENDED_OFFLINE,
 		compoundArchive = _gameConfig.GAMEPASS_COMPOUND_ARCHIVE,
+		eventPass       = _gameConfig.GAMEPASS_EVENT_PASS,
 	}
 	local passes = {}
 	for passName, passId in pairs(passMap) do

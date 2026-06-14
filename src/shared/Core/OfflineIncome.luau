@@ -2,11 +2,11 @@
 -- No Roblox globals. Lune-testable.
 --
 -- Contract:
---   settle(slots, offlineSeconds, capSeconds) → { total, breakdown[] }
+--   settle(slots, offlineSeconds, capSeconds, incomeMultiplier?) → { total, breakdown[] }
 --   Each slot: { tier, workRemainingSeconds, passivePerMin }
---   Each slot earns floor(passivePerMin × durationMins) over exactly the time it runs.
---   Duration = min(workRemainingSeconds, effectiveCap). Floor applied once per slot.
---   After the last slot finishes, floor income (2 P/min) for remaining offline time.
+--   Each slot earns round(passivePerMin × durationMins × multiplier) over exactly the time it runs.
+--   Duration = min(workRemainingSeconds, effectiveCap). round applied once per slot (IR-01).
+--   After the last slot finishes, floor income (2 P/min × multiplier) for remaining offline time.
 --   Cap cuts ALL income — tier and floor — at effectiveCap seconds.
 --   The §10 worked example (40+1971+2826+600 = 5437) is a mandatory unit test.
 
@@ -32,7 +32,8 @@ export type SettleResult = {
 
 local OfflineIncome = {}
 
-function OfflineIncome.settle(slots: { SlotInput }, offlineSeconds: number, capSeconds: number): SettleResult
+function OfflineIncome.settle(slots: { SlotInput }, offlineSeconds: number, capSeconds: number, incomeMultiplier: number?): SettleResult
+	incomeMultiplier = incomeMultiplier or 1.0
 	local effectiveCap = math.min(offlineSeconds, capSeconds)
 	if effectiveCap <= 0 then
 		return { total = 0, breakdown = {}, floorPellets = 0 }
@@ -48,7 +49,7 @@ function OfflineIncome.settle(slots: { SlotInput }, offlineSeconds: number, capS
 			continue
 		end
 		local durationMin = durationSec / 60
-		local pellets = math.round(slot.passivePerMin * durationMin)
+		local pellets = math.round(slot.passivePerMin * durationMin * incomeMultiplier)
 		if pellets > 0 then
 			table.insert(breakdown, { tier = slot.tier, durationMins = durationMin, pellets = pellets })
 			total += pellets
@@ -78,7 +79,7 @@ function OfflineIncome.settle(slots: { SlotInput }, offlineSeconds: number, capS
 	local floorSec = effectiveCap - allFinished
 	local floorPellets = 0
 	if floorSec > 0 then
-		floorPellets = math.round(FLOOR_RATE * (floorSec / 60))
+		floorPellets = math.round(FLOOR_RATE * (floorSec / 60) * incomeMultiplier)
 		if floorPellets > 0 then
 			table.insert(breakdown, { tier = 0, durationMins = floorSec / 60, pellets = floorPellets })
 			total += floorPellets

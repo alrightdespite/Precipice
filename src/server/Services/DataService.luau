@@ -23,6 +23,16 @@ local migrations: { [number]: (data: any) -> () } = {
 			data.contracts.list = nil
 		end
 	end,
+	[2] = function(data)
+		if data.eventState then
+			if data.eventState.extractionFluxToday == nil then
+				data.eventState.extractionFluxToday = { date = "", count = 0 }
+			end
+			if data.eventState.milestoneClaimed == nil then
+				data.eventState.milestoneClaimed = {}
+			end
+		end
+	end,
 }
 
 local STORE_NAME = "PlayerData_v1"

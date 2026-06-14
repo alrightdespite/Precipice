@@ -11,6 +11,8 @@ local _scs: any = nil -- SynthCountService
 local _rs: any = nil -- RemoteService
 local _compounds: any = nil -- Compounds data table (for sweep iteration)
 local _pw: any = nil -- PatentWindow module
+local _eventCompounds: any = nil -- EventCompounds data table
+local _eventService: any = nil -- EventService (for event patent guards)
 
 -- ── Module ─────────────────────────────────────────────────────────────────
 
@@ -31,6 +33,16 @@ function PatentService._setCompounds(c: any)
 end
 function PatentService._setPw(pw: any)
 	_pw = pw
+end
+function PatentService._setEventCompounds(ec: any)
+	_eventCompounds = ec
+end
+function PatentService._setEventService(es: any)
+	_eventService = es
+end
+
+function PatentService.isEventCompound(compoundId: string): boolean
+	return _eventCompounds ~= nil and _eventCompounds[compoundId] ~= nil
 end
 
 -- ── Internal helpers ───────────────────────────────────────────────────────
@@ -64,6 +76,11 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 	-- Step 1: record completion in SynthCounts (SEPARATE write, different key — never
 	-- nest DataStore calls inside an UpdateAsync transform).
 	_scs.recordCompletion(compoundId, userId, now)
+
+	-- Pre-fetch event state (cannot make DS calls inside UpdateAsync transform)
+	local isEv = PatentService.isEventCompound(compoundId)
+	local evFirstRun = isEv and _eventService ~= nil and (_eventService.isFirstRun() == true)
+	local evActive = isEv and _eventService ~= nil and (_eventService.isEventActive() == true)
 
 	-- Peek at current record to learn the holder/challenger IDs needed for count queries.
 	-- (Cannot read DataStore inside an UpdateAsync transform in production.)
@@ -99,6 +116,11 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 			}
 		end
 
+		-- ── Event patent: first-run → permanent, uncontestable ───────────
+		if isEv and evFirstRun then
+			return nil
+		end
+
 		-- ── Immunity: new holder cannot be challenged yet ─────────────────
 		if _pw.isInImmunity(record, now) then
 			return nil
@@ -129,6 +151,10 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 		end
 
 		-- ── No active challenge, no immunity: open one if warranted ───────
+		-- Between event runs: event compounds are uncontestable (doc §29)
+		if isEv and not evActive then
+			return nil
+		end
 		if userId == record.holderId then
 			return nil -- can't challenge your own patent
 		end

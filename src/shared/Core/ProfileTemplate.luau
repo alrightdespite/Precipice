@@ -7,7 +7,7 @@ local ProfileTemplate = {}
 -- Hard-copied by ProfileStore.New as the DataStore template.
 -- Never mutate this table at runtime.
 ProfileTemplate.DEFAULT = {
-	schemaVersion = 2,
+	schemaVersion = 3,
 
 	balances = { pellets = 0, catalysts = 0 },
 
@@ -47,7 +47,12 @@ ProfileTemplate.DEFAULT = {
 
 	cosmetics = { owned = {}, equipped = {} },
 
-	eventState = { fluxBySeason = {}, blueprintsOwned = {} },
+	eventState = {
+		fluxBySeason = {},
+		blueprintsOwned = {},
+		extractionFluxToday = { date = "", count = 0 },
+		milestoneClaimed = {},
+	},
 
 	pendingCreditsApplied = {},
 }

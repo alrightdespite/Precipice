@@ -309,6 +309,21 @@ local Manifest: { RemoteEntry } = {
 		payloadDesc = "passes: { [string]: boolean }",
 	},
 
+	-- ── Events ────────────────────────────────────────────────────────────────
+	{
+		name = "FluxUpdate",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "seasonKey: string, total: number",
+	},
+	{
+		name = "BlueprintPurchase",
+		kind = "Function",
+		direction = "C2S",
+		rateLimit = 2,
+		payloadDesc = "compoundId: string → ok: boolean, err: string?",
+	},
+
 	-- ── Clock ─────────────────────────────────────────────────────────────────
 	{
 		name = "EpochChanged",

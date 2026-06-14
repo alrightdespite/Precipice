@@ -269,6 +269,13 @@ local Manifest: { RemoteEntry } = {
 		direction = "S2C",
 		payloadDesc = "day: number, safeUntil: number",
 	},
+	{
+		name = "ContractClaim",
+		kind = "Function",
+		direction = "C2S",
+		rateLimit = 2,
+		payloadDesc = "slotIndex: number → ok: boolean, err: string?",
+	},
 
 	-- ── Prestige ──────────────────────────────────────────────────────────────
 	{

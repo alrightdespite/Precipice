@@ -12,7 +12,18 @@ local ProfileTemplate = require(game:GetService("ReplicatedStorage").Shared.Core
 -- Add migration functions here as the schema evolves.
 -- Each entry [N] upgrades profile.Data from schemaVersion N to N+1.
 -- Mutations must be in-place — never replace the data table.
-local migrations: { [number]: (data: any) -> () } = {}
+local migrations: { [number]: (data: any) -> () } = {
+	[1] = function(data)
+		if data.streak and data.streak.lastLoginUnix ~= nil then
+			data.streak.lastLoginAt = data.streak.lastLoginUnix
+			data.streak.lastLoginUnix = nil
+		end
+		if data.contracts and data.contracts.list ~= nil then
+			data.contracts.slots = data.contracts.list
+			data.contracts.list = nil
+		end
+	end,
+}
 
 local STORE_NAME = "PlayerData_v1"
 local KEY_PREFIX = "Player_"

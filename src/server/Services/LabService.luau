@@ -115,6 +115,7 @@ local function wireRemotes()
 					feePaid = fee,
 					isRush = isRush,
 				}
+				-- TODO Session B: ContractService.recordProgress(player, data, "lab_analysis", 1)
 			else
 				-- Failure: inputs returned unharmed, residue awarded, pair logged (§11, §12)
 				local residueAmt = LabAnalysis.getResidueAmount(minT)

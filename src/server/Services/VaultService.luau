@@ -90,6 +90,7 @@ local function wireRemotes()
 			VaultService.applyDeduct(data, compoundId, quantity)
 			earned = compound.baseValue * quantity
 			data.balances.pellets += earned
+			-- TODO Session B: ContractService.recordProgress(player, data, "instant_sell", 1)
 		end)
 
 		if failErr then

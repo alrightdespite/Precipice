@@ -141,6 +141,8 @@ function MarketService.createListing(
 		return newList
 	end)
 
+	-- TODO Session B: ContractService.recordProgress(player, data, "market_list", 1)
+
 	return listingId, nil
 end
 
@@ -258,6 +260,7 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 	-- Step 6: award compounds to buyer
 	_dataService.updateProfile(buyerId, function(data)
 		_vaultService.applyAward(data, record.compoundId, record.quantity)
+		-- TODO Session B: ContractService.recordProgress(buyerPlayer, data, "market_buy", 1)
 	end)
 
 	-- Step 7: remove from index, push VaultUpdate to buyer

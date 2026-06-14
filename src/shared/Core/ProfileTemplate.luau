@@ -7,7 +7,7 @@ local ProfileTemplate = {}
 -- Hard-copied by ProfileStore.New as the DataStore template.
 -- Never mutate this table at runtime.
 ProfileTemplate.DEFAULT = {
-	schemaVersion = 1,
+	schemaVersion = 2,
 
 	balances = { pellets = 0, catalysts = 0 },
 
@@ -31,9 +31,9 @@ ProfileTemplate.DEFAULT = {
 
 	sprintPoints = { weekEpoch = 0, points = 0 },
 
-	streak = { day = 0, lastLoginUnix = 0 },
+	streak = { day = 0, lastLoginAt = 0 },
 
-	contracts = { dayKey = "", list = {} },
+	contracts = { dayKey = "", slots = {} },
 
 	prestige = { level = 0, jointQualLifetime = false },
 

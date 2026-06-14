@@ -109,4 +109,44 @@ return {
 	-- Starting balance (doc §27)
 	STARTING_PELLETS = 100,
 	STARTING_COMPOUNDS_PER_STARTER = 1,
+
+	-- Streak rewards (doc §20)
+	-- STREAK_DAILY_PELLETS: index = streak day (1-based). 0 = milestone day (Catalyst/rank instead, no Pellets).
+	STREAK_DAILY_PELLETS = {
+		50,
+		100,
+		200,
+		200,
+		300,
+		300,
+		0,
+		200,
+		200,
+		200,
+		200,
+		200,
+		200,
+		0,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		300,
+		0,
+	},
+	STREAK_PELLETS_REPEATING = 300, -- days 29+
+	STREAK_MILESTONE_DAYS = { 7, 14, 28 },
+	STREAK_MILESTONE_CATALYSTS = { 1, 2, 5 },
+	STREAK_MILESTONE_RANK = { 150, 300, 750 },
+	STREAK_REPEATING_INTERVAL = 7, -- every 7 days from day 35 onward
+	STREAK_REPEATING_CATALYSTS = 1,
+	STREAK_REPEATING_RANK = 75,
 }

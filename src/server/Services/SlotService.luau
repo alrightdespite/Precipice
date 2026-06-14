@@ -339,6 +339,7 @@ local function wireRemotes()
 			isNatural = nat
 			-- TODO Phase 6: RankService.scoreNaturalCompletion(userId, compoundId)
 			PatentService.recordNaturalSynthesis(player, compoundId, data)
+			-- TODO Session B: ContractService.recordProgress(player, data, "synthesis_t" .. Compounds[compoundId].tier, 1)
 		end)
 
 		if failErr then
@@ -369,6 +370,8 @@ local function wireRemotes()
 
 		DataService.updateProfile(userId, function(data)
 			-- TODO Phase 11: validate and deduct cost (MonetizationService)
+			-- TODO Session B: ContractService.recordProgress(player, data, "synthesis_t" .. Compounds[slot.compoundId].tier, 1)
+			-- Note: skipped runs count toward contracts (doc §19) but not patents/rank/sprint.
 			local newSlots, slotErr = SlotMachine.skip(data.slots, slotIndex, os.time())
 			if slotErr then
 				failErr = slotErr

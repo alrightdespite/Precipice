@@ -52,6 +52,25 @@ LabService.init()
 local MarketService = require(ServerScriptService.Server.Services.MarketService)
 MarketService.init()
 
+-- ── 10. StreakService ──────────────────────────────────────────────────────
+local StreakService = require(ServerScriptService.Server.Services.StreakService)
+StreakService.init()
+
+-- ── 11. ContractService ───────────────────────────────────────────────────
+local ContractService = require(ServerScriptService.Server.Services.ContractService)
+ContractService.init()
+
+-- ── Post-profile-load hooks (StreakService + ContractService) ──────────────
+DataService.onProfileLoaded:Connect(function(userId)
+	local player = Players:GetPlayerByUserId(userId)
+	if not player then
+		return
+	end
+	local data = DataService.getProfile(userId)
+	StreakService.onLogin(player, data, os.time())
+	ContractService.refreshIfStale(player, data, os.time())
+end)
+
 -- ── 9–N. Remaining services (wired up in Phases 4–11) ─────────────────────
 -- ClockService, GlobalJobService, IncomeService,
 -- LabService, RecipeService, MarketService, PatentService, SyndicateService,
@@ -80,4 +99,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 3 + GlobalJobService + MarketService)")
+print("GameInit: boot complete (Phase 5 + StreakService + ContractService)")

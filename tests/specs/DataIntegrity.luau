@@ -11,9 +11,9 @@ local STARTER_IDS = { "T1_01", "T1_02", "T1_03", "T1_04", "T1_05" }
 local TIER_COUNTS = { [1] = 30, [2] = 30, [3] = 30, [4] = 25, [5] = 20, [6] = 15 }
 local RECIPE_TIER_COUNTS = { [1] = 25, [2] = 40, [3] = 50, [4] = 45, [5] = 30, [6] = 15 }
 local REWARD_BANDS = {
-	Easy = { 200, 500 },
-	Medium = { 500, 1500 },
-	Hard = { 1500, 3000 },
+	easy = { 200, 500 },
+	medium = { 500, 1500 },
+	hard = { 1500, 3000 },
 }
 
 spec.describe("DataIntegrity — Compound counts", function()
@@ -152,21 +152,27 @@ end)
 
 spec.describe("DataIntegrity — Contract pool", function()
 	spec.it("has exactly 24 contract templates", function()
-		local count = 0
-		for _ in pairs(ContractPool) do
-			count += 1
-		end
+		local count = #ContractPool.easy + #ContractPool.medium + #ContractPool.hard
 		spec.expect(count).toBe(24)
 	end)
 
 	spec.it("all rewards inside §19 bands", function()
-		for id, c in pairs(ContractPool) do
-			local band = REWARD_BANDS[c.difficulty]
+		for difficulty, templates in pairs(ContractPool) do
+			local band = REWARD_BANDS[difficulty]
 			if not band then
-				error("Unknown difficulty: " .. tostring(c.difficulty) .. " on " .. id)
+				error("Unknown difficulty key: " .. tostring(difficulty))
 			end
-			if c.pelletReward < band[1] or c.pelletReward > band[2] then
-				error(string.format("%s: reward %d outside %s band %d–%d", id, c.pelletReward, c.difficulty, band[1], band[2]))
+			for _, c in ipairs(templates) do
+				if c.pelletReward < band[1] or c.pelletReward > band[2] then
+					error(string.format(
+						"%s: reward %d outside %s band %d–%d",
+						c.id,
+						c.pelletReward,
+						difficulty,
+						band[1],
+						band[2]
+					))
+				end
 			end
 		end
 	end)

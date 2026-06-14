@@ -218,6 +218,33 @@ function PatentService.runDecaySweep(now: number?)
 	end
 end
 
+-- Release all patents held by userId. Called by PrestigeService after profile reset.
+-- Clears holderId, challenge, challengeQueue, immunityUntil so the next natural
+-- completion can claim the patent (doc §22, R6).
+-- Does NOT reset SynthCounts — 30-day counts survive prestige (R6).
+-- Returns count released.
+function PatentService.releaseAllForUser(userId: number, now: number?): number
+	now = now or os.time()
+	local released = 0
+
+	for compoundId, _ in pairs(_compounds) do
+		_ds:UpdateAsync("patent:" .. compoundId, function(record)
+			if record == nil then return nil end
+			if record.holderId ~= userId then return nil end
+			local newRecord = copyRecord(record)
+			newRecord.holderId = nil
+			newRecord.challenge = nil
+			newRecord.challengeQueue = {}
+			newRecord.immunityUntil = nil
+			released += 1
+			return newRecord
+		end)
+	end
+
+	-- TODO Phase 10: announce patent releases as transfers for T4+
+	return released
+end
+
 -- Simple read — used by UI remotes and tests.
 function PatentService.getRecord(compoundId: string): any
 	return _ds:GetAsync("patent:" .. compoundId)

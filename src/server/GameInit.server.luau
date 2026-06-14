@@ -68,6 +68,10 @@ RankService.init()
 local LeaderboardService = require(ServerScriptService.Server.Services.LeaderboardService)
 LeaderboardService.init()
 
+-- ── 14. PrestigeService ───────────────────────────────────────────────────
+local PrestigeService = require(ServerScriptService.Server.Services.PrestigeService)
+PrestigeService.init()
+
 -- ── Post-profile-load hooks (StreakService + ContractService) ──────────────
 DataService.onProfileLoaded:Connect(function(userId)
 	local player = Players:GetPlayerByUserId(userId)
@@ -107,4 +111,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 6 complete — Rank, Sprint, Leaderboards, Contracts, Streak)")
+print("GameInit: boot complete (Phase 7 — Prestige)")

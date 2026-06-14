@@ -318,3 +318,22 @@ spec.describe("RankService — sprint ODS write skipped when score does not incr
 		spec.expect(#mock.writes).toBe(1) -- still just 1
 	end)
 end)
+
+-- ── Test 13 (Phase 7): writeChiefBoardScore ──────────────────────────────
+
+spec.describe("RankService — writeChiefBoardScore writes userId+lifetime to ODS", function()
+	spec.it("ODS receives key=userId, score=lifetimeScore", function()
+		local mock = makeOdsMock()
+		RankService._setChiefOds(mock.ods)
+		RankService._setSpawnFn(function(fn) fn() end) -- synchronous for test
+
+		local data = makeData()
+		data.rank.lifetime = 99999
+
+		RankService.writeChiefBoardScore(mockPlayer, data)
+
+		spec.expect(#mock.writes).toBe(1)
+		spec.expect(mock.writes[1].key).toBe(tostring(mockPlayer.UserId))
+		spec.expect(mock.writes[1].score).toBe(99999)
+	end)
+end)

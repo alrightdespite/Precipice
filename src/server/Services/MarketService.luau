@@ -61,8 +61,18 @@ local function writePendingCredit(userId: number, creditId: string, amount: numb
 	end)
 end
 
-local function removeFromIndex(tier: number, listingId: string)
+local function removeFromIndex(tier: number, listingId: string, sellerId: number)
 	_indexDs:UpdateAsync("index:tier:" .. tostring(tier), function(stored)
+		if stored == nil then return nil end
+		local newList = {}
+		for _, id in ipairs(stored) do
+			if id ~= listingId then
+				table.insert(newList, id)
+			end
+		end
+		return newList
+	end)
+	_indexDs:UpdateAsync("index:user:" .. tostring(sellerId), function(stored)
 		if stored == nil then return nil end
 		local newList = {}
 		for _, id in ipairs(stored) do
@@ -148,6 +158,13 @@ function MarketService.createListing(
 		return newList
 	end)
 
+	_indexDs:UpdateAsync("index:user:" .. tostring(userId), function(stored)
+		local list = stored or {}
+		local newList = { table.unpack(list) }
+		table.insert(newList, listingId)
+		return newList
+	end)
+
 	return listingId, nil
 end
 
@@ -188,7 +205,7 @@ function MarketService.cancelListing(player: any, listingId: string): (boolean, 
 		_vaultService.applyAward(data, record.compoundId, record.quantity)
 	end)
 
-	removeFromIndex(record.tier, listingId)
+	removeFromIndex(record.tier, listingId, record.sellerId)
 
 	local playerObj = _getPlayer(userId)
 	if playerObj then
@@ -278,7 +295,7 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 	end)
 
 	-- Step 7: remove from index, push VaultUpdate to buyer
-	removeFromIndex(record.tier, listingId)
+	removeFromIndex(record.tier, listingId, record.sellerId)
 
 	local buyerPlayer = _getPlayer(buyerId)
 	if buyerPlayer then
@@ -367,9 +384,25 @@ function MarketService.runExpirySweep(sweepNow: number?)
 				end
 			end
 
-			removeFromIndex(tier, listingId)
+			removeFromIndex(tier, listingId, listing.sellerId)
 		end
 	end
+end
+
+-- Cancel all active listings for a player. Called by PrestigeService only.
+-- Compounds are returned to vault by cancelListing. Idempotent on non-ACTIVE listings.
+-- Returns count cancelled.
+function MarketService.cancelAllForUser(player: any): number
+	local userId = player.UserId
+	local ids = _indexDs:GetAsync("index:user:" .. tostring(userId)) or {}
+	local cancelled = 0
+	for _, listingId in ipairs(ids) do
+		local ok = MarketService.cancelListing(player, listingId)
+		if ok then
+			cancelled += 1
+		end
+	end
+	return cancelled
 end
 
 -- ── Production init ────────────────────────────────────────────────────────

@@ -173,6 +173,21 @@ function RankService.scoreVaultContribution(player: any, data: any, pellets: num
 	RankService.addScore(player, data, _rankMath.vaultContributionScore(pellets), "vault")
 end
 
+-- Write lifetime score to ChiefBoard ODS. Called at Prestige time (§22).
+-- Fire-and-forget; never yields the caller.
+function RankService.writeChiefBoardScore(player: any, data: any)
+	local userId = player.UserId
+	local score = data.rank.lifetime
+	_spawnFn(function()
+		local ok, err = pcall(function()
+			_chiefOds:SetAsync(tostring(userId), score)
+		end)
+		if not ok then
+			warn("RankService: ChiefBoard ODS write failed:", err)
+		end
+	end)
+end
+
 -- Stub: award champion badges from Sprint_{weekEpoch} ODS top-3. Phase 7 implements fully.
 function RankService.archiveSprint(_weekEpoch: number)
 	warn("RankService.archiveSprint: not yet implemented")

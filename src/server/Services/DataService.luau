@@ -71,6 +71,11 @@ local function flushPendingCredits(userId: number, data: any)
 	end
 end
 
+-- Public wrapper for PrestigeService to drain PendingCredits before reset.
+function DataService.drainPending(userId: number, data: any)
+	flushPendingCredits(userId, data)
+end
+
 function DataService.init()
 	assert(profileStore == nil, "DataService.init called twice")
 	profileStore = ProfileStore.New(STORE_NAME, ProfileTemplate.DEFAULT)

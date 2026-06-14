@@ -26,11 +26,16 @@ local TICK_INTERVAL = 1 -- seconds between server ticks
 local _loaded: { [number]: boolean } = {} -- userIds with active, ready sessions
 local _tickAccum = 0
 local _eventService: any = nil
+local _jointService: any = nil
 
 local SlotService = {}
 
 function SlotService._setEventService(es: any)
 	_eventService = es
+end
+
+function SlotService._setJointService(js: any)
+	_jointService = js
 end
 
 -- ── Helpers ────────────────────────────────────────────────────────────────
@@ -77,6 +82,18 @@ local function settleOfflineForPlayer(userId: number)
 					workRemainingSeconds = slot.workRemaining / OFFLINE_RATE,
 					passivePerMin = compound.passivePerMin,
 				})
+			end
+		end
+
+		-- Add running joint synthesis slots as virtual slot inputs (§17, §10)
+		if _jointService and data.syndicate then
+			local jointInputs = _jointService.getRunningSlotInputs(
+				data.syndicate.id,
+				userId,
+				now
+			)
+			for _, ji in ipairs(jointInputs) do
+				table.insert(slotInputs, ji)
 			end
 		end
 

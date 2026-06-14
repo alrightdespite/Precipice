@@ -14,6 +14,8 @@ local _patentService: any = nil
 local _remoteService: any = nil
 local _economyConstants: any = nil
 local _profileTemplate: any = nil
+local _jointService: any = nil
+local _syndicateService: any = nil
 
 local PrestigeService = {}
 
@@ -30,6 +32,8 @@ function PrestigeService._setPatentService(ps: any) _patentService = ps end
 function PrestigeService._setRemoteService(rs: any) _remoteService = rs end
 function PrestigeService._setEconomyConstants(ec: any) _economyConstants = ec end
 function PrestigeService._setProfileTemplate(pt: any) _profileTemplate = pt end
+function PrestigeService._setJointService(js: any) _jointService = js end
+function PrestigeService._setSyndicateService(ss: any) _syndicateService = ss end
 
 -- ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -47,7 +51,8 @@ end
 -- ── Public API ─────────────────────────────────────────────────────────────
 
 -- Returns list of human-readable blocker strings. Empty list = eligible (R5).
-function PrestigeService.getBlockers(data: any): { string }
+-- player is optional; joint slot checks are skipped when nil.
+function PrestigeService.getBlockers(data: any, player: any?): { string }
 	local blockers: { string } = {}
 
 	-- 1. Rank gate: must have earned 250,000 current-run points
@@ -81,8 +86,25 @@ function PrestigeService.getBlockers(data: any): { string }
 		end
 	end
 
-	-- TODO Phase 5: check joint slot state (data.syndicate joint slot)
-	-- TODO Phase 5: check if player is a contributor to a running joint run
+	-- 5. Active joint staging or running run involving this player.
+	if player and data.syndicate and _jointService and _syndicateService then
+		local syndicateId = data.syndicate.id
+		local record = _syndicateService.getRecord(syndicateId)
+		if record then
+			for _, slot in pairs(record.jointSlots or {}) do
+				if slot.state == "STAGED" and slot.openerId == player.UserId then
+					table.insert(blockers, "A joint synthesis staging is pending")
+					break
+				end
+				if slot.state == "RUNNING"
+					and (slot.openerId == player.UserId or slot.partnerId == player.UserId)
+				then
+					table.insert(blockers, "A joint synthesis run is in progress")
+					break
+				end
+			end
+		end
+	end
 
 	return blockers
 end
@@ -165,7 +187,7 @@ function PrestigeService.init()
 	-- PrestigeRequest: check eligibility, return blockers
 	_remoteService.getFunction("PrestigeRequest").OnServerInvoke = function(player: Player)
 		local data = _dataService.getProfile(player.UserId)
-		local blockers = PrestigeService.getBlockers(data)
+		local blockers = PrestigeService.getBlockers(data, player)
 		if #blockers > 0 then
 			return { ok = false, blockers = blockers }
 		end
@@ -175,7 +197,7 @@ function PrestigeService.init()
 	-- PrestigeConfirm: double-check then execute
 	_remoteService.getFunction("PrestigeConfirm").OnServerInvoke = function(player: Player)
 		local data = _dataService.getProfile(player.UserId)
-		local blockers = PrestigeService.getBlockers(data)
+		local blockers = PrestigeService.getBlockers(data, player)
 		if #blockers > 0 then
 			return { ok = false, err = blockers[1] }
 		end

@@ -24,6 +24,7 @@
 - [x] Task 16: PRECIPICE_PHASE8 -- MonetizationService (gamepass cache: expandedLab/extendedOffline/compoundArchive; getSlotCap/getOfflineCap prestige+pass stacking; ProcessReceipt idempotency via receiptLedger; CatalystS/L/RushAnalysis/TimerSkip dispatch; CompoundArchive monthly archive grant; deductCatalystSkip; SlotService cost wiring for catalyst+timerskip skips; applySkipToSlot; BalanceUpdate payload +rushUses+timerSkipUses; GameInit wired; 269/269 tests green)
 - [x] Task 17: PRECIPICE_PHASE9 -- EventService (Flux earn by extraction/synthesis; event pass 2× Flux; income 1.5× multiplier; community milestone 25 Catalysts; blueprint purchase via Flux; event patent first-run/between-run guards; schema v3 migration; FluxUpdate+BlueprintPurchase remotes; OfflineIncome multiplier param; GameInit wired; 295/295 tests green)
 - [x] Task 18: PRECIPICE_PHASE10A -- SyndicateService (create/invite/accept/kick/promote/rename/contributeVault/purchaseUpgrade/expandMemberCap/disband+confirm; pending invite DS; schema v4 migration; 8 new remotes; T4 joint qualification hook in SlotService; GameInit wired; 325/325 tests green)
+- [x] Task 19: PRECIPICE_PHASE10B -- JointSynthService (EMPTY→STAGED→RUNNING→COMPLETE state machine, async expiry+cooldown, offline pending delivery, passive income virtual slots); ExoticService (decay math 0.97^N, floor at 25%, world-first claim fan-out, atomic UpdateAsync unit count); RecipeResolver.resolveExotic; PrestigeService joint blockers wired; ExoticRegistryUpdate remote; GameInit wired; 353/353 tests green
 
 ## In progress
 
@@ -31,7 +32,7 @@ None.
 
 ## Next
 
-Phase 10B — JointSynthService + ExoticService (joint slot state machine EMPTY→STAGED→MATCHED→RUNNING→COMPLETE, Exotic seed lookup, atomic unit counters, completion fan-out).
+Phase 11 — Hardening (remote validation, exploit audit, DataStore budget review, anti-exploit pass, AnalyticsService stubs, launch readiness checklist).
 
 ## Known issues
 

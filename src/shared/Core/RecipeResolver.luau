@@ -13,10 +13,12 @@
 
 local Compounds = require(script.Parent.Parent.Data.Compounds)
 local Recipes = require(script.Parent.Parent.Data.Recipes)
+local Exotics = require(script.Parent.Parent.Data.Exotics)
 
 -- Build lookup tables at module load time
 local _byPair: { [string]: { string } } = {} -- "id1|id2" → { recipeId, ... }
 local _variablePairs: { [string]: { string } } = {} -- variablePairId → { recipeId (primary first) }
+local _exoticByPair: { [string]: string } = {} -- "id1|id2" → exoticId
 
 for recipeId, recipe in pairs(Recipes) do
 	local key = if recipe.input1 < recipe.input2
@@ -33,6 +35,13 @@ for recipeId, recipe in pairs(Recipes) do
 		end
 		table.insert(_variablePairs[recipe.variablePairId], recipeId)
 	end
+end
+
+for exoticId, exotic in pairs(Exotics) do
+	local key = if exotic.inputA < exotic.inputB
+		then exotic.inputA .. "|" .. exotic.inputB
+		else exotic.inputB .. "|" .. exotic.inputA
+	_exoticByPair[key] = exoticId
 end
 
 local RecipeResolver = {}
@@ -102,6 +111,15 @@ function RecipeResolver.getLabResult(
 		isVariable = true,
 		isPrimary = isPrimary,
 	}
+end
+
+-- Returns the exoticId if id1+id2 is a valid T6+T6 pair, nil otherwise.
+function RecipeResolver.resolveExotic(id1: string, id2: string): string?
+	local c1 = Compounds[id1]
+	local c2 = Compounds[id2]
+	if c1 == nil or c2 == nil then return nil end
+	if c1.tier ~= 6 or c2.tier ~= 6 then return nil end
+	return _exoticByPair[pairKey(id1, id2)]
 end
 
 return RecipeResolver

@@ -86,6 +86,17 @@ PatentService._setEventService(EventService)
 local SyndicateService = require(ServerScriptService.Server.Services.SyndicateService)
 SyndicateService.init()
 
+-- ── 18. ExoticService ─────────────────────────────────────────────────────
+local ExoticService = require(ServerScriptService.Server.Services.ExoticService)
+ExoticService.init()
+
+-- ── 19. JointSynthService ─────────────────────────────────────────────────
+local JointSynthService = require(ServerScriptService.Server.Services.JointSynthService)
+JointSynthService.init()
+SlotService._setJointService(JointSynthService)
+PrestigeService._setJointService(JointSynthService)
+PrestigeService._setSyndicateService(SyndicateService)
+
 -- ── Post-profile-load hooks ────────────────────────────────────────────────
 DataService.onProfileLoaded:Connect(function(userId)
 	local player = Players:GetPlayerByUserId(userId)
@@ -101,6 +112,7 @@ DataService.onProfileLoaded:Connect(function(userId)
 	end
 	EventService.onLogin(player, data)
 	SyndicateService.checkPendingInvite(player)
+	JointSynthService.onLogin(player, data, os.time())
 	if data.syndicate then
 		local record = SyndicateService.getRecord(data.syndicate.id)
 		if record then
@@ -137,4 +149,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 10A — SyndicateService)")
+print("GameInit: boot complete (Phase 10B — JointSynthService + ExoticService)")

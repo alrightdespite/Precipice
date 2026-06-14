@@ -379,6 +379,14 @@ local Manifest: { RemoteEntry } = {
 		payloadDesc = "compoundId: string → ok: boolean, err: string?",
 	},
 
+	-- ── Exotics ──────────────────────────────────────────────────────────────
+	{
+		name = "ExoticRegistryUpdate",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "exoticId: string, unitCount: number, currentValue: number",
+	},
+
 	-- ── Clock ─────────────────────────────────────────────────────────────────
 	{
 		name = "EpochChanged",

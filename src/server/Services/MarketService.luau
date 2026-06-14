@@ -11,6 +11,8 @@ local _pendingDs: any = nil   -- DataStore("PendingCredits")
 local _dataService: any = nil -- DataService
 local _vaultService: any = nil -- VaultService
 local _remoteService: any = nil -- RemoteService
+local _rankService: any = nil  -- RankService
+local _contractService: any = nil -- ContractService
 local _mm: any = nil          -- MarketMath
 local _compounds: any = nil   -- Compounds data table
 local _getPlayer: any = nil   -- fn(userId: number) -> Player?
@@ -33,6 +35,8 @@ function MarketService._setCompounds(c: any) _compounds = c end
 function MarketService._setGetPlayer(fn: any) _getPlayer = fn end
 function MarketService._setClock(fn: any) _clock = fn end
 function MarketService._resetSeq() _listingSeq = 0 end
+function MarketService._setRankService(rs: any) _rankService = rs end
+function MarketService._setContractService(cs: any) _contractService = cs end
 
 -- ── Internal helpers ───────────────────────────────────────────────────────
 
@@ -110,6 +114,9 @@ function MarketService.createListing(
 		end
 		data.balances.pellets -= listingFee
 		_vaultService.applyDeduct(data, compoundId, quantity)
+		if _contractService then
+			_contractService.recordProgress(player, data, "market_list", 1)
+		end
 	end)
 
 	if failErr then
@@ -140,8 +147,6 @@ function MarketService.createListing(
 		table.insert(newList, listingId)
 		return newList
 	end)
-
-	-- TODO Session B: ContractService.recordProgress(player, data, "market_list", 1)
 
 	return listingId, nil
 end
@@ -251,16 +256,25 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 	if sellerPlayer then
 		_dataService.updateProfile(sellerId, function(data)
 			data.balances.pellets += proceeds
+			if _rankService then
+				_rankService.scoreMarketSale(sellerPlayer, data, proceeds)
+			end
+			if _contractService then
+				_contractService.recordProgress(sellerPlayer, data, "market_sell_pellets", proceeds)
+			end
 		end)
 	else
 		local creditId = "market:" .. listingId .. ":" .. tostring(sellerId)
 		writePendingCredit(sellerId, creditId, proceeds, "market_sale")
+		-- TODO Phase 8: rank from market sale via PendingCredits drain (offline seller path)
 	end
 
 	-- Step 6: award compounds to buyer
 	_dataService.updateProfile(buyerId, function(data)
 		_vaultService.applyAward(data, record.compoundId, record.quantity)
-		-- TODO Session B: ContractService.recordProgress(buyerPlayer, data, "market_buy", 1)
+		if _contractService then
+			_contractService.recordProgress(player, data, "market_buy", 1)
+		end
 	end)
 
 	-- Step 7: remove from index, push VaultUpdate to buyer
@@ -374,6 +388,8 @@ function MarketService.init()
 	_dataService = require(ServerScriptService.Server.Services.DataService)
 	_vaultService = require(ServerScriptService.Server.Services.VaultService)
 	_remoteService = require(ServerScriptService.Server.Services.RemoteService)
+	_rankService = require(ServerScriptService.Server.Services.RankService)
+	_contractService = require(ServerScriptService.Server.Services.ContractService)
 	_getPlayer = function(userId: number) return Players:GetPlayerByUserId(userId) end
 	_clock = os.time
 

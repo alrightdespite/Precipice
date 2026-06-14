@@ -3,6 +3,7 @@
 
 local _remoteService: any = nil
 local _dataService: any = nil
+local _rankService: any = nil
 local _contractPool: any = nil
 local _poolById: { [string]: any } = {}
 local _compounds: any = nil
@@ -17,6 +18,10 @@ end
 
 function ContractService._setDataService(ds: any)
 	_dataService = ds
+end
+
+function ContractService._setRankService(rs: any)
+	_rankService = rs
 end
 
 function ContractService._setCompounds(c: any)
@@ -290,8 +295,9 @@ function ContractService.claimReward(
 	end
 
 	data.balances.pellets += template.pelletReward
-	data.rank.currentRun += template.rankReward
-	data.rank.lifetime += template.rankReward
+	if _rankService then
+		_rankService.addScore(player, data, template.rankReward, "contract")
+	end
 	slot.claimed = true
 
 	fireContractUpdate(player, data)
@@ -304,6 +310,9 @@ function ContractService.init()
 	end
 	if _dataService == nil then
 		_dataService = require(game:GetService("ServerScriptService").Server.Services.DataService)
+	end
+	if _rankService == nil then
+		_rankService = require(game:GetService("ServerScriptService").Server.Services.RankService)
 	end
 	if _contractPool == nil then
 		ContractService._setContractPool(

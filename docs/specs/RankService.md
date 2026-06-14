@@ -1,5 +1,8 @@
 # RankService
 
+<!-- Sprint tracking merged into RankService per Session B decision. No separate SprintService.
+     See addSprintPoints and archiveSprint. -->
+
 ## Mission
 
 Manages player rank score (current run and lifetime) and sprint leaderboard. Uses `RankMath.luau` for score computation. Persists via player profile (rank sub-table) and `Sprint_{isoWeek}` / `ChiefBoard` OrderedDataStores.

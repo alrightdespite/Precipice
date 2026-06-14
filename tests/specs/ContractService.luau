@@ -4,6 +4,9 @@
 
 local spec = require("../spec")
 local ContractPool = require("../../src/shared/Data/ContractPool")
+local RankMath = require("../../src/shared/Core/RankMath")
+local SeedResolver = require("../../src/shared/Core/SeedResolver")
+local RankService = require("../../src/server/Services/RankService")
 local ContractService = require("../../src/server/Services/ContractService")
 
 -- Minimal Compounds mock: enough tiers to satisfy all filter checks
@@ -15,9 +18,16 @@ local MOCK_COMPOUNDS = {
 	["T5_01"] = { tier = 5 },
 }
 
+-- Wire RankService with pure modules and no remote (fires silently)
+RankService._setRankMath(RankMath)
+RankService._setSeedResolver(SeedResolver)
+RankService._setCompounds(MOCK_COMPOUNDS)
+RankService._setRemoteService(nil) -- fire silently
+
 ContractService._setContractPool(ContractPool)
 ContractService._setCompounds(MOCK_COMPOUNDS)
 ContractService._setRemoteService(nil) -- fire calls nil-checked
+ContractService._setRankService(RankService)
 
 local mockPlayer = { UserId = 2001 }
 
@@ -29,7 +39,7 @@ local BASE_NOW = 1749859200
 local function defaultData(): any
 	return {
 		balances = { pellets = 0, catalysts = 0 },
-		rank = { currentRun = 0, lifetime = 0 },
+		rank = { currentRun = 0, lifetime = 0, dailyCaps = { date = "", marketPoints = 0, vaultPoints = 0 } },
 		formulaLog = { discovered = {}, validatedPairs = {}, failedPairs = {} },
 		syndicate = nil,
 		prestige = { level = 0, jointQualLifetime = false },
@@ -37,7 +47,7 @@ local function defaultData(): any
 	}
 end
 
--- Data with all filters satisfied
+-- Data with all filters satisfied (includes dailyCaps for RankService)
 local function richData(): any
 	local d = defaultData()
 	d.formulaLog.discovered = {

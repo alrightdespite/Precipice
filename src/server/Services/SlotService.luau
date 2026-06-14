@@ -11,6 +11,8 @@ local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 local SeedService = require(ServerScriptService.Server.Services.SeedService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
 local PatentService = require(ServerScriptService.Server.Services.PatentService)
+local RankService = require(ServerScriptService.Server.Services.RankService)
+local ContractService = require(ServerScriptService.Server.Services.ContractService)
 local SlotMachine = require(ReplicatedStorage.Shared.Core.SlotMachine)
 local OfflineIncome = require(ReplicatedStorage.Shared.Core.OfflineIncome)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
@@ -337,9 +339,13 @@ local function wireRemotes()
 			VaultService.applyAward(data, compoundId, 1)
 			awardedId = compoundId
 			isNatural = nat
-			-- TODO Phase 6: RankService.scoreNaturalCompletion(userId, compoundId)
+			if isNatural then
+				RankService.scoreNaturalCompletion(player, data, compoundId, os.time())
+			end
 			PatentService.recordNaturalSynthesis(player, compoundId, data)
-			-- TODO Session B: ContractService.recordProgress(player, data, "synthesis_t" .. Compounds[compoundId].tier, 1)
+			-- Contract progress counts for all reveals (natural and non-natural per §19)
+			local revealTier = Compounds[compoundId] and Compounds[compoundId].tier or 0
+			ContractService.recordProgress(player, data, "synthesis_t" .. revealTier, 1)
 		end)
 
 		if failErr then
@@ -370,8 +376,14 @@ local function wireRemotes()
 
 		DataService.updateProfile(userId, function(data)
 			-- TODO Phase 11: validate and deduct cost (MonetizationService)
-			-- TODO Session B: ContractService.recordProgress(player, data, "synthesis_t" .. Compounds[slot.compoundId].tier, 1)
-			-- Note: skipped runs count toward contracts (doc §19) but not patents/rank/sprint.
+			-- Find compoundId before skip for contract progress
+			local skipCompoundId = nil
+			for _, s in ipairs(data.slots) do
+				if s.index == slotIndex then
+					skipCompoundId = s.compoundId
+					break
+				end
+			end
 			local newSlots, slotErr = SlotMachine.skip(data.slots, slotIndex, os.time())
 			if slotErr then
 				failErr = slotErr
@@ -382,6 +394,18 @@ local function wireRemotes()
 				if s.index == slotIndex then
 					newSlotRecord = s
 					break
+				end
+			end
+			-- Skipped runs count toward contracts per §19 (not rank/patents/sprint)
+			if skipCompoundId then
+				local skipCompound = Compounds[skipCompoundId]
+				if skipCompound then
+					ContractService.recordProgress(
+						player,
+						data,
+						"synthesis_t" .. skipCompound.tier,
+						1
+					)
 				end
 			end
 		end)

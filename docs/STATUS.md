@@ -1,6 +1,6 @@
 # Status
 
-## Current phase: Phase 6A complete -> Session B next
+## Current phase: Phase 6 complete
 
 **Last updated:** 2026-06-14
 
@@ -19,6 +19,7 @@
 - [x] Task 11: PRECIPICE_PHASE4 -- GlobalJobService (H1 CAS lock/ledger/resume, NoopJob); SynthCountService (30-day rolling counts, per-user queries, prune-on-write); PatentService (first-claim, challenge/immunity/queue, decay sweep, two-pass multi-party race); SlotService wired to PatentService.recordNaturalSynthesis; Manifest +3 patent remotes; 156/156 tests green
 - [x] Task 12: PRECIPICE_PHASE5 -- MarketService (createListing/cancelListing/buyListing/browseTier CAS purchase R13, hourly expiry sweep, PendingCredits offline seller/expiry paths, per-tier DataStore index H4, listing fee + seller proceeds via MarketMath); 170/170 tests green
 - [x] Task 13: PRECIPICE_PHASE6A -- ProfileTemplate v2 (lastLoginAt/slots rename + migration [1]); EconomyConstants streak constants; ContractPool rewrite (easy/medium/hard arrays, progressType+filter enums, 5-slot draw rule 3+2); StreakService (grace window, milestone/repeating rewards, StreakUpdate S2C); ContractService (daily draw, filter eval, recordProgress, claimReward, ContractClaim C2S); RankService stub; Manifest +ContractClaim; GameInit wired; 200/200 tests green
+- [x] Task 14: PRECIPICE_PHASE6B -- RankService (addScore, addSprintPoints, daily caps market/vault, scoreNaturalCompletion/Discovery/Defense/Claim/MarketSale/VaultContribution, archiveSprint stub); LeaderboardService (LeaderboardRequest C2S, 60s cache, own-row resolution, rank=-1 fallback); Sprint tracking merged into RankService; full contract+streak wiring (SlotService, LabService, VaultService, MarketService, ContractService, StreakService); 218/218 tests green
 
 ## In progress
 
@@ -26,11 +27,7 @@ None.
 
 ## Next
 
-Session B (Phase 6 completion): RankService, SprintService, LeaderboardService, full contract wiring
-- `RankService`: lifetime rank tracking, prestige-run counter, RankUpdate remote, daily sprint reset
-- `SprintService`: weekly sprint scores, sprint archive on epoch rotation
-- `LeaderboardService`: ordered score tables for sprint and chiefs boards, LeaderboardRequest remote
-- Wire Session B TODOs: ContractService.recordProgress in SlotService, VaultService, LabService, MarketService
+Phase 7 — PrestigeService (blockers R5, reset table §22, patent release fan-out, ChiefBoard ODS write).
 
 ## Known issues
 

@@ -3,6 +3,7 @@
 
 local _remoteService: any = nil
 local _econConstants: any = nil
+local _rankService: any = nil
 
 local StreakService = {}
 
@@ -14,12 +15,19 @@ function StreakService._setEconConstants(ec: any)
 	_econConstants = ec
 end
 
+function StreakService._setRankService(rs: any)
+	_rankService = rs
+end
+
 function StreakService.init()
 	if _remoteService == nil then
 		_remoteService = require(game:GetService("ServerScriptService").Server.Services.RemoteService)
 	end
 	if _econConstants == nil then
 		_econConstants = require(game:GetService("ReplicatedStorage").Shared.Config.EconomyConstants)
+	end
+	if _rankService == nil then
+		_rankService = require(game:GetService("ServerScriptService").Server.Services.RankService)
 	end
 end
 
@@ -76,8 +84,9 @@ function StreakService.onLogin(player: any, data: any, now: number)
 	for i, milestoneDay in ipairs(EC.STREAK_MILESTONE_DAYS) do
 		if data.streak.day == milestoneDay then
 			data.balances.catalysts += EC.STREAK_MILESTONE_CATALYSTS[i]
-			data.rank.currentRun += EC.STREAK_MILESTONE_RANK[i]
-			data.rank.lifetime += EC.STREAK_MILESTONE_RANK[i]
+			if _rankService then
+				_rankService.addScore(player, data, EC.STREAK_MILESTONE_RANK[i], "streak")
+			end
 			break
 		end
 	end
@@ -85,8 +94,9 @@ function StreakService.onLogin(player: any, data: any, now: number)
 	-- Repeating reward (day 35+, every 7 days)
 	if data.streak.day >= 35 and (data.streak.day - 35) % EC.STREAK_REPEATING_INTERVAL == 0 then
 		data.balances.catalysts += EC.STREAK_REPEATING_CATALYSTS
-		data.rank.currentRun += EC.STREAK_REPEATING_RANK
-		data.rank.lifetime += EC.STREAK_REPEATING_RANK
+		if _rankService then
+			_rankService.addScore(player, data, EC.STREAK_REPEATING_RANK, "streak")
+		end
 	end
 
 	if _remoteService then

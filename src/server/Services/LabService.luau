@@ -9,6 +9,8 @@ local DataService = require(ServerScriptService.Server.Services.DataService)
 local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 local SeedService = require(ServerScriptService.Server.Services.SeedService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
+local RankService = require(ServerScriptService.Server.Services.RankService)
+local ContractService = require(ServerScriptService.Server.Services.ContractService)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
 local LabAnalysis = require(ReplicatedStorage.Shared.Core.LabAnalysis)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
@@ -106,7 +108,9 @@ local function wireRemotes()
 				VaultService.applyAward(data, labResult.resultId :: string, 1)
 				data.formulaLog.discovered[labResult.resultId :: string] = true
 				vaultChanged = true
-				-- TODO Phase 6: RankService.recordDiscovery(userId, labResult.resultId)
+				RankService.scoreDiscovery(player, data) -- no-op per §14
+				ContractService.recordProgress(player, data, "recipe_discover", 1)
+				ContractService.recordProgress(player, data, "lab_analysis", 1)
 				result = {
 					status = "discovery",
 					resultId = labResult.resultId,
@@ -115,13 +119,13 @@ local function wireRemotes()
 					feePaid = fee,
 					isRush = isRush,
 				}
-				-- TODO Session B: ContractService.recordProgress(player, data, "lab_analysis", 1)
 			else
 				-- Failure: inputs returned unharmed, residue awarded, pair logged (§11, §12)
 				local residueAmt = LabAnalysis.getResidueAmount(minT)
 				VaultService.applyResidue(data, residueAmt)
 				data.formulaLog.failedPairs[pKey] = true
 				vaultChanged = true
+				ContractService.recordProgress(player, data, "lab_analysis", 1)
 				result = {
 					status = "failure",
 					residueAwarded = residueAmt,

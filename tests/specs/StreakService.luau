@@ -4,10 +4,21 @@
 
 local spec = require("../spec")
 local EconomyConstants = require("../../src/shared/Config/EconomyConstants")
+local RankMath = require("../../src/shared/Core/RankMath")
+local SeedResolver = require("../../src/shared/Core/SeedResolver")
+local Compounds = require("../../src/shared/Data/Compounds")
+local RankService = require("../../src/server/Services/RankService")
 local StreakService = require("../../src/server/Services/StreakService")
+
+-- Wire RankService with pure modules and no remote
+RankService._setRankMath(RankMath)
+RankService._setSeedResolver(SeedResolver)
+RankService._setCompounds(Compounds)
+RankService._setRemoteService(nil)
 
 StreakService._setEconConstants(EconomyConstants)
 StreakService._setRemoteService(nil) -- fire calls are nil-checked
+StreakService._setRankService(RankService)
 
 local mockPlayer = { UserId = 1001 }
 
@@ -15,7 +26,7 @@ local function defaultData(): any
 	return {
 		streak = { day = 0, lastLoginAt = 0 },
 		balances = { pellets = 0, catalysts = 0 },
-		rank = { currentRun = 0, lifetime = 0 },
+		rank = { currentRun = 0, lifetime = 0, dailyCaps = { date = "", marketPoints = 0, vaultPoints = 0 } },
 	}
 end
 

@@ -143,11 +143,13 @@ local function wireRemotes()
 		if vaultChanged or balanceChanged then
 			local data = DataService.getProfile(userId)
 			VaultService.fireVaultUpdate(player, data)
-			if balanceChanged then
+			if balanceChanged or (result ~= nil and result.isRush == true) then
 				RemoteService.getEvent("BalanceUpdate"):FireClient(
 					player,
 					data.balances.pellets,
-					data.balances.catalysts
+					data.balances.catalysts,
+					data.monetization.rushUses,
+					data.monetization.timerSkipUses or 0
 				)
 			end
 		end

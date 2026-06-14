@@ -13,6 +13,7 @@ local VaultService = require(ServerScriptService.Server.Services.VaultService)
 local PatentService = require(ServerScriptService.Server.Services.PatentService)
 local RankService = require(ServerScriptService.Server.Services.RankService)
 local ContractService = require(ServerScriptService.Server.Services.ContractService)
+local MonetizationService = require(ServerScriptService.Server.Services.MonetizationService)
 local SlotMachine = require(ReplicatedStorage.Shared.Core.SlotMachine)
 local OfflineIncome = require(ReplicatedStorage.Shared.Core.OfflineIncome)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
@@ -29,9 +30,8 @@ local SlotService = {}
 
 -- ── Helpers ────────────────────────────────────────────────────────────────
 
-local function getSlotCap(_data: any): number
-	-- TODO Phase 11: add gamepass slot expansion (MonetizationService)
-	return GameConfig.BASE_SLOTS
+local function getSlotCap(data: any): number
+	return MonetizationService.getSlotCap(data)
 end
 
 local function fireSlotUpdate(player: Player, slot: any)
@@ -51,8 +51,7 @@ local function settleOfflineForPlayer(userId: number)
 		local now = os.time()
 		local lastSeenAt = data.lastSeenAt or 0
 		local offlineSeconds = math.max(0, now - lastSeenAt)
-		local capSeconds = GameConfig.OFFLINE_CAP_BASE_HOURS * 3600
-		-- TODO Phase 11: extended cap for gamepass holders
+		local capSeconds = MonetizationService.getOfflineCap(data) * 3600
 
 		data.lastSeenAt = now
 
@@ -375,7 +374,22 @@ local function wireRemotes()
 		local failErr = nil
 
 		DataService.updateProfile(userId, function(data)
-			-- TODO Phase 11: validate and deduct cost (MonetizationService)
+			-- Deduct skip cost (Phase 8)
+			if skipType == "catalyst" then
+				local ok = MonetizationService.deductCatalystSkip(data)
+				if not ok then
+					failErr = "insufficient Catalysts (need 30)"
+					return
+				end
+			elseif skipType == "timerskip" then
+				local uses = data.monetization.timerSkipUses or 0
+				if uses <= 0 then
+					failErr = "no TimerSkip uses available"
+					return
+				end
+				data.monetization.timerSkipUses = uses - 1
+			end
+
 			-- Find compoundId before skip for contract progress
 			local skipCompoundId = nil
 			for _, s in ipairs(data.slots) do
@@ -416,6 +430,14 @@ local function wireRemotes()
 		if newSlotRecord then
 			fireSlotUpdate(player, newSlotRecord)
 		end
+		local skipData = DataService.getProfile(userId)
+		RemoteService.getEvent("BalanceUpdate"):FireClient(
+			player,
+			skipData.balances.pellets,
+			skipData.balances.catalysts,
+			skipData.monetization.rushUses,
+			skipData.monetization.timerSkipUses or 0
+		)
 		return true, nil
 	end
 end
@@ -452,6 +474,30 @@ local function runTick()
 		if not ok then
 			warn("SlotService: tick error for", userId, "—", err)
 		end
+	end
+end
+
+-- ── Public: applySkipToSlot (called by MonetizationService.applyTimerSkip) ──
+
+function SlotService.applySkipToSlot(player: Player, slotIndex: number)
+	local userId = player.UserId
+	local newSlotRecord = nil
+	DataService.updateProfile(userId, function(data)
+		local newSlots, slotErr = SlotMachine.skip(data.slots, slotIndex, os.time())
+		if slotErr then
+			warn("SlotService.applySkipToSlot: skip error for slot", slotIndex, "—", slotErr)
+			return
+		end
+		data.slots = newSlots
+		for _, s in ipairs(newSlots) do
+			if s.index == slotIndex then
+				newSlotRecord = s
+				break
+			end
+		end
+	end)
+	if newSlotRecord then
+		RemoteService.getEvent("SlotStateUpdate"):FireClient(player, newSlotRecord.index, newSlotRecord)
 	end
 end
 

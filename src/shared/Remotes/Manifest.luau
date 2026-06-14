@@ -77,7 +77,7 @@ local Manifest: { RemoteEntry } = {
 		name = "BalanceUpdate",
 		kind = "Event",
 		direction = "S2C",
-		payloadDesc = "pellets: number, catalysts: number",
+		payloadDesc = "pellets: number, catalysts: number, rushUses: number, timerSkipUses: number",
 	},
 	{
 		name = "OfflineIncomeDelivered",

@@ -72,7 +72,11 @@ LeaderboardService.init()
 local PrestigeService = require(ServerScriptService.Server.Services.PrestigeService)
 PrestigeService.init()
 
--- ── Post-profile-load hooks (StreakService + ContractService) ──────────────
+-- ── 15. MonetizationService ───────────────────────────────────────────────
+local MonetizationService = require(ServerScriptService.Server.Services.MonetizationService)
+MonetizationService.init()
+
+-- ── Post-profile-load hooks ────────────────────────────────────────────────
 DataService.onProfileLoaded:Connect(function(userId)
 	local player = Players:GetPlayerByUserId(userId)
 	if not player then
@@ -81,6 +85,10 @@ DataService.onProfileLoaded:Connect(function(userId)
 	local data = DataService.getProfile(userId)
 	StreakService.onLogin(player, data, os.time())
 	ContractService.refreshIfStale(player, data, os.time())
+	MonetizationService.refreshGamepasses(player, data)
+	if MonetizationService.ownsGamepass(data, "compoundArchive") then
+		MonetizationService.grantArchiveUses(player, data, os.time())
+	end
 end)
 
 -- ── 9–N. Remaining services (wired up in Phases 4–11) ─────────────────────
@@ -111,4 +119,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 7 — Prestige)")
+print("GameInit: boot complete (Phase 8 — Monetization)")

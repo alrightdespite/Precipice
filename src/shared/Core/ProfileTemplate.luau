@@ -40,6 +40,7 @@ ProfileTemplate.DEFAULT = {
 	monetization = {
 		gamepasses = {},
 		rushUses = 0,
+		timerSkipUses = 0,
 		archiveUsesByMonth = {},
 		receiptLedger = {},
 	},

@@ -41,4 +41,23 @@ return {
 
 	-- Maximum simultaneous active challenges per holder (doc §15)
 	MAX_ACTIVE_CHALLENGES = 3,
+
+	-- Gamepass IDs (doc §25) — replace with real IDs before launch
+	GAMEPASS_EXPANDED_LAB = 0, -- +2 slots (5→7)
+	GAMEPASS_EXTENDED_OFFLINE = 0, -- offline cap 12h→24h
+	GAMEPASS_COMPOUND_ARCHIVE = 0, -- one archive synthesis per month per compound
+
+	-- Developer Product IDs (doc §25) — replace with real IDs before launch
+	PRODUCT_TIMER_SKIP = 0, -- 75 Robux: instantly complete one personal slot
+	PRODUCT_CATALYST_S = 0, -- 200 Robux: 50 Catalysts
+	PRODUCT_CATALYST_L = 0, -- 500 Robux: 150 Catalysts
+	PRODUCT_RUSH_ANALYSIS = 0, -- 100 Robux: 3 Rush Analysis uses
+
+	-- Developer Product grants (doc §25)
+	PRODUCT_CATALYST_S_AMOUNT = 50,
+	PRODUCT_CATALYST_L_AMOUNT = 150,
+	PRODUCT_RUSH_USES_AMOUNT = 3,
+
+	-- Catalyst skip cost for personal slots (doc §25)
+	CATALYST_SKIP_COST = 30,
 }

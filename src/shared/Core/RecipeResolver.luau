@@ -113,12 +113,37 @@ function RecipeResolver.getLabResult(
 	}
 end
 
+-- Returns all possible result compoundIds for this pair (empty table if no recipe).
+function RecipeResolver.getResultIds(id1: string, id2: string): { string }
+	local key = pairKey(id1, id2)
+	local rids = _byPair[key]
+	if not rids then
+		return {}
+	end
+	local results = {}
+	for _, rid in ipairs(rids) do
+		results[#results + 1] = Recipes[rid].resultId
+	end
+	return results
+end
+
+-- Returns true when the pair has multiple possible outcomes (variable recipe).
+function RecipeResolver.isVariablePair(id1: string, id2: string): boolean
+	local key = pairKey(id1, id2)
+	local rids = _byPair[key]
+	return rids ~= nil and #rids > 1
+end
+
 -- Returns the exoticId if id1+id2 is a valid T6+T6 pair, nil otherwise.
 function RecipeResolver.resolveExotic(id1: string, id2: string): string?
 	local c1 = Compounds[id1]
 	local c2 = Compounds[id2]
-	if c1 == nil or c2 == nil then return nil end
-	if c1.tier ~= 6 or c2.tier ~= 6 then return nil end
+	if c1 == nil or c2 == nil then
+		return nil
+	end
+	if c1.tier ~= 6 or c2.tier ~= 6 then
+		return nil
+	end
 	return _exoticByPair[pairKey(id1, id2)]
 end
 

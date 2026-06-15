@@ -28,6 +28,12 @@
 					"$path": "src/client"
 				}
 			}
+		},
+		"StarterGui": {
+			"$className": "StarterGui",
+			"UI": {
+				"$path": "src/client/UI"
+			}
 		}
 	}
 }

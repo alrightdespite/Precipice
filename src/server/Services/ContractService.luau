@@ -7,6 +7,7 @@ local _rankService: any = nil
 local _contractPool: any = nil
 local _poolById: { [string]: any } = {}
 local _compounds: any = nil
+local _analyticsService: any = { track = function() end, Events = {} }
 
 local ContractService = {}
 
@@ -26,6 +27,9 @@ end
 
 function ContractService._setCompounds(c: any)
 	_compounds = c
+end
+function ContractService._setAnalyticsService(as: any)
+	_analyticsService = as
 end
 
 function ContractService._setContractPool(p: any)
@@ -300,6 +304,11 @@ function ContractService.claimReward(
 	end
 	slot.claimed = true
 
+	_analyticsService.track(_analyticsService.Events.CONTRACT_CLAIM or "contract_claim", {
+		userId = player.UserId,
+		templateId = slot.templateId,
+	})
+
 	fireContractUpdate(player, data)
 	return true, nil
 end
@@ -322,9 +331,11 @@ function ContractService.init()
 	if _compounds == nil then
 		_compounds = require(game:GetService("ReplicatedStorage").Shared.Data.Compounds)
 	end
+	_analyticsService = require(game:GetService("ServerScriptService").Server.Services.AnalyticsService)
 
 	local claimFn = _remoteService.getFunction("ContractClaim")
 	claimFn.OnServerInvoke = function(player: any, slotIndex: any)
+		if not _dataService.isLoaded(player.UserId) then return { ok = false, err = "session not ready" } end
 		if type(slotIndex) ~= "number" then
 			return { ok = false, err = "invalid args" }
 		end

@@ -27,6 +27,8 @@ require("specs/EventService")
 require("specs/SyndicateService")
 require("specs/ExoticService")
 require("specs/JointSynthService")
+require("specs/RemoteHandlers")
+require("specs/Phase11Hardening")
 
 print("\n=== PRECIPICE test suite ===")
 local passed = spec.run()

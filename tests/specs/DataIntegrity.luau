@@ -1,5 +1,11 @@
 -- DataIntegrity: CI guard — re-runs structural assertions and BFS reachability in Luau.
 -- Fails if src/shared/Data/ has drifted from a fresh export (H9).
+--
+-- KNOWN LIMITATION (Phase 11): This spec validates structural correctness of the
+-- loaded Data modules but does NOT verify provenance against the source xlsx.
+-- A hand-edit that preserves counts and BFS will pass undetected.
+-- Full provenance check requires: python data/gen/export_data.py --dry-run | diff src/shared/Data/
+-- Wire this in GitHub Actions CI (Phase 12 / pre-launch).
 
 local spec = require("../spec")
 local Compounds = require("../../src/shared/Data/Compounds")

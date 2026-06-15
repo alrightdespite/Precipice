@@ -12,6 +12,7 @@ local _patentService: any = nil
 local _vaultService: any = nil
 local _rankMath: any = nil
 local _economyConstants: any = nil
+local _analyticsService: any = { track = function() end, Events = {} }
 local _spawnFn: (((() -> ()) -> ())) = function(fn)
 	fn()
 end
@@ -20,6 +21,7 @@ local ExoticService = {}
 
 -- ── Injection helpers ──────────────────────────────────────────────────────
 
+function ExoticService._setAnalyticsService(as: any) _analyticsService = as end
 function ExoticService._setExoticDs(ds: any) _exoticDs = ds end
 function ExoticService._setExotics(e: any) _exotics = e end
 function ExoticService._setRemoteService(r: any) _remoteService = r end
@@ -113,7 +115,11 @@ function ExoticService.onPairCompleted(
 		partnerData.balances.catalysts += EC.PATENT_CLAIM_CATALYSTS
 		_rankService.addScore(openerPlayer, openerData, EC.PATENT_CLAIM_RANK, "claim")
 		_rankService.addScore(partnerPlayer, partnerData, EC.PATENT_CLAIM_RANK, "claim")
-		-- TODO Phase 11: fire world-first announcement via AnnouncementService
+		_analyticsService.track(_analyticsService.Events.EXOTIC_WORLD_FIRST or "exotic_world_first", {
+			exoticId = exoticId,
+			openerId = openerPlayer.UserId,
+			partnerId = partnerPlayer.UserId,
+		})
 	end
 
 	-- Step 5: Teach recipe to both.
@@ -155,6 +161,7 @@ function ExoticService.init()
 	_patentService = require(ServerScriptService.Server.Services.PatentService)
 	_vaultService = require(ServerScriptService.Server.Services.VaultService)
 	_remoteService = require(ServerScriptService.Server.Services.RemoteService)
+	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 	_spawnFn = task.spawn
 end
 

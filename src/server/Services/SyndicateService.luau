@@ -182,7 +182,13 @@ function SyndicateService.invite(player: any, targetUserId: any): (boolean, stri
 	if type(targetUserId) ~= "number" then
 		return false, "invalid args"
 	end
+	if targetUserId ~= math.floor(targetUserId) or targetUserId <= 0 or targetUserId >= 10000000000 then
+		return false, "invalid targetUserId"
+	end
 	local callerId = player.UserId
+	if targetUserId == callerId then
+		return false, "cannot invite yourself"
+	end
 	local data = _dataService.getProfile(callerId)
 	if data.syndicate == nil then return false, "not in a syndicate" end
 	local syndicateId = data.syndicate.id
@@ -393,7 +399,11 @@ function SyndicateService.rename(player: any, newName: any): (boolean, string?)
 end
 
 function SyndicateService.contributeVault(player: any, amount: any): (boolean, string?)
-	if type(amount) ~= "number" or amount <= 0 then
+	if type(amount) ~= "number" then
+		return false, "invalid amount"
+	end
+	amount = math.floor(amount)
+	if amount <= 0 then
 		return false, "invalid amount"
 	end
 	local userId = player.UserId
@@ -607,52 +617,65 @@ function SyndicateService.init()
 	_players = game:GetService("Players")
 
 	local rs = _remoteService
+	local function guard(player) return _dataService.isLoaded(player.UserId) end
 
 	rs.getFunction("SyndicateCreate").OnServerInvoke = function(player, name)
+		if not guard(player) then return nil, "session not ready" end
 		return SyndicateService.create(player, name)
 	end
 
 	rs.getFunction("SyndicateInvite").OnServerInvoke = function(player, targetUserId)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.invite(player, targetUserId)
 	end
 
 	rs.getFunction("SyndicateKick").OnServerInvoke = function(player, targetUserId)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.kick(player, targetUserId)
 	end
 
 	rs.getFunction("SyndicatePromote").OnServerInvoke = function(player, targetUserId)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.promote(player, targetUserId)
 	end
 
 	rs.getFunction("SyndicateContributeVault").OnServerInvoke = function(player, amount)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.contributeVault(player, amount)
 	end
 
 	rs.getFunction("SyndicateAcceptInvite").OnServerInvoke = function(player, syndicateId)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.acceptInvite(player, syndicateId)
 	end
 
 	rs.getFunction("SyndicateDeclineInvite").OnServerInvoke = function(player)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.declineInvite(player)
 	end
 
 	rs.getFunction("SyndicateRename").OnServerInvoke = function(player, newName)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.rename(player, newName)
 	end
 
 	rs.getFunction("SyndicatePurchaseUpgrade").OnServerInvoke = function(player, upgradeName)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.purchaseUpgrade(player, upgradeName)
 	end
 
 	rs.getFunction("SyndicateExpandCap").OnServerInvoke = function(player)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.expandMemberCap(player)
 	end
 
 	rs.getFunction("SyndicateDisband").OnServerInvoke = function(player)
+		if not guard(player) then return 0, false, "session not ready" end
 		return SyndicateService.disband(player)
 	end
 
 	rs.getFunction("SyndicateDisbandConfirm").OnServerInvoke = function(player)
+		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.disbandConfirm(player)
 	end
 end

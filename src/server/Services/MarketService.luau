@@ -18,12 +18,14 @@ local _compounds: any = nil   -- Compounds data table
 local _getPlayer: any = nil   -- fn(userId: number) -> Player?
 local _clock: any = nil       -- fn() -> number (os.time in prod)
 
+local _analyticsService: any = { track = function() end, Events = {} }
 local _listingSeq = 0 -- monotonic counter for unique listingIds within same second
 
 local MarketService = {}
 
 -- ── Injection helpers ──────────────────────────────────────────────────────
 
+function MarketService._setAnalyticsService(as: any) _analyticsService = as end
 function MarketService._setListingsDs(ds: any) _listingsDs = ds end
 function MarketService._setIndexDs(ds: any) _indexDs = ds end
 function MarketService._setPendingDs(ds: any) _pendingDs = ds end
@@ -149,6 +151,13 @@ function MarketService.createListing(
 		status = "ACTIVE",
 	}
 
+	_analyticsService.track(_analyticsService.Events.MARKET_LIST or "market_list", {
+		userId = userId,
+		compoundId = compoundId,
+		quantity = quantity,
+		price = price,
+	})
+
 	_listingsDs:SetAsync("listing:" .. listingId, record)
 
 	_indexDs:UpdateAsync("index:tier:" .. tostring(compound.tier), function(stored)
@@ -207,6 +216,11 @@ function MarketService.cancelListing(player: any, listingId: string): (boolean, 
 
 	removeFromIndex(record.tier, listingId, record.sellerId)
 
+	_analyticsService.track(_analyticsService.Events.MARKET_CANCEL or "market_cancel", {
+		userId = userId,
+		listingId = listingId,
+	})
+
 	local playerObj = _getPlayer(userId)
 	if playerObj then
 		_vaultService.fireVaultUpdate(playerObj, _dataService.getProfile(userId))
@@ -226,6 +240,9 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 	end
 	if record.status ~= "ACTIVE" then
 		return false, "already sold"
+	end
+	if record.sellerId == buyerId then
+		return false, "SELF_TRADE"
 	end
 
 	local totalCost = record.price * record.quantity
@@ -293,6 +310,13 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 			_contractService.recordProgress(player, data, "market_buy", 1)
 		end
 	end)
+
+	_analyticsService.track(_analyticsService.Events.MARKET_BUY or "market_buy", {
+		userId = buyerId,
+		listingId = listingId,
+		compoundId = record.compoundId,
+		totalCost = totalCost,
+	})
 
 	-- Step 7: remove from index, push VaultUpdate to buyer
 	removeFromIndex(record.tier, listingId, record.sellerId)
@@ -423,6 +447,7 @@ function MarketService.init()
 	_remoteService = require(ServerScriptService.Server.Services.RemoteService)
 	_rankService = require(ServerScriptService.Server.Services.RankService)
 	_contractService = require(ServerScriptService.Server.Services.ContractService)
+	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 	_getPlayer = function(userId: number) return Players:GetPlayerByUserId(userId) end
 	_clock = os.time
 

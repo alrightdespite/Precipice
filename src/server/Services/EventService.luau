@@ -14,6 +14,7 @@ local _spawnFn: (((() -> ()) -> ())) = function(fn)
 	fn()
 end
 local _clockFn: () -> number = os.time
+local _analyticsService: any = { track = function() end, Events = {} }
 
 -- ── Cache ──────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,9 @@ function EventService._setSpawnFn(fn: any)
 end
 function EventService._setClockFn(fn: any)
 	_clockFn = fn
+end
+function EventService._setAnalyticsService(as: any)
+	_analyticsService = as
 end
 
 -- ── Public API ─────────────────────────────────────────────────────────────
@@ -175,6 +179,12 @@ function EventService.awardFlux(player: any, data: any, source: string, tier: nu
 		})
 	end
 
+	_analyticsService.track(_analyticsService.Events.FLUX_EARN or "flux_earn", {
+		userId = player.UserId,
+		source = source,
+		earned = earned,
+	})
+
 	EventService.checkMilestoneDelivery(player, data, ev)
 end
 
@@ -287,6 +297,7 @@ function EventService.init()
 	_economyConstants = require(ReplicatedStorage.Shared.Config.EconomyConstants)
 	_eventCompounds = require(ReplicatedStorage.Shared.Data.EventCompounds)
 	_globalDs = DataStoreService:GetDataStore("EventGlobal")
+	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 	_spawnFn = task.spawn
 
 	-- Seed initial cache (non-fatal if no event configured yet)
@@ -324,6 +335,10 @@ function EventService.init()
 			local ok = EventService.spendFlux(player, data, compoundId, cost)
 			if ok then
 				result = { ok = true, err = nil }
+				_analyticsService.track(_analyticsService.Events.BLUEPRINT_PURCHASE or "blueprint_purchase", {
+					userId = userId,
+					compoundId = compoundId,
+				})
 			else
 				result = { ok = false, err = "insufficient Flux" }
 			end

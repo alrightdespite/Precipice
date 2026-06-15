@@ -157,6 +157,11 @@ function DataService.closeSession(player: Player)
 	DataService.onProfileReleased:Fire(userId)
 end
 
+-- Returns true if a session is active for userId.
+function DataService.isLoaded(userId: number): boolean
+	return activeSessions[userId] ~= nil
+end
+
 -- Returns profile.Data for userId. Errors if not loaded — never returns nil.
 function DataService.getProfile(userId: number): any
 	local session = activeSessions[userId]

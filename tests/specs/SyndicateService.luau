@@ -186,6 +186,31 @@ describe("SyndicateService — invite", function()
 		expect(ok).toBeFalse()
 		expect(err ~= nil).toBeTrue()
 	end)
+
+	it("float userId (non-integer): rejected", function()
+		local _ = setup()
+		createSyndicate()
+		local ok, err = SyndicateService.invite(player1, 2.5)
+		expect(ok).toBeFalse()
+		expect(err ~= nil).toBeTrue()
+	end)
+
+	it("self-invite (targetUserId == callerId): rejected", function()
+		local _ = setup()
+		createSyndicate()
+		-- player1.UserId is 1; inviting self
+		local ok, err = SyndicateService.invite(player1, 1)
+		expect(ok).toBeFalse()
+		expect(err ~= nil).toBeTrue()
+	end)
+
+	it("targetUserId at or above 10 billion: rejected", function()
+		local _ = setup()
+		createSyndicate()
+		local ok, err = SyndicateService.invite(player1, 10_000_000_000)
+		expect(ok).toBeFalse()
+		expect(err ~= nil).toBeTrue()
+	end)
 end)
 
 -- ── acceptInvite ───────────────────────────────────────────────────────────
@@ -375,6 +400,29 @@ describe("SyndicateService — contributeVault", function()
 		local record = ctx.syndicateDs:GetAsync("syndicate:" .. synId)
 		expect(record.vaultBalance).toBe(0)
 		expect(#ctx.vaultContribs).toBe(0)
+	end)
+
+	it("fractional amount: floored to integer before deducting", function()
+		local ctx = setup()
+		local synId = createSyndicate()
+		local pelletsBefore = ctx.data1.balances.pellets
+		local ok, err = SyndicateService.contributeVault(player1, 1000.9)
+		expect(ok).toBeTrue()
+		expect(err).toBeNil()
+		-- Deducts 1000 (floor of 1000.9), not 1000.9
+		expect(ctx.data1.balances.pellets).toBe(pelletsBefore - 1000)
+		local record = ctx.syndicateDs:GetAsync("syndicate:" .. synId)
+		expect(record.vaultBalance).toBe(1000)
+	end)
+
+	it("sub-integer positive amount (0.5): rejected as invalid", function()
+		local ctx = setup()
+		createSyndicate()
+		local pelletsBefore = ctx.data1.balances.pellets
+		local ok, err = SyndicateService.contributeVault(player1, 0.5)
+		expect(ok).toBeFalse()
+		expect(err ~= nil).toBeTrue()
+		expect(ctx.data1.balances.pellets).toBe(pelletsBefore)
 	end)
 end)
 

@@ -1,5 +1,7 @@
 -- JointSynthService: EMPTY→STAGED→RUNNING→COMPLETE state machine for joint synthesis.
 -- No Roblox globals at module level. Injection pattern.
+-- DS budget (§DS-01): tick() fires ONE UpdateAsync per active syndicate, not per slot.
+-- Worst case: 4 syndicates × 12 ticks/min = 48 writes/min, well inside 140/min budget.
 
 -- ── Injected state ─────────────────────────────────────────────────────────
 
@@ -18,6 +20,7 @@ local _economyConstants: any = nil
 local _compounds: any = nil
 local _rankMath: any = nil
 local _players: any = nil
+local _analyticsService: any = { track = function() end, Events = {} }
 local _spawnFn: (((() -> ()) -> ())) = function(fn)
 	fn()
 end
@@ -46,8 +49,10 @@ function JointSynthService._setEconomyConstants(s: any) _economyConstants = s en
 function JointSynthService._setCompounds(s: any) _compounds = s end
 function JointSynthService._setRankMath(s: any) _rankMath = s end
 function JointSynthService._setPlayers(s: any) _players = s end
+function JointSynthService._setAnalyticsService(as: any) _analyticsService = as end
 function JointSynthService._setSpawnFn(fn: any) _spawnFn = fn end
 function JointSynthService._resetActiveSyndicates() _activeSyndicates = {} end
+function JointSynthService._resetLastTick() _lastTick = {} end
 
 -- ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -467,6 +472,13 @@ function JointSynthService.complete(syndicateId: string, slotKey: string, now: n
 		awardMember(partnerPlayer, partnerData, partnerId)
 	end
 
+	_analyticsService.track(_analyticsService.Events.JOINT_COMPLETE or "joint_complete", {
+		syndicateId = syndicateId,
+		resultId = resultId,
+		openerId = openerId,
+		partnerId = partnerId,
+	})
+
 	-- Clear slot
 	updateSyndicateSlot(syndicateId, slotKey, nil)
 
@@ -503,27 +515,41 @@ function JointSynthService.tick(syndicateId: string, now: number)
 	if elapsed <= 0 then return end
 
 	local hasActive = false
+	local completingSlots: { string } = {}
+	local hasStillRunning = false
 
 	for slotKey, slot in pairs(record.jointSlots or {}) do
 		if slot and slot.state == "RUNNING" then
 			hasActive = true
-			local newWork = slot.workRemaining - elapsed
-			if newWork <= 0 then
-				JointSynthService.complete(syndicateId, slotKey, now)
+			if slot.workRemaining - elapsed <= 0 then
+				table.insert(completingSlots, slotKey)
 			else
-				-- Persist updated workRemaining
-				_syndicateDs:UpdateAsync("syndicate:" .. syndicateId, function(rec)
-					if rec == nil then return nil end
-					local s = rec.jointSlots and rec.jointSlots[slotKey]
-					if s and s.state == "RUNNING" then
-						s.workRemaining = math.max(0, s.workRemaining - elapsed)
-					end
-					return rec
-				end)
+				hasStillRunning = true
 			end
 		elseif slot and slot.state == "STAGED" then
 			hasActive = true
 		end
+	end
+
+	-- §DS-01: one UpdateAsync per syndicate covers ALL still-running slots.
+	-- Previously this was one write per slot (N_slots writes); now N_syndicates writes.
+	if hasStillRunning then
+		_syndicateDs:UpdateAsync("syndicate:" .. syndicateId, function(rec)
+			if rec == nil then return nil end
+			for _, slot in pairs(rec.jointSlots or {}) do
+				if slot and slot.state == "RUNNING" then
+					local newWork = slot.workRemaining - elapsed
+					if newWork > 0 then
+						slot.workRemaining = newWork
+					end
+				end
+			end
+			return rec
+		end)
+	end
+
+	for _, slotKey in ipairs(completingSlots) do
+		JointSynthService.complete(syndicateId, slotKey, now)
 	end
 
 	if not hasActive then
@@ -637,19 +663,23 @@ function JointSynthService.init()
 	_rankMath = require(ReplicatedStorage.Shared.Core.RankMath)
 	_compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 	_players = game:GetService("Players")
+	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 	_spawnFn = task.spawn
 
 	local rs = _remoteService
 
 	rs.getFunction("JointStage").OnServerInvoke = function(player, slotIndex, myCompound, partnerCompound, async, accelerated)
+		if not _dataService.isLoaded(player.UserId) then return false, "session not ready" end
 		return JointSynthService.stage(player, slotIndex, myCompound, partnerCompound, async, accelerated)
 	end
 
 	rs.getFunction("JointContribute").OnServerInvoke = function(player, slotIndex, compound)
+		if not _dataService.isLoaded(player.UserId) then return false, "session not ready" end
 		return JointSynthService.contribute(player, slotIndex, compound)
 	end
 
 	rs.getFunction("JointCancel").OnServerInvoke = function(player, slotIndex)
+		if not _dataService.isLoaded(player.UserId) then return false, "session not ready" end
 		return JointSynthService.cancel(player, slotIndex)
 	end
 

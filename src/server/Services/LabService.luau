@@ -11,6 +11,7 @@ local SeedService = require(ServerScriptService.Server.Services.SeedService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
 local RankService = require(ServerScriptService.Server.Services.RankService)
 local ContractService = require(ServerScriptService.Server.Services.ContractService)
+local AnalyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
 local LabAnalysis = require(ReplicatedStorage.Shared.Core.LabAnalysis)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
@@ -156,7 +157,16 @@ local function wireRemotes()
 
 		if result and result.status == "discovery" then
 			RemoteService.getEvent("LabDiscovery"):FireClient(player, result.resultId)
+			AnalyticsService.track(AnalyticsService.Events.LAB_DISCOVERY, {
+				userId = userId,
+				resultId = result.resultId,
+			})
 		end
+
+		AnalyticsService.track(AnalyticsService.Events.LAB_ANALYZE, {
+			userId = userId,
+			status = result and result.status or "error",
+		})
 
 		return result, nil
 	end
@@ -172,6 +182,13 @@ function LabService.init()
 		_loaded[userId] = nil
 	end)
 	wireRemotes()
+
+	RemoteService.getFunction("FormulaLogRequest").OnServerInvoke = function(player: Player)
+		local userId = player.UserId
+		if not _loaded[userId] then return {} end
+		local data = DataService.getProfile(userId)
+		return data.formulaLog
+	end
 end
 
 return LabService

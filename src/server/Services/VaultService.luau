@@ -64,6 +64,7 @@ end
 local function wireRemotes()
 	local sellFn = RemoteService.getFunction("VaultInstantSell")
 	sellFn.OnServerInvoke = function(player: Player, compoundId: any, quantity: any)
+		if not DataService.isLoaded(player.UserId) then return 0, "session not ready" end
 		if type(compoundId) ~= "string" or type(quantity) ~= "number" then
 			return 0, "invalid args"
 		end

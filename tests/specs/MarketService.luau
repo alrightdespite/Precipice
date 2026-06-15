@@ -514,3 +514,29 @@ describe("MarketService — runExpirySweep", function()
 		expect(stillActive.status).toBe("ACTIVE")
 	end)
 end)
+
+-- ── self-trade guard ───────────────────────────────────────────────────────
+
+describe("MarketService — buyListing self-trade rejection", function()
+	it("seller cannot buy their own listing: returns SELF_TRADE error", function()
+		local seller = { UserId = 7001 }
+		local sellerData = defaultData()
+		sellerData.vault.compounds["T2_01"] = 5
+		sellerData.balances.pellets = 10000
+
+		local listingsDs = setup({ [7001] = sellerData }, { [7001] = seller })
+
+		local listingId = MarketService.createListing(seller, "T2_01", 5, 100)
+		local record = listingsDs:GetAsync("listing:" .. listingId)
+		expect(record.status).toBe("ACTIVE")
+
+		-- Seller tries to buy their own listing
+		local ok, err = MarketService.buyListing(seller, listingId)
+		expect(ok).toBeFalse()
+		expect(err).toBe("SELF_TRADE")
+
+		-- Listing still ACTIVE; no pellet debit occurred beyond the listing fee
+		local afterRecord = listingsDs:GetAsync("listing:" .. listingId)
+		expect(afterRecord.status).toBe("ACTIVE")
+	end)
+end)

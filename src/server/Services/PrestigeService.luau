@@ -16,11 +16,13 @@ local _economyConstants: any = nil
 local _profileTemplate: any = nil
 local _jointService: any = nil
 local _syndicateService: any = nil
+local _analyticsService: any = { track = function() end, Events = {} }
 
 local PrestigeService = {}
 
 -- ── Injection helpers ──────────────────────────────────────────────────────
 
+function PrestigeService._setAnalyticsService(as: any) _analyticsService = as end
 function PrestigeService._setDataService(ds: any) _dataService = ds end
 function PrestigeService._setVaultService(vs: any) _vaultService = vs end
 function PrestigeService._setSlotService(ss: any) _slotService = ss end
@@ -181,6 +183,7 @@ function PrestigeService.init()
 	_marketService = require(ServerScriptService.Server.Services.MarketService)
 	_patentService = require(ServerScriptService.Server.Services.PatentService)
 	_remoteService = require(ServerScriptService.Server.Services.RemoteService)
+	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 	_economyConstants = require(ReplicatedStorage.Shared.Config.EconomyConstants)
 	_profileTemplate = require(ReplicatedStorage.Shared.Core.ProfileTemplate)
 
@@ -216,6 +219,11 @@ function PrestigeService.init()
 			local freshData = _dataService.getProfile(player.UserId)
 			_rankService.addScore(player, freshData, 0, "synthesis")
 		end
+
+		_analyticsService.track(_analyticsService.Events.PRESTIGE or "prestige", {
+			userId = player.UserId,
+			level = _dataService.getProfile(player.UserId).prestige.level,
+		})
 
 		return { ok = true }
 	end

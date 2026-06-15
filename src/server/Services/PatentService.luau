@@ -13,12 +13,14 @@ local _compounds: any = nil -- Compounds data table (for sweep iteration)
 local _pw: any = nil -- PatentWindow module
 local _eventCompounds: any = nil -- EventCompounds data table
 local _eventService: any = nil -- EventService (for event patent guards)
+local _analyticsService: any = { track = function() end, Events = {} }
 
 -- ── Module ─────────────────────────────────────────────────────────────────
 
 local PatentService = {}
 
 -- Test injection helpers. Production uses init().
+function PatentService._setAnalyticsService(as: any) _analyticsService = as end
 function PatentService._setDs(ds: any)
 	_ds = ds
 end
@@ -174,7 +176,10 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 	if _rs then
 		if didClaim then
 			_rs.getEvent("PatentClaim"):FireClient(player, compoundId, userId, true)
-			-- TODO Phase 10: AnnouncementService.announce() for world-first T4+
+			_analyticsService.track(_analyticsService.Events.PATENT_CLAIM or "patent_claim", {
+				userId = userId,
+				compoundId = compoundId,
+			})
 		elseif challengeOpened then
 			_rs.getEvent("PatentChallengeAlert"):FireClient(player, compoundId, challengeWindowEnd)
 		end
@@ -294,6 +299,7 @@ function PatentService.init()
 	_compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 	_scs = require(ServerScriptService.Server.Services.SynthCountService)
 	_rs = require(ServerScriptService.Server.Services.RemoteService)
+	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 
 	-- Wire PatentQuery C2S remote
 	local patentQueryFn = _rs.getFunction("PatentQuery")

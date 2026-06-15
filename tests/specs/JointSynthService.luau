@@ -477,3 +477,73 @@ describe("JointSynthService — test 27: getRunningSlotInputs returns T6 slot fo
 		expect(inputs[1].workRemainingSeconds > 0).toBeTrue()
 	end)
 end)
+
+-- ── Budget test (§DS-01) ──────────────────────────────────────────────────────
+
+describe("JointSynthService — test 28: DS budget — 4 syndicates × 3 running slots → 4 writes/tick", function()
+	it("tick produces exactly 4 UpdateAsync calls, not 12", function()
+		-- Reset module state from prior tests
+		setup()
+		JointSynthService._resetLastTick()
+
+		local baseDs = MockDataStore.new()
+		local updateCount = 0
+		local countingDs = {
+			GetAsync = function(_, key) return baseDs:GetAsync(key) end,
+			SetAsync = function(_, key, val) return baseDs:SetAsync(key, val) end,
+			UpdateAsync = function(_, key, fn)
+				updateCount += 1
+				return baseDs:UpdateAsync(key, fn)
+			end,
+			RemoveAsync = function(_, key) return baseDs:RemoveAsync(key) end,
+		}
+
+		local budgetSynIds = { "syn_b1", "syn_b2", "syn_b3", "syn_b4" }
+		local NOW_B = 1700100000
+
+		for _, synId in ipairs(budgetSynIds) do
+			baseDs:SetAsync("syndicate:" .. synId, {
+				id = synId,
+				name = synId,
+				founderId = 1,
+				members = { [1] = "Founder", [2] = "Member" },
+				vaultBalance = 0,
+				upgrades = {
+					thirdSlot = true,
+					crest = false,
+					animatedCrest = false,
+					broadcastCrest = false,
+					memberCapExpanded = false,
+				},
+				asyncCooldowns = {},
+				jointSlots = {
+					["1"] = { state = "RUNNING", openerId = 1, partnerId = 2, openerCompound = "T4_01", partnerCompound = "T5_01", resultId = "T6_01", isNatural = true, isAsync = false, workRemaining = 3600, matchedAt = NOW_B - 1, stagedAt = NOW_B - 2, completedAt = nil, expiresAt = nil },
+					["2"] = { state = "RUNNING", openerId = 1, partnerId = 2, openerCompound = "T4_01", partnerCompound = "T5_01", resultId = "T6_01", isNatural = true, isAsync = false, workRemaining = 3600, matchedAt = NOW_B - 1, stagedAt = NOW_B - 2, completedAt = nil, expiresAt = nil },
+					["3"] = { state = "RUNNING", openerId = 1, partnerId = 2, openerCompound = "T4_01", partnerCompound = "T5_01", resultId = "T6_01", isNatural = true, isAsync = false, workRemaining = 3600, matchedAt = NOW_B - 1, stagedAt = NOW_B - 2, completedAt = nil, expiresAt = nil },
+				},
+				createdAt = NOW_B,
+			})
+		end
+
+		JointSynthService._setSyndicateDs(countingDs)
+		JointSynthService._setSyndicateService({
+			getRecord = function(syndicateId: string)
+				return baseDs:GetAsync("syndicate:" .. syndicateId)
+			end,
+		})
+
+		-- First tick: initializes _lastTick, elapsed=0, no writes
+		for _, synId in ipairs(budgetSynIds) do
+			JointSynthService.tick(synId, NOW_B)
+		end
+		local priorCount = updateCount
+
+		-- Second tick: elapsed=5s, 3 running slots each still running (3600-5=3595>0)
+		for _, synId in ipairs(budgetSynIds) do
+			JointSynthService.tick(synId, NOW_B + 5)
+		end
+
+		-- Must be exactly 4 (one per syndicate), not 12 (one per slot)
+		expect(updateCount - priorCount).toBe(4)
+	end)
+end)

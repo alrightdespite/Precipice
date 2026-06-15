@@ -18,7 +18,9 @@ local SlotMachine = require(ReplicatedStorage.Shared.Core.SlotMachine)
 local OfflineIncome = require(ReplicatedStorage.Shared.Core.OfflineIncome)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
+local EventCompounds = require(ReplicatedStorage.Shared.Data.EventCompounds)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local AnalyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 
 local OFFLINE_RATE = 0.8 -- E1: offline work rate
 local TICK_INTERVAL = 1 -- seconds between server ticks
@@ -248,6 +250,15 @@ local function wireRemotes()
 				return
 			end
 
+			-- Event compound blueprint gate (§4 hardening)
+			if EventCompounds[resultId] then
+				local blueprints = data.blueprints or {}
+				if not blueprints[resultId] then
+					failErr = "NO_BLUEPRINT"
+					return
+				end
+			end
+
 			-- Deduct inputs from vault (handles same-compound case)
 			local required: { [string]: number } = {}
 			required[input1] = (required[input1] or 0) + 1
@@ -372,11 +383,13 @@ local function wireRemotes()
 					local fluxSource = if compound and compound.tier == 1 then "extraction" else "synthesis"
 					_eventService.awardFlux(player, data, fluxSource, compound and compound.tier, os.time())
 				end
+				AnalyticsService.track(AnalyticsService.Events.SYNTHESIS_NATURAL, {
+					userId = player.UserId,
+					compoundId = compoundId,
+					tier = Compounds[compoundId] and Compounds[compoundId].tier or 0,
+				})
 			end
 			PatentService.recordNaturalSynthesis(player, compoundId, data)
-			-- TODO Phase 9b: validate event compound access (blueprintAccess or archiveAccess)
-			-- EventService.canSynthesizeCompound(data, compoundId) should gate this.
-			-- For now, event compounds can be started by anyone with inputs (no gate).
 			-- Contract progress counts for all reveals (natural and non-natural per §19)
 			local revealTier = Compounds[compoundId] and Compounds[compoundId].tier or 0
 			ContractService.recordProgress(player, data, "synthesis_t" .. revealTier, 1)
@@ -465,6 +478,11 @@ local function wireRemotes()
 		if newSlotRecord then
 			fireSlotUpdate(player, newSlotRecord)
 		end
+		AnalyticsService.track(AnalyticsService.Events.SYNTHESIS_SKIP, {
+			userId = userId,
+			skipType = skipType,
+			slotIndex = slotIndex,
+		})
 		local skipData = DataService.getProfile(userId)
 		RemoteService.getEvent("BalanceUpdate"):FireClient(
 			player,

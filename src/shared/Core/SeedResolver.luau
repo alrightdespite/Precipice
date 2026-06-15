@@ -45,16 +45,14 @@ end
 -- Returns ISO week number for a given Unix timestamp (UTC).
 -- Uses the ISO 8601 definition: week 1 is the week containing the first Thursday of the year.
 function SeedResolver.getCurrentWeekNumber(unixTime: number): number
-	-- Day of week: 0=Sun ... 6=Sat. ISO: 1=Mon ... 7=Sun.
 	local days = math.floor(unixTime / 86400)
-	local dow = (days + 4) % 7 -- 0=Mon .. 6=Sun (Thursday=3)
-	-- Nearest Thursday: this week's Thursday
+	local dow = (days + 3) % 7 -- 0=Mon .. 6=Sun (Thursday=3); Jan 1 1970 was Thursday → (0+3)%7=3 ✓
+	-- Thursday of the ISO week containing this day
 	local thursday = days - dow + 3
-	-- January 1 of the year of that Thursday
+	-- Find Jan 1 of the year that Thursday falls in
 	local year = 1970
 	local yearStart = 0
-	-- Compute year and yearStart for the Thursday day count
-	-- (Simplified; accurate for years 1970–2100)
+	-- (Accurate for years 1970–2100)
 	while true do
 		local daysInYear = if (year % 4 == 0 and (year % 100 ~= 0 or year % 400 == 0)) then 366 else 365
 		if yearStart + daysInYear > thursday then
@@ -63,9 +61,10 @@ function SeedResolver.getCurrentWeekNumber(unixTime: number): number
 		yearStart = yearStart + daysInYear
 		year = year + 1
 	end
-	local jan1Dow = (yearStart + 4) % 7 -- 0=Mon
-	-- Week number: how many weeks from Jan 1 Monday to Thursday
-	local weekNum = math.floor((thursday - yearStart - (0 - jan1Dow) % 7) / 7) + 1
+	local jan1Dow = (yearStart + 3) % 7 -- 0=Mon, same mapping as dow above
+	-- Week 1 Thursday ordinal within year = (3 - jan1Dow) % 7
+	-- weekNum = floor((thursday_ordinal - week1_thursday_ordinal) / 7) + 1
+	local weekNum = math.floor((thursday - yearStart - (3 - jan1Dow) % 7) / 7) + 1
 	return weekNum
 end
 

@@ -37,7 +37,7 @@ Phase 12 — World, VFX, polish (map build, reveal VFX, cosmetics, mobile UI pas
 
 ## Known issues
 
-- `SeedResolver.getCurrentWeekNumber` may be off by one week in some edge cases (ISO week boundary formula). Seeds change at consistent intervals so gameplay is unaffected, but the computed week number may not match ISO 8601 exactly.
+None.
 
 ## Open questions
 

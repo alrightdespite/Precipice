@@ -205,13 +205,6 @@ function UIController.init(): typeof(UIController)
 		end
 	end)
 
-	-- StateController.Changed → open Home when loaded
-	StateController.Changed:Connect(function(patch)
-		if patch.loaded == true and not (_current ~= "Loading" and _current ~= nil) then
-			UIController.openScreen("Home")
-		end
-	end)
-
 	return UIController
 end
 

@@ -161,7 +161,7 @@ end
 local SynthesizeScreen = {}
 local _scope = nil
 
-function SynthesizeScreen.open()
+function SynthesizeScreen.open(uiController)
 	if _scope then
 		return
 	end
@@ -371,6 +371,23 @@ function SynthesizeScreen.open()
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
+			scope:New("TextButton")({
+				Name = "CloseBtn",
+				Size = UDim2.fromOffset(36, 36),
+				AnchorPoint = Vector2.new(1, 0),
+				Position = UDim2.new(1, -8, 0, 8),
+				BackgroundTransparency = 1,
+				Text = "✕",
+				TextColor3 = Theme.Colors.TextSecondary,
+				FontFace = Theme.Font.Header,
+				TextSize = 20,
+				ZIndex = 20,
+				[OnEvent("Activated")] = function()
+					if uiController then
+						uiController.openScreen("Home")
+					end
+				end,
+			}),
 			-- Header
 			scope:New("Frame")({
 				Name = "Header",

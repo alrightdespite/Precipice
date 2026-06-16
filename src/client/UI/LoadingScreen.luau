@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Theme = require(script.Parent.Theme)
@@ -16,6 +17,7 @@ local TAGLINES = {
 local LoadingScreen = {}
 local _scope = nil
 local _progressValue = nil
+local _bgRef = nil
 local _cycling = false
 
 function LoadingScreen.open()
@@ -66,20 +68,12 @@ function LoadingScreen.open()
 	end
 	task.delay(3, cycleFn)
 
-	scope:New("ScreenGui")({
-		Name = "LoadingScreen",
-		Enabled = true,
-		ResetOnSpawn = false,
-		DisplayOrder = 100,
-		Parent = Players.LocalPlayer.PlayerGui,
+	local bgFrame = scope:New("Frame")({
+		Name = "Bg",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Theme.Colors.Background,
+		BorderSizePixel = 0,
 		[Children] = {
-			-- Background
-			scope:New("Frame")({
-				Name = "Bg",
-				Size = UDim2.fromScale(1, 1),
-				BackgroundColor3 = Theme.Colors.Background,
-				BorderSizePixel = 0,
-				[Children] = {
 					-- Centered column
 					scope:New("Frame")({
 						Name = "Center",
@@ -156,17 +150,33 @@ function LoadingScreen.open()
 						Visible = showTimeout,
 					}),
 				},
-			}),
-		},
+			})
+	_bgRef = bgFrame
+	scope:New("ScreenGui")({
+		Name = "LoadingScreen",
+		Enabled = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 100,
+		Parent = Players.LocalPlayer.PlayerGui,
+		[Children] = { bgFrame },
 	})
 end
 
 function LoadingScreen.close()
 	_cycling = false
-	if _scope then
-		doCleanup(_scope)
-		_scope = nil
-		_progressValue = nil
+	local bg = _bgRef
+	local scopeToClean = _scope
+	_bgRef = nil
+	_scope = nil
+	_progressValue = nil
+	if bg and bg.Parent then
+		local tween = TweenService:Create(bg, TweenInfo.new(0.3, Enum.EasingStyle.Linear), { BackgroundTransparency = 1 })
+		tween:Play()
+		tween.Completed:Connect(function()
+			doCleanup(scopeToClean)
+		end)
+	else
+		doCleanup(scopeToClean)
 	end
 end
 

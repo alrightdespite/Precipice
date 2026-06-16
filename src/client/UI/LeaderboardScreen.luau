@@ -17,7 +17,7 @@ local TAB_LABELS = { sprint = "Weekly Sprint", chief = "Chief's Board" }
 local LeaderboardScreen = {}
 local _scope = nil
 
-function LeaderboardScreen.open()
+function LeaderboardScreen.open(uiController)
 	if _scope then
 		return
 	end
@@ -246,6 +246,23 @@ function LeaderboardScreen.open()
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
+			scope:New("TextButton")({
+				Name = "CloseBtn",
+				Size = UDim2.fromOffset(36, 36),
+				AnchorPoint = Vector2.new(1, 0),
+				Position = UDim2.new(1, -8, 0, 8),
+				BackgroundTransparency = 1,
+				Text = "✕",
+				TextColor3 = Theme.Colors.TextSecondary,
+				FontFace = Theme.Font.Header,
+				TextSize = 20,
+				ZIndex = 20,
+				[OnEvent("Activated")] = function()
+					if uiController then
+						uiController.openScreen("Home")
+					end
+				end,
+			}),
 			scope:New("Frame")({
 				Name = "Header",
 				Size = UDim2.new(1, 0, 0, 56),

@@ -677,25 +677,56 @@ function HomeScreen.open(uiController)
 				},
 			}),
 			makeOfflineCard(scope, offlineIncomeValue),
-			-- Slot scroll panel
-			scope:New("ScrollingFrame")({
-				Name = "SlotPanel",
-				Size = UDim2.new(1, -24, 1, -(topPad + 100)),
-				Position = UDim2.new(0, 12, 0, topPad),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				ScrollBarThickness = 0,
-				AutomaticCanvasSize = Enum.AutomaticSize.Y,
-				CanvasSize = UDim2.fromScale(0, 0),
-				[Children] = {
-					scope:New("UIListLayout")({
-						SortOrder = Enum.SortOrder.LayoutOrder,
-						FillDirection = Enum.FillDirection.Vertical,
-						Padding = UDim.new(0, 6),
+			-- Slot panel toggle
+			(function()
+				local slotPanelVisible = scope:Value(true)
+				return {
+					scope:New("TextButton")({
+						Name = "SlotToggle",
+						Size = UDim2.new(0, 88, 0, 28),
+						AnchorPoint = Vector2.new(1, 1),
+						Position = UDim2.new(1, -12, 1, -220),
+						BackgroundColor3 = Theme.Colors.Surface,
+						BorderSizePixel = 0,
+						Text = scope:Computed(function(use)
+							return use(slotPanelVisible) and "Hide" or "Show Slots"
+						end),
+						TextColor3 = Theme.Colors.TextPrimary,
+						FontFace = Theme.Font.Label,
+						TextSize = 13,
+						ZIndex = 5,
+						[Children] = {
+							scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+						},
+						[OnEvent("Activated")] = function()
+							slotPanelVisible:set(not peek(slotPanelVisible))
+						end,
 					}),
-					table.unpack(slotCards),
-				},
-			}),
+					-- Slot scroll panel
+					scope:New("ScrollingFrame")({
+						Name = "SlotPanel",
+						Size = UDim2.new(1, -24, 0, 200),
+						AnchorPoint = Vector2.new(0, 1),
+						Position = UDim2.new(0, 12, 1, -12),
+						BackgroundTransparency = 1,
+						BorderSizePixel = 0,
+						ScrollBarThickness = 0,
+						AutomaticCanvasSize = Enum.AutomaticSize.Y,
+						CanvasSize = UDim2.fromScale(0, 0),
+						Visible = scope:Computed(function(use)
+							return use(slotPanelVisible)
+						end),
+						[Children] = {
+							scope:New("UIListLayout")({
+								SortOrder = Enum.SortOrder.LayoutOrder,
+								FillDirection = Enum.FillDirection.Vertical,
+								Padding = UDim.new(0, 6),
+							}),
+							table.unpack(slotCards),
+						},
+					}),
+				}
+			end)(),
 			makeHintBar(scope, hintValue),
 			makeBottomNav(scope, uiController),
 		},

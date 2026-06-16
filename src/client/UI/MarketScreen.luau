@@ -12,8 +12,12 @@ local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
 local function formatNum(n: number): string
-	if n >= 1000000 then return string.format("%.1fM", n / 1000000) end
-	if n >= 1000 then return string.format("%.1fK", n / 1000) end
+	if n >= 1000000 then
+		return string.format("%.1fM", n / 1000000)
+	end
+	if n >= 1000 then
+		return string.format("%.1fK", n / 1000)
+	end
 	return tostring(math.floor(n))
 end
 
@@ -24,7 +28,9 @@ local MarketScreen = {}
 local _scope = nil
 
 function MarketScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 
@@ -44,7 +50,9 @@ function MarketScreen.open()
 	local feePreview = scope:Computed(function(use)
 		local price = tonumber(use(modalPrice)) or 0
 		local qty = tonumber(use(modalQty)) or 0
-		if price <= 0 or qty <= 0 then return "" end
+		if price <= 0 or qty <= 0 then
+			return ""
+		end
 		local fee = math.floor(price * qty * 0.01)
 		local receive = math.floor(price * qty * 0.95)
 		return string.format("Fee: %s ◈ · You receive: %s ◈", formatNum(fee), formatNum(receive))
@@ -122,7 +130,9 @@ function MarketScreen.open()
 								task.spawn(function()
 									if isMine then
 										local ok, err = MarketController.cancelListing(entry.listingId)
-										if not ok then statusMsg:set(tostring(err)) end
+										if not ok then
+											statusMsg:set(tostring(err))
+										end
 									else
 										statusLabel:set("…")
 										local ok, err = MarketController.buyListing(entry.listingId)
@@ -331,7 +341,9 @@ function MarketScreen.open()
 									local compound = peek(modalCompound)
 									local qty = tonumber(peek(modalQty))
 									local price = tonumber(peek(modalPrice))
-									if not compound or compound == "" or not qty or not price then return end
+									if not compound or compound == "" or not qty or not price then
+										return
+									end
 									task.spawn(function()
 										local ok, err = MarketController.createListing(compound, qty, price)
 										if ok then

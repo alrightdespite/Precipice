@@ -149,11 +149,9 @@ local function wireS2C()
 	end)
 
 	-- RankUpdate
-	_remotes["RankUpdate"].OnClientEvent:Connect(
-		function(currentRun: number, lifetime: number, title: string)
-			StateController.set({ rank = { currentRun = currentRun, lifetime = lifetime, title = title } })
-		end
-	)
+	_remotes["RankUpdate"].OnClientEvent:Connect(function(currentRun: number, lifetime: number, title: string)
+		StateController.set({ rank = { currentRun = currentRun, lifetime = lifetime, title = title } })
+	end)
 
 	-- ContractUpdate
 	_remotes["ContractUpdate"].OnClientEvent:Connect(function(contracts: any)

@@ -59,14 +59,14 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 
 	local bgColor = scope:Computed(function(use)
 		local st = use(slotState)
-		return (st == "RUNNING" or st == "DONE" or st == "REVEALING")
-				and Theme.Colors.SurfaceRaised
-			or Theme.Colors.Surface
+		return (st == "RUNNING" or st == "DONE" or st == "REVEALING") and Theme.Colors.SurfaceRaised or Theme.Colors.Surface
 	end)
 
 	local accentColor = scope:Computed(function(use)
 		local slot = use(slotComputed)
-		if slot.state == "EMPTY" then return Theme.Colors.Surface end
+		if slot.state == "EMPTY" then
+			return Theme.Colors.Surface
+		end
 		local tier = 1
 		if slot.compoundId then
 			-- Tier lookup: derive from compound data if available (Phase 12C wires compounds)
@@ -109,7 +109,9 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 	end)
 
 	local showSkip = scope:Computed(function(use)
-		if use(slotState) ~= "RUNNING" then return false end
+		if use(slotState) ~= "RUNNING" then
+			return false
+		end
 		local uses = use(timerSkipUsesValue)
 		return uses > 0
 	end)
@@ -117,9 +119,15 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 	-- Action button label
 	local actionLabel = scope:Computed(function(use)
 		local st = use(slotState)
-		if st == "EMPTY" then return "Start" end
-		if st == "RUNNING" then return "Skip" end
-		if st == "DONE" or st == "REVEALING" then return "Reveal" end
+		if st == "EMPTY" then
+			return "Start"
+		end
+		if st == "RUNNING" then
+			return "Skip"
+		end
+		if st == "DONE" or st == "REVEALING" then
+			return "Reveal"
+		end
 		return "—"
 	end)
 
@@ -128,7 +136,9 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		local st = slot.state
 		if st == "EMPTY" then
 			-- Phase 12C: open slot picker. For now open Synthesize screen.
-			if uiController then uiController.openScreen("Lab") end
+			if uiController then
+				uiController.openScreen("Lab")
+			end
 		elseif st == "RUNNING" then
 			SlotController.skip(slotIndex, "timer")
 		elseif st == "DONE" or st == "REVEALING" then
@@ -213,15 +223,21 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 				Position = UDim2.new(1, -48, 0.5, -22),
 				BackgroundColor3 = scope:Computed(function(use)
 					local st = use(slotState)
-					if st == "DONE" or st == "REVEALING" then return Theme.Colors.Success end
-					if st == "RUNNING" and use(showSkip) then return Theme.Colors.Warning end
+					if st == "DONE" or st == "REVEALING" then
+						return Theme.Colors.Success
+					end
+					if st == "RUNNING" and use(showSkip) then
+						return Theme.Colors.Warning
+					end
 					return Theme.Colors.Accent
 				end),
 				BorderSizePixel = 0,
 				Text = "",
 				Visible = scope:Computed(function(use)
 					local st = use(slotState)
-					if st == "RUNNING" then return use(showSkip) end
+					if st == "RUNNING" then
+						return use(showSkip)
+					end
 					return true
 				end),
 				[Children] = {
@@ -348,8 +364,12 @@ local function makeBottomNav(scope, uiController)
 			[OnEvent("Activated")] = function()
 				if uiController then
 					local target = name
-					if target == "Lab" then target = "Synthesize" end
-					if target == "Log" then target = "FormulaLog" end
+					if target == "Lab" then
+						target = "Synthesize"
+					end
+					if target == "Log" then
+						target = "FormulaLog"
+					end
 					if target == "More" then
 						uiController.openDrawer()
 						return
@@ -419,7 +439,9 @@ local function makeHintBar(scope, hintValue)
 				TextSize = 14,
 				[OnEvent("Activated")] = function()
 					local h = peek(hintValue)
-					if h then HintController.dismiss(h.id) end
+					if h then
+						HintController.dismiss(h.id)
+					end
 				end,
 			}),
 		},
@@ -442,7 +464,9 @@ local function makeMarquee(scope, announcementsValue)
 	-- Watch for new announcements and run marquee tween
 	local activeTween = nil
 	table.insert(scope, function()
-		if activeTween then activeTween:Cancel() end
+		if activeTween then
+			activeTween:Cancel()
+		end
 	end)
 
 	local obs = scope:Observer(announcementsValue)
@@ -450,8 +474,12 @@ local function makeMarquee(scope, announcementsValue)
 		scope,
 		obs:onChange(function()
 			local label = peek(marqueeRef)
-			if not label then return end
-			if activeTween then activeTween:Cancel() end
+			if not label then
+				return
+			end
+			if activeTween then
+				activeTween:Cancel()
+			end
 			label.Position = UDim2.new(1, 10, 0, 0)
 			activeTween = TweenService:Create(label, TweenInfo.new(6, Enum.EasingStyle.Linear), {
 				Position = UDim2.new(-1, -10, 0, 0),
@@ -493,7 +521,9 @@ local function makeOfflineCard(scope, offlineIncomeValue)
 
 	local amountText = scope:Computed(function(use)
 		local oi = use(offlineIncomeValue)
-		if not oi then return "" end
+		if not oi then
+			return ""
+		end
 		return "While you were away: +" .. formatNum(oi.amount) .. " Pellets"
 	end)
 
@@ -544,7 +574,9 @@ local HomeScreen = {}
 local _scope = nil
 
 function HomeScreen.open(uiController)
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
@@ -565,12 +597,24 @@ function HomeScreen.open(uiController)
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.balance ~= nil then balanceValue:set(patch.balance) end
-			if patch.slots ~= nil then slotsValue:set(patch.slots) end
-			if patch.rank ~= nil then rankValue:set(patch.rank) end
-			if patch.announcements ~= nil then announcementsValue:set(patch.announcements) end
-			if patch.offlineIncome ~= nil then offlineIncomeValue:set(patch.offlineIncome) end
-			if patch.hints ~= nil then hintValue:set(HintController.getActiveHint()) end
+			if patch.balance ~= nil then
+				balanceValue:set(patch.balance)
+			end
+			if patch.slots ~= nil then
+				slotsValue:set(patch.slots)
+			end
+			if patch.rank ~= nil then
+				rankValue:set(patch.rank)
+			end
+			if patch.announcements ~= nil then
+				announcementsValue:set(patch.announcements)
+			end
+			if patch.offlineIncome ~= nil then
+				offlineIncomeValue:set(patch.offlineIncome)
+			end
+			if patch.hints ~= nil then
+				hintValue:set(HintController.getActiveHint())
+			end
 		end)
 	)
 

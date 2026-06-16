@@ -19,7 +19,9 @@ local _progressValue = nil
 local _cycling = false
 
 function LoadingScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_cycling = true
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
@@ -48,10 +50,14 @@ function LoadingScreen.open()
 
 	-- Tagline cycle: fade out → swap → fade in
 	local function cycleFn()
-		if not _cycling then return end
+		if not _cycling then
+			return
+		end
 		taglineAlpha:set(0)
 		task.delay(0.3, function()
-			if not _cycling then return end
+			if not _cycling then
+				return
+			end
 			local next = (peek(taglineIdx) % #TAGLINES) + 1
 			taglineIdx:set(next)
 			taglineAlpha:set(1)

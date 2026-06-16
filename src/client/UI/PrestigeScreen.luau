@@ -42,7 +42,9 @@ local _scope = nil
 local _uiController = nil
 
 function PrestigeScreen.open(uiController)
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_uiController = uiController
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
@@ -57,7 +59,9 @@ function PrestigeScreen.open(uiController)
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.rank ~= nil then rankValue:set(patch.rank) end
+			if patch.rank ~= nil then
+				rankValue:set(patch.rank)
+			end
 		end)
 	)
 
@@ -159,7 +163,9 @@ function PrestigeScreen.open(uiController)
 	local nextBonus = scope:Computed(function(use)
 		local lvl = use(prestigeLevel) + 1
 		for _, b in ipairs(PRESTIGE_BONUSES) do
-			if b.level == lvl then return b.desc end
+			if b.level == lvl then
+				return b.desc
+			end
 		end
 		return "+5% passive income"
 	end)
@@ -190,7 +196,9 @@ function PrestigeScreen.open(uiController)
 						TextSize = 20,
 						ZIndex = 10,
 						[OnEvent("Activated")] = function()
-							if uiController then uiController.openScreen("Home") end
+							if uiController then
+								uiController.openScreen("Home")
+							end
 						end,
 					}),
 					scope:New("ScrollingFrame")({
@@ -240,7 +248,11 @@ function PrestigeScreen.open(uiController)
 								BorderSizePixel = 0,
 								[Children] = {
 									scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-									scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 8) }),
+									scope:New("UIPadding")({
+										PaddingLeft = UDim.new(0, 12),
+										PaddingRight = UDim.new(0, 12),
+										PaddingTop = UDim.new(0, 8),
+									}),
 									scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 2) }),
 									scope:New("TextLabel")({
 										Size = UDim2.new(1, 0, 0, 14),
@@ -374,7 +386,9 @@ function PrestigeScreen.open(uiController)
 													local ok, err = PrestigeController.confirm()
 													isLoading:set(false)
 													if ok then
-														if uiController then uiController.openScreen("Home") end
+														if uiController then
+															uiController.openScreen("Home")
+														end
 													else
 														statusMsg:set(tostring(err))
 													end

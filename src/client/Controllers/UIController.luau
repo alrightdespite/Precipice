@@ -168,7 +168,9 @@ function UIController.init(): typeof(UIController)
 	local loadConn
 	loadConn = StateController.Changed:Connect(function(patch)
 		if _loaded then
-			if loadConn then loadConn:Disconnect() end
+			if loadConn then
+				loadConn:Disconnect()
+			end
 			return
 		end
 
@@ -178,7 +180,9 @@ function UIController.init(): typeof(UIController)
 
 		if patch.loaded == true then
 			_loaded = true
-			if loadConn then loadConn:Disconnect() end
+			if loadConn then
+				loadConn:Disconnect()
+			end
 			LoadingScreen.close()
 			UIController.openScreen("Home")
 		end

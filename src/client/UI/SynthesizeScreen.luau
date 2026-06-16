@@ -29,7 +29,9 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
 			end
 		end
 		table.sort(list, function(a, b)
-			if a.tier ~= b.tier then return a.tier < b.tier end
+			if a.tier ~= b.tier then
+				return a.tier < b.tier
+			end
 			return a.id < b.id
 		end)
 		return list
@@ -42,9 +44,13 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
 		scope,
 		rowsConn:onChange(function()
 			local frame = peek(rowsFrame)
-			if not frame then return end
+			if not frame then
+				return
+			end
 			for _, child in ipairs(frame:GetChildren()) do
-				if child:IsA("TextButton") then child:Destroy() end
+				if child:IsA("TextButton") then
+					child:Destroy()
+				end
 			end
 			for i, entry in ipairs(peek(entries)) do
 				local tier = entry.tier
@@ -149,7 +155,9 @@ local SynthesizeScreen = {}
 local _scope = nil
 
 function SynthesizeScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
@@ -160,8 +168,12 @@ function SynthesizeScreen.open()
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.vault ~= nil then vaultValue:set(patch.vault) end
-			if patch.formulaLog ~= nil then formulaLogValue:set(patch.formulaLog) end
+			if patch.vault ~= nil then
+				vaultValue:set(patch.vault)
+			end
+			if patch.formulaLog ~= nil then
+				formulaLogValue:set(patch.formulaLog)
+			end
 		end)
 	)
 
@@ -182,14 +194,20 @@ function SynthesizeScreen.open()
 			local i1, i2 = use(input1), use(input2)
 			if i1 and i2 then
 				local ok, fee = pcall(LabAnalysis.getFee, i1, i2)
-				if ok then return string.format("Analyze — %d ◈", fee) end
+				if ok then
+					return string.format("Analyze — %d ◈", fee)
+				end
 			end
 		end
 		if bs == "SYNTHESIZE" or bs == "SYNTHESIZE_VARIABLE" then
 			return "Synthesize"
 		end
-		if bs == "SELECT_INPUTS" then return "Select two compounds" end
-		if bs == "JOINT_REQUIRED" then return "Joint research required" end
+		if bs == "SELECT_INPUTS" then
+			return "Select two compounds"
+		end
+		if bs == "JOINT_REQUIRED" then
+			return "Joint research required"
+		end
 		return "Cannot analyze"
 	end)
 
@@ -202,7 +220,9 @@ function SynthesizeScreen.open()
 	local logEntries = scope:Computed(function(use)
 		local log = use(formulaLogValue)
 		local sorted = table.clone(log)
-		table.sort(sorted, function(a, b) return a.discoveredAt > b.discoveredAt end)
+		table.sort(sorted, function(a, b)
+			return a.discoveredAt > b.discoveredAt
+		end)
 		return sorted
 	end)
 
@@ -285,7 +305,12 @@ function SynthesizeScreen.open()
 					Thickness = 1,
 					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 				}),
-				scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) }),
+				scope:New("UIPadding")({
+					PaddingLeft = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 10),
+					PaddingTop = UDim.new(0, 8),
+					PaddingBottom = UDim.new(0, 8),
+				}),
 				scope:New("TextLabel")({
 					Size = UDim2.new(1, -36, 1, 0),
 					BackgroundTransparency = 1,
@@ -366,7 +391,12 @@ function SynthesizeScreen.open()
 				BorderSizePixel = 0,
 				[Children] = {
 					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-					scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 12), PaddingBottom = UDim.new(0, 12) }),
+					scope:New("UIPadding")({
+						PaddingLeft = UDim.new(0, 12),
+						PaddingRight = UDim.new(0, 12),
+						PaddingTop = UDim.new(0, 12),
+						PaddingBottom = UDim.new(0, 12),
+					}),
 					scope:New("UIListLayout")({
 						FillDirection = Enum.FillDirection.Vertical,
 						SortOrder = Enum.SortOrder.LayoutOrder,
@@ -400,7 +430,9 @@ function SynthesizeScreen.open()
 								OnClick = function()
 									local bs = peek(buttonState)
 									local i1, i2 = peek(input1), peek(input2)
-									if not i1 or not i2 then return end
+									if not i1 or not i2 then
+										return
+									end
 									isLoading:set(true)
 									statusMsg:set("")
 									if bs == "ANALYZE" then
@@ -487,7 +519,11 @@ function SynthesizeScreen.open()
 				[Children] = {
 					makeVaultBrowser(scope, vaultValue, function(id)
 						local target = peek(pickerTarget)
-						if target == 1 then input1:set(id) else input2:set(id) end
+						if target == 1 then
+							input1:set(id)
+						else
+							input2:set(id)
+						end
 					end, function()
 						showBrowser:set(false)
 					end),

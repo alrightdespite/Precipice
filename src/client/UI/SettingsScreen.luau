@@ -20,7 +20,9 @@ local SettingsScreen = {}
 local _scope = nil
 
 function SettingsScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
@@ -32,7 +34,9 @@ function SettingsScreen.open()
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.gamepasses ~= nil then gamepassesValue:set(patch.gamepasses) end
+			if patch.gamepasses ~= nil then
+				gamepassesValue:set(patch.gamepasses)
+			end
 		end)
 	)
 

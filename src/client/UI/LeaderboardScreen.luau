@@ -18,7 +18,9 @@ local LeaderboardScreen = {}
 local _scope = nil
 
 function LeaderboardScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
@@ -31,8 +33,12 @@ function LeaderboardScreen.open()
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.leaderboard ~= nil then leaderboardValue:set(patch.leaderboard) end
-			if patch.ownRows ~= nil then ownRowsValue:set(patch.ownRows) end
+			if patch.leaderboard ~= nil then
+				leaderboardValue:set(patch.leaderboard)
+			end
+			if patch.ownRows ~= nil then
+				ownRowsValue:set(patch.ownRows)
+			end
 		end)
 	)
 
@@ -116,9 +122,13 @@ function LeaderboardScreen.open()
 
 		local ownInTop = scope:Computed(function(use)
 			local own = use(ownRow)
-			if not own then return false end
+			if not own then
+				return false
+			end
 			for _, e in ipairs(use(entries)) do
-				if e.userId == localUserId then return true end
+				if e.userId == localUserId then
+					return true
+				end
 			end
 			return false
 		end)

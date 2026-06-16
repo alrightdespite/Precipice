@@ -14,8 +14,12 @@ local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
 local function formatNum(n: number): string
-	if n >= 1000000 then return string.format("%.1fM", n / 1000000) end
-	if n >= 1000 then return string.format("%.1fK", n / 1000) end
+	if n >= 1000000 then
+		return string.format("%.1fM", n / 1000000)
+	end
+	if n >= 1000 then
+		return string.format("%.1fK", n / 1000)
+	end
 	return tostring(math.floor(n))
 end
 
@@ -29,7 +33,9 @@ local SyndicateScreen = {}
 local _scope = nil
 
 function SyndicateScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
@@ -49,8 +55,12 @@ function SyndicateScreen.open()
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.syndicate ~= nil then syndicateValue:set(patch.syndicate) end
-			if patch.pendingInvite ~= nil then pendingInviteValue:set(patch.pendingInvite) end
+			if patch.syndicate ~= nil then
+				syndicateValue:set(patch.syndicate)
+			end
+			if patch.pendingInvite ~= nil then
+				pendingInviteValue:set(patch.pendingInvite)
+			end
 		end)
 	)
 
@@ -61,14 +71,18 @@ function SyndicateScreen.open()
 	local function setStatus(msg: string)
 		statusMsg:set(msg)
 		task.delay(3, function()
-			if peek(statusMsg) == msg then statusMsg:set("") end
+			if peek(statusMsg) == msg then
+				statusMsg:set("")
+			end
 		end)
 	end
 
 	-- Member role for local player
 	local localRole = scope:Computed(function(use)
 		local syn = use(syndicateValue)
-		if not syn then return nil end
+		if not syn then
+			return nil
+		end
 		local member = syn.members[localUserId]
 		return member and member.role or nil
 	end)
@@ -142,7 +156,9 @@ function SyndicateScreen.open()
 							OnClick = function()
 								task.spawn(function()
 									local ok, err = SyndicateController.kick(userId)
-									if not ok then setStatus(tostring(err)) end
+									if not ok then
+										setStatus(tostring(err))
+									end
 								end)
 							end,
 						}),
@@ -156,7 +172,9 @@ function SyndicateScreen.open()
 	local function buildJointSlot(slotIdx: number)
 		local slotData = scope:Computed(function(use)
 			local syn = use(syndicateValue)
-			if not syn or not syn.jointSlots then return nil end
+			if not syn or not syn.jointSlots then
+				return nil
+			end
 			return syn.jointSlots[slotIdx]
 		end)
 		local slotState = scope:Computed(function(use)
@@ -196,8 +214,12 @@ function SyndicateScreen.open()
 					BackgroundTransparency = 1,
 					TextColor3 = scope:Computed(function(use)
 						local s = use(slotState)
-						if s == "RUNNING" then return Theme.Colors.Accent end
-						if s == "COMPLETE" then return Theme.Colors.Success end
+						if s == "RUNNING" then
+							return Theme.Colors.Accent
+						end
+						if s == "COMPLETE" then
+							return Theme.Colors.Success
+						end
 						return Theme.Colors.TextPrimary
 					end),
 					FontFace = Theme.Font.Label,
@@ -224,7 +246,9 @@ function SyndicateScreen.open()
 							OnClick = function()
 								task.spawn(function()
 									local ok, err = JointController.cancel(slotIdx)
-									if not ok then setStatus(tostring(err)) end
+									if not ok then
+										setStatus(tostring(err))
+									end
 								end)
 							end,
 						}),
@@ -301,10 +325,14 @@ function SyndicateScreen.open()
 								Size = UDim2.fromOffset(80, 32),
 								OnClick = function()
 									local inv = peek(pendingInviteValue)
-									if not inv then return end
+									if not inv then
+										return
+									end
 									task.spawn(function()
 										local ok, err = SyndicateController.acceptInvite(inv.syndicateId)
-										if not ok then setStatus(tostring(err)) end
+										if not ok then
+											setStatus(tostring(err))
+										end
 									end)
 								end,
 							}),
@@ -361,10 +389,14 @@ function SyndicateScreen.open()
 						Text = "Create Syndicate",
 						OnClick = function()
 							local name = peek(createNameInput)
-							if name == "" then return end
+							if name == "" then
+								return
+							end
 							task.spawn(function()
 								local ok, err = SyndicateController.create(name)
-								if not ok then setStatus(tostring(err)) end
+								if not ok then
+									setStatus(tostring(err))
+								end
 							end)
 						end,
 					}),
@@ -431,9 +463,13 @@ function SyndicateScreen.open()
 						TextSize = 11,
 						Text = scope:Computed(function(use)
 							local syn = use(syndicateValue)
-							if not syn then return "" end
+							if not syn then
+								return ""
+							end
 							local count = 0
-							for _ in pairs(syn.members) do count += 1 end
+							for _ in pairs(syn.members) do
+								count += 1
+							end
 							return count .. "/" .. (syn.memberCap or 10) .. " members · " .. formatNum(syn.vaultPellets) .. " ◈ vault"
 						end),
 					}),
@@ -462,7 +498,9 @@ function SyndicateScreen.open()
 					}),
 					scope:Computed(function(use)
 						local syn = use(syndicateValue)
-						if not syn then return {} end
+						if not syn then
+							return {}
+						end
 						local rows = {}
 						for uid, memberData in pairs(syn.members) do
 							table.insert(rows, buildMemberRow(uid, memberData))
@@ -518,7 +556,9 @@ function SyndicateScreen.open()
 								Text = "Invite",
 								OnClick = function()
 									local uid = tonumber(peek(inviteInput))
-									if not uid then return end
+									if not uid then
+										return
+									end
 									task.spawn(function()
 										local ok, err = SyndicateController.invite(uid)
 										if ok then
@@ -576,7 +616,9 @@ function SyndicateScreen.open()
 								Text = "Contribute",
 								OnClick = function()
 									local amt = tonumber(peek(contributeInput))
-									if not amt or amt <= 0 then return end
+									if not amt or amt <= 0 then
+										return
+									end
 									task.spawn(function()
 										local ok, err = SyndicateController.contributeVault(amt)
 										if ok then
@@ -630,7 +672,11 @@ function SyndicateScreen.open()
 								BorderSizePixel = 0,
 								[Children] = {
 									scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-									scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 96), PaddingTop = UDim.new(0, 4) }),
+									scope:New("UIPadding")({
+										PaddingLeft = UDim.new(0, 12),
+										PaddingRight = UDim.new(0, 96),
+										PaddingTop = UDim.new(0, 4),
+									}),
 									scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 2) }),
 									scope:New("TextLabel")({
 										LayoutOrder = 1,
@@ -665,7 +711,9 @@ function SyndicateScreen.open()
 												OnClick = function()
 													task.spawn(function()
 														local ok, err = SyndicateController.purchaseUpgrade(upgKey)
-														if not ok then setStatus(tostring(err)) end
+														if not ok then
+															setStatus(tostring(err))
+														end
 													end)
 												end,
 											}),
@@ -742,7 +790,9 @@ function SyndicateScreen.open()
 									if peek(disbandConfirm) then
 										task.spawn(function()
 											local ok, err = SyndicateController.disbandConfirm()
-											if not ok then setStatus(tostring(err)) end
+											if not ok then
+												setStatus(tostring(err))
+											end
 										end)
 										disbandConfirm:set(false)
 									else

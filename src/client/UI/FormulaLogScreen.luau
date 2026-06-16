@@ -20,8 +20,12 @@ local function getTier(compoundId: string): number
 end
 
 local function formatNum(n: number): string
-	if n >= 1000000 then return string.format("%.1fM", n / 1000000) end
-	if n >= 1000 then return string.format("%.1fK", n / 1000) end
+	if n >= 1000000 then
+		return string.format("%.1fM", n / 1000000)
+	end
+	if n >= 1000 then
+		return string.format("%.1fK", n / 1000)
+	end
 	return tostring(math.floor(n))
 end
 
@@ -29,7 +33,9 @@ local FormulaLogScreen = {}
 local _scope = nil
 
 function FormulaLogScreen.open()
-	if _scope then return end
+	if _scope then
+		return
+	end
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
@@ -42,9 +48,15 @@ function FormulaLogScreen.open()
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
-			if patch.formulaLog ~= nil then formulaLogValue:set(patch.formulaLog) end
-			if patch.patents ~= nil then patentsValue:set(patch.patents) end
-			if patch.exoticRegistry ~= nil then exoticRegistryValue:set(patch.exoticRegistry) end
+			if patch.formulaLog ~= nil then
+				formulaLogValue:set(patch.formulaLog)
+			end
+			if patch.patents ~= nil then
+				patentsValue:set(patch.patents)
+			end
+			if patch.exoticRegistry ~= nil then
+				exoticRegistryValue:set(patch.exoticRegistry)
+			end
 		end)
 	)
 
@@ -171,10 +183,7 @@ function FormulaLogScreen.open()
 					FontFace = Theme.Font.Body,
 					TextSize = 11,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = formatNum(data.currentValue)
-						.. " ◈ · "
-						.. tostring(data.unitCount)
-						.. " units",
+					Text = formatNum(data.currentValue) .. " ◈ · " .. tostring(data.unitCount) .. " units",
 				}),
 				-- T7 badge
 				scope:New("Frame")({

@@ -17,19 +17,35 @@ function Components.Button(scope, props)
 
 	local bgGoal = scope:Computed(function(use)
 		local dis = props.Disabled
-		if typeof(dis) == "table" then dis = use(dis) end
-		if dis then return Theme.Colors.SurfaceRaised end
+		if typeof(dis) == "table" then
+			dis = use(dis)
+		end
+		if dis then
+			return Theme.Colors.SurfaceRaised
+		end
 		if use(pressed) then
-			if style == "danger" then return Color3.fromHex("B91C1C") end
-			if style == "secondary" then return Theme.Colors.SurfaceRaised end
+			if style == "danger" then
+				return Color3.fromHex("B91C1C")
+			end
+			if style == "secondary" then
+				return Theme.Colors.SurfaceRaised
+			end
 			return Theme.Colors.AccentDim
 		elseif use(hovered) then
-			if style == "danger" then return Theme.Colors.Danger:Lerp(Color3.new(1, 1, 1), 0.1) end
-			if style == "secondary" then return Theme.Colors.SurfaceRaised end
+			if style == "danger" then
+				return Theme.Colors.Danger:Lerp(Color3.new(1, 1, 1), 0.1)
+			end
+			if style == "secondary" then
+				return Theme.Colors.SurfaceRaised
+			end
 			return Theme.Colors.Accent:Lerp(Color3.new(1, 1, 1), 0.1)
 		else
-			if style == "danger" then return Theme.Colors.Danger end
-			if style == "secondary" then return Theme.Colors.Surface end
+			if style == "danger" then
+				return Theme.Colors.Danger
+			end
+			if style == "secondary" then
+				return Theme.Colors.Surface
+			end
 			return Theme.Colors.Accent
 		end
 	end)
@@ -37,9 +53,15 @@ function Components.Button(scope, props)
 
 	local textColor = scope:Computed(function(use)
 		local dis = props.Disabled
-		if typeof(dis) == "table" then dis = use(dis) end
-		if dis then return Theme.Colors.TextSecondary end
-		if style == "secondary" then return Theme.Colors.Accent end
+		if typeof(dis) == "table" then
+			dis = use(dis)
+		end
+		if dis then
+			return Theme.Colors.TextSecondary
+		end
+		if style == "secondary" then
+			return Theme.Colors.Accent
+		end
 		return Theme.Colors.TextPrimary
 	end)
 
@@ -77,7 +99,9 @@ function Components.Button(scope, props)
 		end,
 		[OnEvent("Activated")] = function()
 			local dis = props.Disabled
-			if typeof(dis) == "table" then dis = peek(dis) end
+			if typeof(dis) == "table" then
+				dis = peek(dis)
+			end
 			if not dis and props.OnClick then
 				props.OnClick()
 			end
@@ -91,12 +115,15 @@ function Components.Card(scope, props)
 		scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
 	}
 	if props.Padding then
-		table.insert(inner, scope:New("UIPadding")({
-			PaddingTop = Theme.Layout.CardPadding,
-			PaddingBottom = Theme.Layout.CardPadding,
-			PaddingLeft = Theme.Layout.CardPadding,
-			PaddingRight = Theme.Layout.CardPadding,
-		}))
+		table.insert(
+			inner,
+			scope:New("UIPadding")({
+				PaddingTop = Theme.Layout.CardPadding,
+				PaddingBottom = Theme.Layout.CardPadding,
+				PaddingLeft = Theme.Layout.CardPadding,
+				PaddingRight = Theme.Layout.CardPadding,
+			})
+		)
 	end
 	if props.Children then
 		for _, child in ipairs(props.Children) do
@@ -181,10 +208,16 @@ function Components.ProgressBar(scope, props)
 	local fillWidth = scope:Computed(function(use)
 		local val = props.ValueState
 		local mx = props.MaxState
-		if typeof(val) == "table" then val = use(val) end
-		if typeof(mx) == "table" then mx = use(mx) end
+		if typeof(val) == "table" then
+			val = use(val)
+		end
+		if typeof(mx) == "table" then
+			mx = use(mx)
+		end
 		mx = mx or 1
-		if mx <= 0 then return 0 end
+		if mx <= 0 then
+			return 0
+		end
 		return math.clamp(val / mx, 0, 1)
 	end)
 	local springWidth = scope:Spring(fillWidth, 12, 1)

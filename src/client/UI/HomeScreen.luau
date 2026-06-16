@@ -453,12 +453,16 @@ local function makeMarquee(scope, announcementsValue)
 	local marqueeRef = scope:Value(nil :: TextLabel?)
 
 	local hasAnn = scope:Computed(function(use)
-		return #use(announcementsValue) > 0
+		local anns = use(announcementsValue)
+		return anns ~= nil and #anns > 0
 	end)
 
 	local annText = scope:Computed(function(use)
 		local anns = use(announcementsValue)
-		return #anns > 0 and anns[#anns].message or ""
+		if not anns or #anns == 0 then
+			return ""
+		end
+		return anns[#anns].message or ""
 	end)
 
 	-- Watch for new announcements and run marquee tween
@@ -473,6 +477,10 @@ local function makeMarquee(scope, announcementsValue)
 	table.insert(
 		scope,
 		obs:onChange(function()
+			local anns = peek(announcementsValue)
+			if not anns or #anns == 0 then
+				return
+			end
 			local label = peek(marqueeRef)
 			if not label then
 				return

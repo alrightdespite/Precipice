@@ -76,7 +76,13 @@ end
 -- Returns all hint defs whose trigger conditions are met and that have not been shown.
 function HintTriggerLogic.evaluate(state: HintState, shownHints: { [string]: boolean }): { HintDef }
 	local triggered: { HintDef } = {}
-	local logCount = formulaLogCount(state.formulaLog)
+
+	local slots = state.slots
+	local formulaLog = state.formulaLog
+	local streak = type(state.streak) == "table" and state.streak or nil
+	local flux = state.flux
+
+	local logCount = formulaLogCount(formulaLog)
 
 	for _, def in ipairs(HINT_DEFS) do
 		if shownHints[def.id] then
@@ -87,18 +93,18 @@ function HintTriggerLogic.evaluate(state: HintState, shownHints: { [string]: boo
 		local id = def.id
 
 		if id == "lab_intro" then
-			fires = allSlotsRunning(state.slots) and logCount == 0
+			fires = allSlotsRunning(slots) and logCount == 0
 		elseif id == "market_intro" then
 			fires = logCount >= 1
 		elseif id == "tier_system" then
 			fires = logCount == 1 -- first discovery only; shown-once logic prevents re-fire
 		elseif id == "syndicate_intro" then
-			local day = state.streak and state.streak.day or 0
+			local day = streak ~= nil and type(streak.day) == "number" and streak.day or 0
 			fires = day >= 7 and state.syndicate == nil
 		elseif id == "patent_mechanics" then
 			fires = state.patents ~= nil and next(state.patents) ~= nil
 		elseif id == "event_intro" then
-			fires = state.flux ~= nil
+			fires = flux ~= nil
 		end
 
 		if fires then

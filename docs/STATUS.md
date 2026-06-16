@@ -1,8 +1,8 @@
 # Status
 
-## Current phase: Phase 11 complete
+## Current phase: Phase 12B complete
 
-**Last updated:** 2026-06-14
+**Last updated:** 2026-06-15
 
 ## Done
 
@@ -39,7 +39,8 @@ Phase 12C -- World build (Studio: lab interior, chamber parts, plot layout, reve
 
 ## Known issues
 
-None.
+- LoadingScreen does not appear on join — UIController opens HomeScreen before LoadingScreen fade completes (Phase 12B known issue, fix in 12C)
+- SynthesizeScreen Computed callback type error on line 27 — vault sort comparison bug (fix pending)
 
 ## Open questions
 

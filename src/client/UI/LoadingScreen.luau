@@ -1,87 +1,173 @@
--- Loading screen — first thing every player sees.
--- Slightly more than a stub: shows title, progress bar placeholder, cycling taglines.
--- Phase 12B: replace placeholder geometry with real art and animated bar.
-
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Theme = require(script.Parent.Theme)
+
+local Children = Fusion.Children
+local peek = Fusion.peek
+local doCleanup = Fusion.doCleanup
 
 local TAGLINES = {
-	"Synthesize the unknown.",
-	"Claim your patents. Guard them well.",
-	"Every compound, a discovery.",
+	"The patent won't wait.",
+	"First in the world. Every time.",
+	"Your lab never sleeps.",
 }
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "LoadingScreen"
-gui.Enabled = false
-gui.ResetOnSpawn = false
-gui.DisplayOrder = 100 -- on top of everything during load
-
-local bg = Instance.new("Frame")
-bg.Size = UDim2.fromScale(1, 1)
-bg.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-bg.BorderSizePixel = 0
-bg.Parent = gui
-
-local title = Instance.new("TextLabel")
-title.Text = "PRECIPICE"
-title.Size = UDim2.new(1, 0, 0.2, 0)
-title.Position = UDim2.fromScale(0, 0.35)
-title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(220, 220, 255)
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
-title.Parent = bg
-
--- Progress bar placeholder (Phase 12B wires real progress)
-local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0.4, 0, 0, 4)
-barBg.Position = UDim2.new(0.3, 0, 0.62, 0)
-barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-barBg.BorderSizePixel = 0
-barBg.Parent = bg
-
-local barFill = Instance.new("Frame")
-barFill.Size = UDim2.fromScale(0, 1)
-barFill.BackgroundColor3 = Color3.fromRGB(120, 100, 255)
-barFill.BorderSizePixel = 0
-barFill.Name = "Fill"
-barFill.Parent = barBg
-
-local taglineLabel = Instance.new("TextLabel")
-taglineLabel.Text = TAGLINES[1]
-taglineLabel.Size = UDim2.new(0.8, 0, 0.1, 0)
-taglineLabel.Position = UDim2.new(0.1, 0, 0.68, 0)
-taglineLabel.BackgroundTransparency = 1
-taglineLabel.TextColor3 = Color3.fromRGB(140, 130, 200)
-taglineLabel.TextScaled = true
-taglineLabel.Font = Enum.Font.Gotham
-taglineLabel.Parent = bg
-
-gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-
-local taglineIndex = 1
-local cycling = false
-
-local function cycleTagline()
-	if not cycling then
-		return
-	end
-	taglineIndex = (taglineIndex % #TAGLINES) + 1
-	taglineLabel.Text = TAGLINES[taglineIndex]
-	task.delay(3, cycleTagline)
-end
-
 local LoadingScreen = {}
+local _scope = nil
+local _progressValue = nil
+local _cycling = false
 
 function LoadingScreen.open()
-	gui.Enabled = true
-	cycling = true
-	task.delay(3, cycleTagline)
+	if _scope then return end
+	_cycling = true
+	_scope = Fusion.scoped(Fusion)
+	local scope = _scope
+
+	_progressValue = scope:Value(0)
+	local progressValue = _progressValue
+
+	local springProgress = scope:Spring(progressValue, 10, 1)
+
+	local taglineIdx = scope:Value(1)
+	local taglineAlpha = scope:Value(1)
+	local springAlpha = scope:Spring(taglineAlpha, 8, 1)
+
+	local taglineText = scope:Computed(function(use)
+		return TAGLINES[use(taglineIdx)]
+	end)
+
+	local showTimeout = scope:Value(false)
+
+	-- 8-second timeout message
+	task.delay(8, function()
+		if _scope then
+			showTimeout:set(true)
+		end
+	end)
+
+	-- Tagline cycle: fade out → swap → fade in
+	local function cycleFn()
+		if not _cycling then return end
+		taglineAlpha:set(0)
+		task.delay(0.3, function()
+			if not _cycling then return end
+			local next = (peek(taglineIdx) % #TAGLINES) + 1
+			taglineIdx:set(next)
+			taglineAlpha:set(1)
+			task.delay(3, cycleFn)
+		end)
+	end
+	task.delay(3, cycleFn)
+
+	scope:New("ScreenGui")({
+		Name = "LoadingScreen",
+		Enabled = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 100,
+		Parent = Players.LocalPlayer.PlayerGui,
+		[Children] = {
+			-- Background
+			scope:New("Frame")({
+				Name = "Bg",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundColor3 = Theme.Colors.Background,
+				BorderSizePixel = 0,
+				[Children] = {
+					-- Centered column
+					scope:New("Frame")({
+						Name = "Center",
+						Size = UDim2.new(0.7, 0, 0, 200),
+						Position = UDim2.new(0.15, 0, 0.3, 0),
+						BackgroundTransparency = 1,
+						[Children] = {
+							scope:New("UIListLayout")({
+								SortOrder = Enum.SortOrder.LayoutOrder,
+								FillDirection = Enum.FillDirection.Vertical,
+								HorizontalAlignment = Enum.HorizontalAlignment.Center,
+								Padding = UDim.new(0, 16),
+							}),
+							-- Title
+							scope:New("TextLabel")({
+								Name = "Title",
+								LayoutOrder = 1,
+								Text = "PRECIPICE",
+								Size = UDim2.new(1, 0, 0, 64),
+								BackgroundTransparency = 1,
+								TextColor3 = Theme.Colors.TextPrimary,
+								FontFace = Theme.Font.Header,
+								TextSize = 48,
+								TextXAlignment = Enum.TextXAlignment.Center,
+							}),
+							-- Tagline
+							scope:New("TextLabel")({
+								Name = "Tagline",
+								LayoutOrder = 2,
+								Text = taglineText,
+								Size = UDim2.new(1, 0, 0, 28),
+								BackgroundTransparency = 1,
+								TextColor3 = Theme.Colors.TextSecondary,
+								TextTransparency = scope:Computed(function(use)
+									return 1 - use(springAlpha)
+								end),
+								FontFace = Theme.Font.Body,
+								TextSize = 16,
+								TextXAlignment = Enum.TextXAlignment.Center,
+							}),
+						},
+					}),
+
+					-- Progress bar (2px, full width at 20% from bottom)
+					scope:New("Frame")({
+						Name = "BarBg",
+						Size = UDim2.new(0.7, 0, 0, 2),
+						Position = UDim2.new(0.15, 0, 0.78, 0),
+						BackgroundColor3 = Theme.Colors.SurfaceRaised,
+						BorderSizePixel = 0,
+						[Children] = {
+							scope:New("Frame")({
+								Name = "Fill",
+								Size = scope:Computed(function(use)
+									return UDim2.new(math.clamp(use(springProgress), 0, 1), 0, 1, 0)
+								end),
+								BackgroundColor3 = Theme.Colors.Accent,
+								BorderSizePixel = 0,
+							}),
+						},
+					}),
+
+					-- Timeout label (appears after 8s)
+					scope:New("TextLabel")({
+						Name = "TimeoutMsg",
+						Text = "Syncing your lab…",
+						Size = UDim2.new(1, 0, 0, 20),
+						Position = UDim2.new(0, 0, 0.82, 0),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.TextSecondary,
+						FontFace = Theme.Font.Body,
+						TextSize = 12,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						Visible = showTimeout,
+					}),
+				},
+			}),
+		},
+	})
 end
 
 function LoadingScreen.close()
-	cycling = false
-	gui.Enabled = false
+	_cycling = false
+	if _scope then
+		doCleanup(_scope)
+		_scope = nil
+		_progressValue = nil
+	end
+end
+
+function LoadingScreen.setProgress(n: number)
+	if _progressValue then
+		_progressValue:set(math.clamp(n, 0, 1))
+	end
 end
 
 return LoadingScreen

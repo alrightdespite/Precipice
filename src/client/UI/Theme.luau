@@ -1,0 +1,35 @@
+return {
+	Colors = {
+		Background = Color3.fromHex("1A1A1F"),
+		Surface = Color3.fromHex("242428"),
+		SurfaceRaised = Color3.fromHex("2C2C32"),
+		Accent = Color3.fromHex("4A9EFF"),
+		AccentDim = Color3.fromHex("1E3A5F"),
+		TextPrimary = Color3.fromHex("E8E8EC"),
+		TextSecondary = Color3.fromHex("8A8A94"),
+		Success = Color3.fromHex("10B981"),
+		Warning = Color3.fromHex("F59E0B"),
+		Danger = Color3.fromHex("EF4444"),
+		Tier = {
+			[1] = Color3.fromHex("6B7280"),
+			[2] = Color3.fromHex("10B981"),
+			[3] = Color3.fromHex("3B82F6"),
+			[4] = Color3.fromHex("8B5CF6"),
+			[5] = Color3.fromHex("F59E0B"),
+			[6] = Color3.fromHex("EF4444"),
+			[7] = Color3.fromHex("FF6B35"),
+		},
+	},
+	Font = {
+		Header = Font.fromName("GothamSSm", Enum.FontWeight.Bold),
+		Label = Font.fromName("GothamSSm", Enum.FontWeight.Medium),
+		Body = Font.fromName("GothamSSm", Enum.FontWeight.Regular),
+		Value = Font.fromName("GothamSSm", Enum.FontWeight.Bold),
+	},
+	Layout = {
+		CornerRadius = UDim.new(0, 4),
+		Padding = UDim.new(0, 12),
+		CardPadding = UDim.new(0, 16),
+		TapTarget = UDim.new(0, 44),
+	},
+}

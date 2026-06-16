@@ -1,27 +1,507 @@
--- STUB: Phase 12B replaces with real layout and data binding.
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
+local LabAnalysis = require(ReplicatedStorage.Shared.Core.LabAnalysis)
+local Theme = require(script.Parent.Theme)
+local Components = require(script.Parent.Components)
+local StateController = require(script.Parent.Parent.Controllers.StateController)
+local LabController = require(script.Parent.Parent.Controllers.LabController)
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "SynthesizeScreen"
-gui.Enabled = false
-gui.ResetOnSpawn = false
+local Children = Fusion.Children
+local OnEvent = Fusion.OnEvent
+local peek = Fusion.peek
+local doCleanup = Fusion.doCleanup
 
-local label = Instance.new("TextLabel")
-label.Text = "SynthesizeScreen [STUB]"
-label.Size = UDim2.fromScale(1, 1)
-label.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-label.TextColor3 = Color3.fromRGB(200, 200, 220)
-label.TextScaled = true
-label.Font = Enum.Font.Gotham
-label.Parent = gui
+local function getTier(compoundId: string): number
+	local c = Compounds[compoundId]
+	return c and c.tier or 1
+end
 
-gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Compact vault browser popup
+local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
+	local entries = scope:Computed(function(use)
+		local vault = use(vaultValue)
+		local list = {}
+		for id, qty in pairs(vault) do
+			if qty > 0 then
+				table.insert(list, { id = id, qty = qty, tier = getTier(id) })
+			end
+		end
+		table.sort(list, function(a, b)
+			if a.tier ~= b.tier then return a.tier < b.tier end
+			return a.id < b.id
+		end)
+		return list
+	end)
+
+	-- Build rows lazily via Observer
+	local rowsFrame = scope:Value(nil :: Frame?)
+	local rowsConn = scope:Observer(entries)
+	table.insert(
+		scope,
+		rowsConn:onChange(function()
+			local frame = peek(rowsFrame)
+			if not frame then return end
+			for _, child in ipairs(frame:GetChildren()) do
+				if child:IsA("TextButton") then child:Destroy() end
+			end
+			for i, entry in ipairs(peek(entries)) do
+				local tier = entry.tier
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(1, 0, 0, 40)
+				btn.BackgroundColor3 = Theme.Colors.SurfaceRaised
+				btn.BorderSizePixel = 0
+				btn.Text = ""
+				btn.LayoutOrder = i
+				local label = Instance.new("TextLabel")
+				label.Size = UDim2.new(1, -52, 1, 0)
+				label.Position = UDim2.fromOffset(8, 0)
+				label.BackgroundTransparency = 1
+				label.TextColor3 = Theme.Colors.TextPrimary
+				label.FontFace = Theme.Font.Label
+				label.TextSize = 13
+				label.TextXAlignment = Enum.TextXAlignment.Left
+				label.Text = entry.id .. " ×" .. entry.qty
+				label.Parent = btn
+				local badge = Instance.new("Frame")
+				badge.Size = UDim2.fromOffset(28, 20)
+				badge.Position = UDim2.new(1, -32, 0.5, -10)
+				badge.BackgroundColor3 = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary
+				badge.BorderSizePixel = 0
+				local badgeLabel = Instance.new("TextLabel")
+				badgeLabel.Size = UDim2.fromScale(1, 1)
+				badgeLabel.BackgroundTransparency = 1
+				badgeLabel.TextColor3 = Color3.new(1, 1, 1)
+				badgeLabel.FontFace = Theme.Font.Label
+				badgeLabel.TextSize = 11
+				badgeLabel.TextXAlignment = Enum.TextXAlignment.Center
+				badgeLabel.Text = "T" .. tier
+				badgeLabel.Parent = badge
+				badge.Parent = btn
+				btn.Activated:Connect(function()
+					onSelect(entry.id)
+					onClose()
+				end)
+				btn.Parent = frame
+			end
+		end)
+	)
+
+	return scope:New("Frame")({
+		Name = "VaultBrowser",
+		Size = UDim2.new(0.9, 0, 0.6, 0),
+		Position = UDim2.new(0.05, 0, 0.2, 0),
+		BackgroundColor3 = Theme.Colors.Surface,
+		BorderSizePixel = 0,
+		ZIndex = 20,
+		[Children] = {
+			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+			scope:New("TextButton")({
+				Name = "Close",
+				Size = UDim2.fromOffset(32, 32),
+				Position = UDim2.new(1, -36, 0, 4),
+				BackgroundTransparency = 1,
+				Text = "✕",
+				TextColor3 = Theme.Colors.TextSecondary,
+				FontFace = Theme.Font.Label,
+				TextSize = 16,
+				ZIndex = 21,
+				[OnEvent("Activated")] = onClose,
+			}),
+			scope:New("TextLabel")({
+				Name = "Title",
+				Text = "Select compound",
+				Size = UDim2.new(1, -44, 0, 40),
+				BackgroundTransparency = 1,
+				TextColor3 = Theme.Colors.TextPrimary,
+				FontFace = Theme.Font.Header,
+				TextSize = 16,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				[Children] = {
+					scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 12) }),
+				},
+			}),
+			scope:New("ScrollingFrame")({
+				Name = "List",
+				Size = UDim2.new(1, -16, 1, -56),
+				Position = UDim2.fromOffset(8, 48),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				ScrollBarThickness = 0,
+				AutomaticCanvasSize = Enum.AutomaticSize.Y,
+				CanvasSize = UDim2.fromScale(0, 0),
+				ZIndex = 21,
+				[Children] = {
+					scope:New("UIListLayout")({
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						FillDirection = Enum.FillDirection.Vertical,
+						Padding = UDim.new(0, 4),
+						[Fusion.Ref] = rowsFrame, -- store ref to scroll contents
+					}),
+				},
+			}),
+		},
+	})
+end
 
 local SynthesizeScreen = {}
+local _scope = nil
+
 function SynthesizeScreen.open()
-	gui.Enabled = true
+	if _scope then return end
+	_scope = Fusion.scoped(Fusion)
+	local scope = _scope
+	local st = StateController.get()
+
+	local vaultValue = scope:Value(st.vault)
+	local formulaLogValue = scope:Value(st.formulaLog)
+
+	table.insert(
+		scope,
+		StateController.Changed:Connect(function(patch)
+			if patch.vault ~= nil then vaultValue:set(patch.vault) end
+			if patch.formulaLog ~= nil then formulaLogValue:set(patch.formulaLog) end
+		end)
+	)
+
+	local input1 = scope:Value(nil :: string?)
+	local input2 = scope:Value(nil :: string?)
+	local showBrowser = scope:Value(false)
+	local pickerTarget = scope:Value(1) -- which picker is open (1 or 2)
+	local statusMsg = scope:Value("")
+	local isLoading = scope:Value(false)
+
+	local buttonState = scope:Computed(function(use)
+		return LabController.getButtonState(use(input1), use(input2))
+	end)
+
+	local feeText = scope:Computed(function(use)
+		local bs = use(buttonState)
+		if bs == "ANALYZE" then
+			local i1, i2 = use(input1), use(input2)
+			if i1 and i2 then
+				local ok, fee = pcall(LabAnalysis.getFee, i1, i2)
+				if ok then return string.format("Analyze — %d ◈", fee) end
+			end
+		end
+		if bs == "SYNTHESIZE" or bs == "SYNTHESIZE_VARIABLE" then
+			return "Synthesize"
+		end
+		if bs == "SELECT_INPUTS" then return "Select two compounds" end
+		if bs == "JOINT_REQUIRED" then return "Joint research required" end
+		return "Cannot analyze"
+	end)
+
+	local actionDisabled = scope:Computed(function(use)
+		local bs = use(buttonState)
+		return bs == "SELECT_INPUTS" or bs == "JOINT_REQUIRED" or bs == "INVALID" or use(isLoading)
+	end)
+
+	-- Formula log rows (bottom panel)
+	local logEntries = scope:Computed(function(use)
+		local log = use(formulaLogValue)
+		local sorted = table.clone(log)
+		table.sort(sorted, function(a, b) return a.discoveredAt > b.discoveredAt end)
+		return sorted
+	end)
+
+	local function buildLogRow(entry: { compoundId: string, recipeId: string?, discoveredAt: number })
+		local tier = getTier(entry.compoundId)
+		return scope:New("Frame")({
+			Size = UDim2.new(1, 0, 0, 40),
+			BackgroundColor3 = Theme.Colors.SurfaceRaised,
+			BorderSizePixel = 0,
+			[Children] = {
+				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+				scope:New("UIPadding")({
+					PaddingLeft = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 80),
+					PaddingTop = UDim.new(0, 6),
+					PaddingBottom = UDim.new(0, 6),
+				}),
+				scope:New("TextLabel")({
+					Size = UDim2.new(1, 0, 1, 0),
+					BackgroundTransparency = 1,
+					TextColor3 = Theme.Colors.TextPrimary,
+					FontFace = Theme.Font.Label,
+					TextSize = 13,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Text = entry.compoundId,
+				}),
+				Components.TierBadge(scope, { Tier = tier }),
+				Components.Button(scope, {
+					Text = "Synth →",
+					Size = UDim2.fromOffset(72, 30),
+					Style = "secondary",
+					OnClick = function()
+						-- Pre-fill inputs if a valid recipe is known
+						if entry.recipeId then
+							local parts = entry.recipeId:split("+")
+							if parts[1] and parts[2] then
+								input1:set(parts[1])
+								input2:set(parts[2])
+							end
+						end
+					end,
+				}),
+			},
+		})
+	end
+
+	local logRows = scope:Computed(function(use)
+		local entries = use(logEntries)
+		local rows = {}
+		for _, entry in ipairs(entries) do
+			table.insert(rows, buildLogRow(entry))
+		end
+		return rows
+	end)
+
+	-- Picker card
+	local function makePickerCard(pickerIdx: number, inputValue)
+		local label = scope:Computed(function(use)
+			local v = use(inputValue)
+			return v or "Select compound"
+		end)
+		local hasValue = scope:Computed(function(use)
+			return use(inputValue) ~= nil
+		end)
+		local tierVal = scope:Computed(function(use)
+			local v = use(inputValue)
+			return v and getTier(v) or nil
+		end)
+
+		return scope:New("TextButton")({
+			Name = "Picker" .. pickerIdx,
+			Size = UDim2.new(0.48, 0, 0, 64),
+			BackgroundColor3 = Theme.Colors.Surface,
+			BorderSizePixel = 0,
+			Text = "",
+			[Children] = {
+				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+				scope:New("UIStroke")({
+					Color = Theme.Colors.SurfaceRaised,
+					Thickness = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				}),
+				scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) }),
+				scope:New("TextLabel")({
+					Size = UDim2.new(1, -36, 1, 0),
+					BackgroundTransparency = 1,
+					TextColor3 = scope:Computed(function(use)
+						return use(hasValue) and Theme.Colors.TextPrimary or Theme.Colors.TextSecondary
+					end),
+					FontFace = Theme.Font.Label,
+					TextSize = 13,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Text = label,
+				}),
+				-- Tier badge (shown if compound selected)
+				scope:New("Frame")({
+					Size = UDim2.fromOffset(28, 20),
+					Position = UDim2.new(1, -28, 0.5, -10),
+					BackgroundColor3 = scope:Computed(function(use)
+						local t = use(tierVal)
+						return t and Theme.Colors.Tier[t] or Theme.Colors.Surface
+					end),
+					BorderSizePixel = 0,
+					Visible = hasValue,
+					[Children] = {
+						scope:New("UICorner")({ CornerRadius = UDim.new(0, 3) }),
+						scope:New("TextLabel")({
+							Size = UDim2.fromScale(1, 1),
+							BackgroundTransparency = 1,
+							TextColor3 = Color3.new(1, 1, 1),
+							FontFace = Theme.Font.Label,
+							TextSize = 11,
+							TextXAlignment = Enum.TextXAlignment.Center,
+							Text = scope:Computed(function(use)
+								local t = use(tierVal)
+								return t and ("T" .. t) or ""
+							end),
+						}),
+					},
+				}),
+			},
+			[OnEvent("Activated")] = function()
+				pickerTarget:set(pickerIdx)
+				showBrowser:set(true)
+			end,
+		})
+	end
+
+	scope:New("ScreenGui")({
+		Name = "SynthesizeScreen",
+		Enabled = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 10,
+		Parent = Players.LocalPlayer.PlayerGui,
+		[Children] = {
+			-- Header
+			scope:New("Frame")({
+				Name = "Header",
+				Size = UDim2.new(1, 0, 0, 56),
+				BackgroundColor3 = Theme.Colors.Surface,
+				BorderSizePixel = 0,
+				[Children] = {
+					scope:New("TextLabel")({
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.TextPrimary,
+						FontFace = Theme.Font.Header,
+						TextSize = 18,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						Text = "Lab",
+					}),
+				},
+			}),
+			-- Input panel
+			scope:New("Frame")({
+				Name = "InputPanel",
+				Size = UDim2.new(1, -24, 0, 180),
+				Position = UDim2.fromOffset(12, 64),
+				BackgroundColor3 = Theme.Colors.Surface,
+				BorderSizePixel = 0,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+					scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 12), PaddingBottom = UDim.new(0, 12) }),
+					scope:New("UIListLayout")({
+						FillDirection = Enum.FillDirection.Vertical,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, 10),
+					}),
+					-- Pickers row
+					scope:New("Frame")({
+						LayoutOrder = 1,
+						Size = UDim2.new(1, 0, 0, 64),
+						BackgroundTransparency = 1,
+						[Children] = {
+							makePickerCard(1, input1),
+							scope:New("Frame")({ Size = UDim2.new(0.04, 0, 1, 0), BackgroundTransparency = 1 }),
+							makePickerCard(2, input2),
+							scope:New("UIListLayout")({
+								FillDirection = Enum.FillDirection.Horizontal,
+								SortOrder = Enum.SortOrder.LayoutOrder,
+								Padding = UDim.new(0, 0),
+							}),
+						},
+					}),
+					-- Action button
+					scope:New("Frame")({
+						LayoutOrder = 2,
+						Size = UDim2.new(1, 0, 0, 44),
+						BackgroundTransparency = 1,
+						[Children] = {
+							Components.Button(scope, {
+								Text = feeText,
+								Disabled = actionDisabled,
+								OnClick = function()
+									local bs = peek(buttonState)
+									local i1, i2 = peek(input1), peek(input2)
+									if not i1 or not i2 then return end
+									isLoading:set(true)
+									statusMsg:set("")
+									if bs == "ANALYZE" then
+										local ok, result = LabController.analyze(i1, i2)
+										isLoading:set(false)
+										if ok then
+											statusMsg:set("Analysis complete.")
+										else
+											statusMsg:set(tostring(result))
+										end
+									elseif bs == "SYNTHESIZE" or bs == "SYNTHESIZE_VARIABLE" then
+										-- Phase 12B: just analyze for now; full synth needs slot selection
+										local ok, result = LabController.analyze(i1, i2)
+										isLoading:set(false)
+										if ok then
+											statusMsg:set("Done.")
+										else
+											statusMsg:set(tostring(result))
+										end
+									end
+								end,
+							}),
+						},
+					}),
+					-- Status message
+					scope:New("TextLabel")({
+						LayoutOrder = 3,
+						Size = UDim2.new(1, 0, 0, 20),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.TextSecondary,
+						FontFace = Theme.Font.Body,
+						TextSize = 12,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						Text = statusMsg,
+					}),
+				},
+			}),
+			-- Formula Log
+			scope:New("Frame")({
+				Name = "FormulaLog",
+				Size = UDim2.new(1, -24, 1, -276),
+				Position = UDim2.fromOffset(12, 256),
+				BackgroundTransparency = 1,
+				[Children] = {
+					scope:New("TextLabel")({
+						Size = UDim2.new(1, 0, 0, 24),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.TextSecondary,
+						FontFace = Theme.Font.Label,
+						TextSize = 12,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						Text = "FORMULA LOG",
+					}),
+					scope:New("ScrollingFrame")({
+						Size = UDim2.new(1, 0, 1, -28),
+						Position = UDim2.fromOffset(0, 28),
+						BackgroundTransparency = 1,
+						BorderSizePixel = 0,
+						ScrollBarThickness = 0,
+						AutomaticCanvasSize = Enum.AutomaticSize.Y,
+						CanvasSize = UDim2.fromScale(0, 0),
+						[Children] = {
+							scope:New("UIListLayout")({
+								SortOrder = Enum.SortOrder.LayoutOrder,
+								FillDirection = Enum.FillDirection.Vertical,
+								Padding = UDim.new(0, 4),
+							}),
+							scope:Computed(function(use)
+								return use(logRows)
+							end),
+						},
+					}),
+				},
+			}),
+			-- Vault browser overlay
+			scope:New("Frame")({
+				Name = "BrowserOverlay",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundColor3 = Color3.new(0, 0, 0),
+				BackgroundTransparency = 0.5,
+				BorderSizePixel = 0,
+				ZIndex = 19,
+				Visible = showBrowser,
+				[Children] = {
+					makeVaultBrowser(scope, vaultValue, function(id)
+						local target = peek(pickerTarget)
+						if target == 1 then input1:set(id) else input2:set(id) end
+					end, function()
+						showBrowser:set(false)
+					end),
+				},
+			}),
+		},
+	})
 end
+
 function SynthesizeScreen.close()
-	gui.Enabled = false
+	if _scope then
+		doCleanup(_scope)
+		_scope = nil
+	end
 end
+
 return SynthesizeScreen

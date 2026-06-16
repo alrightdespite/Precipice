@@ -14,7 +14,7 @@ function MarketController.buyListing(listingId: string): (boolean, string?)
 	return RemoteController.invoke("MarketBuyListing", listingId)
 end
 
-function MarketController.browse(tier: number?, page: number): (boolean, {}[] | string)
+function MarketController.browse(tier: number?, page: number): (boolean, { {} } | string)
 	return RemoteController.invoke("MarketBrowse", tier, page)
 end
 

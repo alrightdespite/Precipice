@@ -22,6 +22,9 @@ end
 local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
 	local entries = scope:Computed(function(use)
 		local vault = use(vaultValue)
+		if not vault then
+			return {}
+		end
 		local list = {}
 		for id, qty in pairs(vault) do
 			if qty > 0 then
@@ -29,8 +32,10 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
 			end
 		end
 		table.sort(list, function(a, b)
-			if a.tier ~= b.tier then
-				return a.tier < b.tier
+			local ta = (Compounds[a.id] and Compounds[a.id].tier) or 0
+			local tb = (Compounds[b.id] and Compounds[b.id].tier) or 0
+			if ta ~= tb then
+				return ta < tb
 			end
 			return a.id < b.id
 		end)

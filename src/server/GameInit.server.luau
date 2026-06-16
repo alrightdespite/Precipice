@@ -129,8 +129,13 @@ end)
 -- MonetizationService, EventService, CosmeticService, AnnouncementService,
 -- AnalyticsService
 
+-- ── 20. PlotService ──────────────────────────────────────────────────────
+local PlotService = require(ServerScriptService.Server.Services.PlotService)
+PlotService.init()
+
 -- ── PlayerAdded / PlayerRemoving — ALWAYS last ────────────────────────────
 local function onPlayerAdded(player: Player)
+	PlotService.spawnPlot(player)
 	task.spawn(function()
 		DataService.openSession(player)
 		-- SlotService picks up onProfileLoaded signal and settles offline income.
@@ -139,6 +144,7 @@ end
 
 local function onPlayerRemoving(player: Player)
 	DataService.closeSession(player)
+	PlotService.destroyPlot(player)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
@@ -149,4 +155,4 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(onPlayerAdded, player)
 end
 
-print("GameInit: boot complete (Phase 10B — JointSynthService + ExoticService)")
+print("GameInit: boot complete (Phase 12C — PlotService)")

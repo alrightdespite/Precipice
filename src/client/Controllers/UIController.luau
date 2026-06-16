@@ -37,6 +37,8 @@ local _screens = {
 
 local _current: string? = nil
 local _loaded = false
+local _initAt = 0
+local MIN_LOADING_SECS = 0.8
 
 -- "More" drawer state (managed here, not a separate screen)
 local _drawerScope = nil
@@ -161,7 +163,7 @@ function UIController.closeScreen()
 end
 
 function UIController.init(): typeof(UIController)
-	-- Show loading screen first
+	_initAt = tick()
 	LoadingScreen.open()
 
 	local s2cCount = 0
@@ -183,8 +185,11 @@ function UIController.init(): typeof(UIController)
 			if loadConn then
 				loadConn:Disconnect()
 			end
-			LoadingScreen.close()
-			UIController.openScreen("Home")
+			local elapsed = tick() - _initAt
+			task.delay(math.max(0, MIN_LOADING_SECS - elapsed), function()
+				LoadingScreen.close()
+				UIController.openScreen("Home")
+			end)
 		end
 	end)
 

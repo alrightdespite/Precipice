@@ -33,7 +33,7 @@ end
 -- ── Remote push ───────────────────────────────────────────────────────────────
 
 function VaultService.fireVaultUpdate(player: Player, data: any)
-	RemoteService.getEvent("VaultUpdate"):FireClient(player, data.vault)
+	RemoteService.getEvent("VaultUpdate"):FireClient(player, data.vault.compounds)
 end
 
 -- ── Full-operation API (own their own updateProfile + remote fire) ────────────

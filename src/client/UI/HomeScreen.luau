@@ -595,6 +595,7 @@ function HomeScreen.open(uiController)
 	local rankValue = scope:Value(st.rank)
 	local announcementsValue = scope:Value(st.announcements)
 	local offlineIncomeValue = scope:Value(st.offlineIncome)
+	local revealQueueValue = scope:Value((st :: any).revealQueue or 0)
 	local timerSkipUsesValue = scope:Computed(function(use)
 		return use(balanceValue).timerSkipUses
 	end)
@@ -623,6 +624,9 @@ function HomeScreen.open(uiController)
 			if patch.hints ~= nil then
 				hintValue:set(HintController.getActiveHint())
 			end
+			if (patch :: any).revealQueue ~= nil then
+				revealQueueValue:set((patch :: any).revealQueue)
+			end
 		end)
 	)
 
@@ -646,6 +650,32 @@ function HomeScreen.open(uiController)
 		[Children] = {
 			makeHUD(scope, balanceValue, rankValue),
 			makeMarquee(scope, announcementsValue),
+			-- Queued-reveal counter ("N reveals queued") — §13 multi-reveal spec
+			scope:New("Frame")({
+				Name = "RevealBanner",
+				Size = UDim2.new(1, 0, 0, 24),
+				Position = UDim2.new(0, 0, 0, 88),
+				BackgroundColor3 = Theme.Colors.AccentDim,
+				BorderSizePixel = 0,
+				Visible = scope:Computed(function(use)
+					return use(revealQueueValue) > 0
+				end),
+				ZIndex = 4,
+				[Children] = {
+					scope:New("TextLabel")({
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.Accent,
+						FontFace = Theme.Font.Label,
+						TextSize = 11,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						Text = scope:Computed(function(use)
+							local n = use(revealQueueValue)
+							return tostring(n) .. (n == 1 and " reveal queued" or " reveals queued")
+						end),
+					}),
+				},
+			}),
 			makeOfflineCard(scope, offlineIncomeValue),
 			-- Slot scroll panel
 			scope:New("ScrollingFrame")({

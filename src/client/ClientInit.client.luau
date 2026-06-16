@@ -17,6 +17,7 @@ local LeaderboardController = require(script.Parent.Controllers.LeaderboardContr
 local PrestigeController = require(script.Parent.Controllers.PrestigeController)
 local EventController = require(script.Parent.Controllers.EventController)
 local HintController = require(script.Parent.Controllers.HintController)
+local RevealController = require(script.Parent.Controllers.RevealController)
 local UIController = require(script.Parent.Controllers.UIController)
 
 -- Dependency-ordered init
@@ -36,6 +37,7 @@ LeaderboardController.init()
 PrestigeController.init()
 EventController.init()
 HintController.init()
+RevealController.init()
 UIController.init()
 
 -- After one frame, mark loaded so UIController transitions from Loading → Home.

@@ -35,12 +35,15 @@ None.
 
 ## Next
 
-Phase 12C -- World build (Studio: lab interior, chamber parts, plot layout, reveal VFX wired to SlotController, cosmetics application).
+Phase 12D -- Studio world build (lab interior model, chamber BaseParts + WingLight PointLights + SpotLights + ParticleEmitters, PLOT_TEMPLATE model in workspace root, cosmetics application).
 
 ## Known issues
 
-- LoadingScreen does not appear on join — UIController opens HomeScreen before LoadingScreen fade completes (Phase 12B known issue, fix in 12C)
-- SynthesizeScreen Computed callback type error on line 27 — vault sort comparison bug (fix pending)
+- **RevealCard patent timing (12D fix):** `isWorldFirst` in RevealController checks `StateController.patents` after VFX (~0.5s), relying on `PatentClaim` S2C arriving within that window. Fix: add `isPatent: boolean` to `SlotReveal` server response payload so the flag is authoritative and synchronous. Affects `SlotService.luau` (return value) and `RevealController.luau` (read from result instead of StateController).
+
+## Phase 12C completed (2026-06-15)
+
+- [x] Task 23: PRECIPICE_PHASE12C -- SynthesizeScreen nil vault guard; UIController 0.8s min loading screen; PlotService (PLOT_TEMPLATE clone per player, Plots folder); RevealController (§13 queue + VFX: dim WingLights → spotlight → 3× pulse → particle burst → chamber fade); RevealCard overlay (Keep/Sell + patent WORLD FIRST banner); SlotController.reveal delegates to RevealController; HomeScreen revealQueue HUD counter; ClientInit wires RevealController; 457/457 tests green
 
 ## Open questions
 

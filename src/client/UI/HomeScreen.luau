@@ -496,6 +496,19 @@ local function makeMarquee(scope, announcementsValue)
 		end)
 	)
 
+	local textLabel = scope:New("TextLabel")({
+		Name = "Text",
+		Size = UDim2.new(1, 0, 1, 0),
+		Position = UDim2.new(1, 10, 0, 0),
+		BackgroundTransparency = 1,
+		TextColor3 = Theme.Colors.Accent,
+		FontFace = Theme.Font.Body,
+		TextSize = 12,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Text = annText,
+	})
+	marqueeRef:set(textLabel)
+
 	return scope:New("Frame")({
 		Name = "Marquee",
 		Size = UDim2.new(1, 0, 0, 28),
@@ -504,20 +517,7 @@ local function makeMarquee(scope, announcementsValue)
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
 		Visible = hasAnn,
-		[Children] = {
-			scope:New("TextLabel")({
-				Name = "Text",
-				Size = UDim2.new(1, 0, 1, 0),
-				Position = UDim2.new(1, 10, 0, 0),
-				BackgroundTransparency = 1,
-				TextColor3 = Theme.Colors.Accent,
-				FontFace = Theme.Font.Body,
-				TextSize = 12,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Text = annText,
-				[Fusion.Ref] = marqueeRef,
-			}),
-		},
+		[Children] = { textLabel },
 	})
 end
 

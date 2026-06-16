@@ -94,6 +94,26 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
 		end)
 	)
 
+	local listFrame = scope:New("ScrollingFrame")({
+		Name = "List",
+		Size = UDim2.new(1, -16, 1, -56),
+		Position = UDim2.fromOffset(8, 48),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 0,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.fromScale(0, 0),
+		ZIndex = 21,
+		[Children] = {
+			scope:New("UIListLayout")({
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				FillDirection = Enum.FillDirection.Vertical,
+				Padding = UDim.new(0, 4),
+			}),
+		},
+	})
+	rowsFrame:set(listFrame)
+
 	return scope:New("Frame")({
 		Name = "VaultBrowser",
 		Size = UDim2.new(0.9, 0, 0.6, 0),
@@ -128,25 +148,7 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
 					scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 12) }),
 				},
 			}),
-			scope:New("ScrollingFrame")({
-				Name = "List",
-				Size = UDim2.new(1, -16, 1, -56),
-				Position = UDim2.fromOffset(8, 48),
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				ScrollBarThickness = 0,
-				AutomaticCanvasSize = Enum.AutomaticSize.Y,
-				CanvasSize = UDim2.fromScale(0, 0),
-				ZIndex = 21,
-				[Children] = {
-					scope:New("UIListLayout")({
-						SortOrder = Enum.SortOrder.LayoutOrder,
-						FillDirection = Enum.FillDirection.Vertical,
-						Padding = UDim.new(0, 4),
-						[Fusion.Ref] = rowsFrame, -- store ref to scroll contents
-					}),
-				},
-			}),
+			listFrame,
 		},
 	})
 end

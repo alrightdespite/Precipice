@@ -1,8 +1,8 @@
 # Status
 
-## Current phase: Phase 12B complete
+## Current phase: Phase 12D — lab world built in Studio
 
-**Last updated:** 2026-06-15
+**Last updated:** 2026-06-16
 
 ## Done
 
@@ -33,9 +33,16 @@
 
 None.
 
+## Phase 12D — Lab world build (done in Studio)
+
+Full lab + exterior built as clone-safe BaseParts. Lives at **`workspace.Plots.PLOT_TEMPLATE`** (so `PlotService` finds it) — see `docs/PLOT_TEMPLATE.md` for the full layout. Code↔map contract verified end-to-end: `PlotService` template lookup, `SlotController.getChamberPart` path (`Plots.<userId>.Lab.Chambers.<i>`), and `RevealController` per-chamber SpotLight/PointLight/ParticleEmitter + `WingLight` resolution all resolve. `Burst` emitters configured for the reveal pop.
+
 ## Next
 
-Phase 12D -- Studio world build (lab interior model, chamber BaseParts + WingLight PointLights + SpotLights + ParticleEmitters, PLOT_TEMPLATE model in workspace root, cosmetics application).
+- **Slots 7–10:** map has chambers `"1"–"6"`; `MAX_SLOTS=10` (Expanded-Lab gamepass → 7). Reveals for slots >6 resolve nil and skip VFX gracefully. Add chambers 7–10 if/when expanded lab ships.
+- **WingLight dim is invisible:** `WingLight` is a Folder-child PointLight (no transform → no light), so the reveal dim has no visible effect. To make it visible: `RevealController` searches recursively + WingLights live on parts. Map currently matches the existing contract.
+- **RevealPrompt inert:** reveal is UI-driven; the chamber `ProximityPrompt` isn't wired. Either connect `Triggered → SlotController.reveal(i)` (guard on slot-complete) or disable the prompt.
+- **Plot overlap (PlotService):** clones aren't position-offset, so multi-player plots stack at origin. Code-side fix (offset each clone) — not a map issue.
 
 ## Known issues
 
@@ -44,6 +51,7 @@ Phase 12D -- Studio world build (lab interior model, chamber BaseParts + WingLig
 ## Phase 12C completed (2026-06-15)
 
 - [x] Task 23: PRECIPICE_PHASE12C -- SynthesizeScreen nil vault guard; UIController 0.8s min loading screen; PlotService (PLOT_TEMPLATE clone per player, Plots folder); RevealController (§13 queue + VFX: dim WingLights → spotlight → 3× pulse → particle burst → chamber fade); RevealCard overlay (Keep/Sell + patent WORLD FIRST banner); SlotController.reveal delegates to RevealController; HomeScreen revealQueue HUD counter; ClientInit wires RevealController; 457/457 tests green
+- [x] Task 24: PRECIPICE_PHASE12C_FIXES -- vault schema root fix (VaultService sends `data.vault.compounds` not `data.vault`; SynthesizeScreen sort crash resolved; VaultController.getQuantity correct); LoadingScreen fade (TweenService 0.3s bg fade before scope cleanup; duplicate UIController Changed connection removed); HUD overlay (SlotPanel height 200px anchored bottom; "Hide"/"Show Slots" toggle); ✕ close button added to SynthesizeScreen, MarketScreen, FormulaLogScreen, LeaderboardScreen, SyndicateScreen, SettingsScreen; 457/457 tests green
 
 ## Open questions
 

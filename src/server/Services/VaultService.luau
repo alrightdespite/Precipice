@@ -130,6 +130,7 @@ function VaultService.init()
 		local player = Players:GetPlayerByUserId(userId)
 		if player then
 			VaultService.fireVaultUpdate(player, DataService.getProfile(userId))
+			RemoteService.getEvent("PlayerReady"):FireClient(player)
 		end
 	end)
 end

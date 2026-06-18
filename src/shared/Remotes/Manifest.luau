@@ -394,6 +394,14 @@ local Manifest: { RemoteEntry } = {
 		direction = "S2C",
 		payloadDesc = "epochType: 'weekly'|'daily', timestamp: number",
 	},
+
+	-- ── Session ───────────────────────────────────────────────────────────────
+	{
+		name = "PlayerReady",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "() — all initial state sent; client may show Home",
+	},
 }
 
 return Manifest

@@ -40,8 +40,7 @@ HintController.init()
 RevealController.init()
 UIController.init()
 
--- After one frame, mark loaded so UIController transitions from Loading → Home.
--- Phase 12B: replace with server-driven initial-state confirmation event.
-task.defer(function()
+-- Wait for server to confirm all initial state has been sent before showing Home.
+RemoteController.connect("PlayerReady", function()
 	StateController.set({ loaded = true })
 end)

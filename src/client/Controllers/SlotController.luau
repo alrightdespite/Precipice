@@ -5,8 +5,8 @@ local RemoteController = require(script.Parent.RemoteController)
 
 local SlotController = {}
 
-function SlotController.startExtraction(slotIndex: number, compoundId: string): (boolean, string?)
-	return RemoteController.invoke("SlotStartExtraction", slotIndex, compoundId)
+function SlotController.startExtraction(_slotIndex: number, compoundId: string): (boolean, string?)
+	return RemoteController.invoke("SlotStartExtraction", compoundId)
 end
 
 function SlotController.startSynthesis(

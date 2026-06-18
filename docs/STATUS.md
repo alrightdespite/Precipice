@@ -37,6 +37,9 @@
 - [x] **Server-driven load gate** — `PlayerReady` S2C Event added to Manifest. `VaultService.onProfileLoaded` fires it after `fireVaultUpdate`. `ClientInit` replaced `task.defer({ loaded = true })` with `RemoteController.connect("PlayerReady", ...)` so the loading screen holds until vault state is guaranteed on the client.
 - [x] **Picker declarative rows** — replaced `Observer/rowsFrame` imperative pattern in `makeVaultBrowser` with `scope:Computed` → `[Children]`; eliminates race where Observer fired before `rowsFrame` was set, leaving picker permanently empty when vault was already populated at open time.
 - [x] **Compound display names** — picker rows and slot bar now show `Compounds[id].name` (e.g. "Sodium Chloride ×1") instead of raw IDs; `HomeScreen` gets `Compounds` require; `or id` fallback for unknown IDs.
+- [x] **Extraction confirm wired** — `HomeScreen` threads `slotIndex` through `openScreen("Lab", "extraction", slotIndex)`; `SynthesizeScreen.open` gains `slotIndex` param; extraction `onSelect` calls `SlotController.startExtraction` then navigates Home. Synthesis `onSelect` unchanged.
+- [x] **Starter extraction unblocked** — `SlotStartExtraction` handler now allows starters (`compoundEntry.starter == true`) to bypass `formulaLog.discovered` check; non-starters still require discovery.
+- [x] **SlotController.startExtraction arg fix** — server handler takes only `compoundId`; client was incorrectly passing `(slotIndex, compoundId)` → `slotIndex` landed as `compoundId` → `"invalid args"`. Fixed to pass only `compoundId`; `_slotIndex` kept in signature for future per-slot routing.
 
 ## In progress
 

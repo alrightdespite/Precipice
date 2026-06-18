@@ -7,6 +7,7 @@ local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 local LabController = require(script.Parent.Parent.Controllers.LabController)
+local SlotController = require(script.Parent.Parent.Controllers.SlotController)
 
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
@@ -175,7 +176,7 @@ end
 local SynthesizeScreen = {}
 local _scope = nil
 
-function SynthesizeScreen.open(uiController, slotMode)
+function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 	if _scope then
 		return
 	end
@@ -556,11 +557,19 @@ function SynthesizeScreen.open(uiController, slotMode)
 				Visible = showBrowser,
 				[Children] = {
 					makeVaultBrowser(scope, vaultValue, function(id)
-						local target = peek(pickerTarget)
-						if target == 1 then
-							input1:set(id)
+						if slotMode == "extraction" then
+							SlotController.startExtraction(slotIndex, id)
+							showBrowser:set(false)
+							if uiController then
+								uiController.openScreen("Home")
+							end
 						else
-							input2:set(id)
+							local target = peek(pickerTarget)
+							if target == 1 then
+								input1:set(id)
+							else
+								input2:set(id)
+							end
 						end
 					end, function()
 						showBrowser:set(false)

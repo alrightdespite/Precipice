@@ -139,7 +139,7 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		local st = slot.state
 		if st == "EMPTY" then
 			if uiController then
-				uiController.openScreen("Lab", "extraction")
+				uiController.openScreen("Lab", "extraction", slotIndex)
 			end
 		elseif st == "RUNNING" then
 			SlotController.skip(slotIndex, "timer")

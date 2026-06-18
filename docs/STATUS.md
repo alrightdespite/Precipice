@@ -1,8 +1,8 @@
 # Status
 
-## Current phase: Phase 12D — lab world built in Studio
+## Current phase: Phase 12E — extraction picker fix + server-driven load gate
 
-**Last updated:** 2026-06-16
+**Last updated:** 2026-06-17
 
 ## Done
 
@@ -28,6 +28,13 @@
 - [x] Task 20: PRECIPICE_PHASE11 -- JointSynth DS budget fix (batch per-syndicate); vault contribute floor; FormulaLogRequest OnServerInvoke in LabService; event compound blueprint gate in SlotService; DataService.isLoaded session guards on all C2S handlers; MarketService self-trade SELF_TRADE check; SyndicateInvite userId validation (integer, positive, <10B, not-self); AnalyticsService stub (Events table + no-op track, wired at all emit points); RemoteHandlers CI spec; DataIntegrity known-limitation comment; 401/401 tests green
 - [x] Task 21: PRECIPICE_PHASE12A -- src/shared/Types.luau; LabButtonStateLogic + PrestigeLogic + HintTriggerLogic pure modules; RecipeResolver +getResultIds +isVariablePair; 17 client Controllers (StateController signal, RemoteController S2C wiring x20, SlotController chamber stub, LabController button-state, all feature controllers); UIController + 9 UI stubs (LoadingScreen with taglines, Home/Synthesize/Market/FormulaLog/Leaderboard/Syndicate/Prestige/Settings); ClientInit.client.luau boot order; 3 Lune specs (LabButtonState x14, PrestigeBlockers x9, HintTriggers x34); default.project.json +StarterGui; 457/457 tests green
 - [x] Task 22: PRECIPICE_PHASE12B -- Theme.luau + Components.luau (Button/Card/Label/TierBadge/Divider/ProgressBar/ScrollFrame); all 9 UI screens replaced with Fusion 0.3.0 implementations (LoadingScreen animated progress+taglines, HomeScreen slot cards with live timers+HUD+marquee+hint+offline-card, SynthesizeScreen pickers+formula-log, MarketScreen browse/my-listings+modal, FormulaLogScreen+ExoticRegistry, LeaderboardScreen 2 boards, SyndicateScreen full CRUD+joint slots, PrestigeScreen 2-step confirm, SettingsScreen toggles+gamepasses); UIController progress tracking + More drawer; 457/457 tests green; 0 selene errors; 0 stylua diffs
+
+## Phase 12E completed (2026-06-17)
+
+- [x] **Starter compound seed** — `VaultService.onProfileLoaded` seeds 5 `starter=true` compounds (T1_01–T1_05) at `STARTING_COMPOUNDS_PER_STARTER = 1` when `vault.compounds` is empty (fresh profile). `EconomyConstants.STARTING_COMPOUNDS_PER_STARTER` consumed for the first time.
+- [x] **Extraction picker data source** — `makeVaultBrowser` branches on `mode == "extraction"`: shows all starters + T1 `formulaLog` discoveries (qty from vault, may be 0) instead of vault-qty->0 filter. Synthesis picker unchanged.
+- [x] **HomeScreen wiring** — slot Start button passes `slotMode = "extraction"` through `UIController.openScreen("Lab", "extraction")` → `SynthesizeScreen.open(uiController, slotMode)`. `UIController.openScreen` updated to forward varargs.
+- [x] **Server-driven load gate** — `PlayerReady` S2C Event added to Manifest. `VaultService.onProfileLoaded` fires it after `fireVaultUpdate`. `ClientInit` replaced `task.defer({ loaded = true })` with `RemoteController.connect("PlayerReady", ...)` so the loading screen holds until vault state is guaranteed on the client.
 
 ## In progress
 

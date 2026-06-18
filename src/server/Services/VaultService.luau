@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataService = require(ServerScriptService.Server.Services.DataService)
 local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
+local EconomyConstants = require(ReplicatedStorage.Shared.Config.EconomyConstants)
 local ContractService = require(ServerScriptService.Server.Services.ContractService)
 
 local VaultService = {}
@@ -64,7 +65,9 @@ end
 local function wireRemotes()
 	local sellFn = RemoteService.getFunction("VaultInstantSell")
 	sellFn.OnServerInvoke = function(player: Player, compoundId: any, quantity: any)
-		if not DataService.isLoaded(player.UserId) then return 0, "session not ready" end
+		if not DataService.isLoaded(player.UserId) then
+			return 0, "session not ready"
+		end
 		if type(compoundId) ~= "string" or type(quantity) ~= "number" then
 			return 0, "invalid args"
 		end
@@ -101,11 +104,7 @@ local function wireRemotes()
 
 		local data = DataService.getProfile(userId)
 		VaultService.fireVaultUpdate(player, data)
-		RemoteService.getEvent("BalanceUpdate"):FireClient(
-			player,
-			data.balances.pellets,
-			data.balances.catalysts
-		)
+		RemoteService.getEvent("BalanceUpdate"):FireClient(player, data.balances.pellets, data.balances.catalysts)
 
 		return earned, nil
 	end
@@ -118,6 +117,16 @@ function VaultService.init()
 
 	-- Push initial vault snapshot on join (before offline settle runs)
 	DataService.onProfileLoaded:Connect(function(userId)
+		local data = DataService.getProfile(userId)
+		if next(data.vault.compounds) == nil then
+			DataService.updateProfile(userId, function(d)
+				for id, entry in pairs(Compounds) do
+					if entry.starter then
+						d.vault.compounds[id] = EconomyConstants.STARTING_COMPOUNDS_PER_STARTER
+					end
+				end
+			end)
+		end
 		local player = Players:GetPlayerByUserId(userId)
 		if player then
 			VaultService.fireVaultUpdate(player, DataService.getProfile(userId))

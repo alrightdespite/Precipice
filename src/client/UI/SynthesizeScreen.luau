@@ -19,16 +19,35 @@ local function getTier(compoundId: string): number
 end
 
 -- Compact vault browser popup
-local function makeVaultBrowser(scope, vaultValue, onSelect, onClose)
+local function makeVaultBrowser(scope, vaultValue, onSelect, onClose, mode, formulaLogValue)
 	local entries = scope:Computed(function(use)
 		local vault = use(vaultValue)
 		if not vault then
 			return {}
 		end
 		local list = {}
-		for id, qty in pairs(vault) do
-			if qty > 0 then
-				table.insert(list, { id = id, qty = qty, tier = getTier(id) })
+		if mode == "extraction" then
+			local log = formulaLogValue and use(formulaLogValue) or {}
+			local seen = {}
+			for id, entry in pairs(Compounds) do
+				if entry.starter then
+					table.insert(list, { id = id, qty = vault[id] or 0, tier = getTier(id) })
+					seen[id] = true
+				end
+			end
+			for _, logEntry in ipairs(log) do
+				local cid = logEntry.compoundId
+				local compound = Compounds[cid]
+				if compound and compound.tier == 1 and not seen[cid] then
+					table.insert(list, { id = cid, qty = vault[cid] or 0, tier = 1 })
+					seen[cid] = true
+				end
+			end
+		else
+			for id, qty in pairs(vault) do
+				if qty > 0 then
+					table.insert(list, { id = id, qty = qty, tier = getTier(id) })
+				end
 			end
 		end
 		table.sort(list, function(a, b)
@@ -161,7 +180,7 @@ end
 local SynthesizeScreen = {}
 local _scope = nil
 
-function SynthesizeScreen.open(uiController)
+function SynthesizeScreen.open(uiController, slotMode)
 	if _scope then
 		return
 	end
@@ -550,7 +569,7 @@ function SynthesizeScreen.open(uiController)
 						end
 					end, function()
 						showBrowser:set(false)
-					end),
+					end, slotMode, formulaLogValue),
 				},
 			}),
 		},

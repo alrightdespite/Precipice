@@ -87,7 +87,7 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose, mode, form
 							FontFace = Theme.Font.Label,
 							TextSize = 13,
 							TextXAlignment = Enum.TextXAlignment.Left,
-							Text = entry.id .. " ×" .. entry.qty,
+							Text = (Compounds[entry.id] and Compounds[entry.id].name or entry.id) .. " ×" .. entry.qty,
 						}),
 						scope:New("Frame")({
 							Size = UDim2.fromOffset(28, 20),

@@ -4,6 +4,7 @@ local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local TimerMath = require(ReplicatedStorage.Shared.Core.TimerMath)
+local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
@@ -92,9 +93,11 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		if slot.state == "EMPTY" then
 			return "Slot idle — tap to start"
 		elseif slot.state == "RUNNING" then
-			return slot.compoundId or "Running…"
+			local cid = slot.compoundId
+			return cid and (Compounds[cid] and Compounds[cid].name or cid) or "Running…"
 		elseif slot.state == "DONE" or slot.state == "REVEALING" then
-			return slot.compoundId or "Complete"
+			local cid = slot.compoundId
+			return cid and (Compounds[cid] and Compounds[cid].name or cid) or "Complete"
 		end
 		return "—"
 	end)

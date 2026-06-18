@@ -46,8 +46,28 @@ local function getSlotCap(data: any): number
 	return MonetizationService.getSlotCap(data)
 end
 
+local function toClientSlot(raw: any): any
+	local state
+	if raw.workRemaining and raw.workRemaining > 0 then
+		state = "RUNNING"
+	elseif raw.workRemaining == 0 then
+		state = "DONE"
+	else
+		state = "EMPTY"
+	end
+	return {
+		index = raw.index,
+		state = state,
+		compoundId = raw.compoundId,
+		workRemaining = raw.workRemaining,
+		lastTickAt = raw.lastTickAt,
+		mode = raw.mode,
+		isActive = true,
+	}
+end
+
 local function fireSlotUpdate(player: Player, slot: any)
-	RemoteService.getEvent("SlotStateUpdate"):FireClient(player, slot.index, slot)
+	RemoteService.getEvent("SlotStateUpdate"):FireClient(player, slot.index, toClientSlot(slot))
 end
 
 local function fireSlotCleared(player: Player, slotIndex: number)
@@ -521,7 +541,7 @@ local function runTick()
 			local event = RemoteService.getEvent("SlotStateUpdate")
 			for _, slot in ipairs(newSlots) do
 				if slot.workRemaining > 0 or justCompleted[slot.index] then
-					event:FireClient(player, slot.index, slot)
+					event:FireClient(player, slot.index, toClientSlot(slot))
 				end
 			end
 		end)
@@ -551,7 +571,7 @@ function SlotService.applySkipToSlot(player: Player, slotIndex: number)
 		end
 	end)
 	if newSlotRecord then
-		RemoteService.getEvent("SlotStateUpdate"):FireClient(player, newSlotRecord.index, newSlotRecord)
+		RemoteService.getEvent("SlotStateUpdate"):FireClient(player, newSlotRecord.index, toClientSlot(newSlotRecord))
 	end
 end
 

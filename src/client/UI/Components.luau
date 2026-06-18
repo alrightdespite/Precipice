@@ -65,6 +65,18 @@ function Components.Button(scope, props)
 		return Theme.Colors.TextPrimary
 	end)
 
+	local disabledNow = scope:Computed(function(use)
+		local dis = props.Disabled
+		if typeof(dis) == "table" then
+			dis = use(dis)
+		end
+		return dis and true or false
+	end)
+
+	local sheenEnabled = scope:Computed(function(use)
+		return (style == "primary" or style == "secondary") and not use(disabledNow)
+	end)
+
 	return scope:New("TextButton")({
 		AutoButtonColor = false,
 		BackgroundColor3 = springBg,
@@ -73,8 +85,13 @@ function Components.Button(scope, props)
 		BorderSizePixel = 0,
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+			scope:New("UIGradient")({
+				Color = Theme.Gradient.SurfaceSheen,
+				Rotation = Theme.Gradient.SurfaceSheenRotation,
+				Enabled = sheenEnabled,
+			}),
 			style == "secondary" and scope:New("UIStroke")({
-				Color = Theme.Colors.SurfaceRaised,
+				Color = Theme.Colors.Stroke,
 				Thickness = 1,
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			}) or nil,
@@ -118,8 +135,12 @@ end
 function Components.Card(scope, props)
 	local inner: { [any]: any } = {
 		scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+		scope:New("UIGradient")({
+			Color = Theme.Gradient.SurfaceSheen,
+			Rotation = Theme.Gradient.SurfaceSheenRotation,
+		}),
 		scope:New("UIStroke")({
-			Color = Theme.Colors.SurfaceRaised,
+			Color = Theme.Colors.Stroke,
 			Thickness = 1,
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		}),
@@ -158,7 +179,7 @@ function Components.Label(scope, props)
 	local color = Theme.Colors.TextPrimary
 	if style == "header" then
 		font = Theme.Font.Header
-		size = 20
+		size = 22
 	elseif style == "label" then
 		font = Theme.Font.Label
 		size = 13
@@ -185,17 +206,22 @@ function Components.TierBadge(scope, props)
 	local tier = props.Tier or 1
 	local tierColor = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary
 	return scope:New("Frame")({
-		Size = UDim2.fromOffset(32, 22),
+		Size = UDim2.fromOffset(34, 22),
 		BackgroundColor3 = tierColor,
 		BorderSizePixel = 0,
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
+			scope:New("UIStroke")({
+				Color = tierColor:Lerp(Color3.new(0, 0, 0), 0.3),
+				Thickness = 1,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}),
 			scope:New("TextLabel")({
 				Text = "T" .. tostring(tier),
 				Size = UDim2.fromScale(1, 1),
 				BackgroundTransparency = 1,
 				TextColor3 = Color3.new(1, 1, 1),
-				FontFace = Theme.Font.Label,
+				FontFace = Theme.Font.Value,
 				TextSize = 12,
 				TextXAlignment = Enum.TextXAlignment.Center,
 			}),
@@ -207,7 +233,7 @@ end
 function Components.Divider(scope)
 	return scope:New("Frame")({
 		Size = UDim2.new(1, 0, 0, 1),
-		BackgroundColor3 = Color3.fromHex("3A3A42"),
+		BackgroundColor3 = Theme.Colors.Stroke,
 		BorderSizePixel = 0,
 	})
 end
@@ -246,6 +272,13 @@ function Components.ProgressBar(scope, props)
 				BorderSizePixel = 0,
 				[Children] = {
 					scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+					scope:New("UIGradient")({
+						Color = ColorSequence.new({
+							ColorSequenceKeypoint.new(0, Theme.Colors.Accent),
+							ColorSequenceKeypoint.new(1, Theme.Colors.Accent:Lerp(Color3.new(1, 1, 1), 0.15)),
+						}),
+						Rotation = 90,
+					}),
 				},
 			}),
 		},

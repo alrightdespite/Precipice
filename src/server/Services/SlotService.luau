@@ -410,7 +410,9 @@ local function wireRemotes()
 					tier = Compounds[compoundId] and Compounds[compoundId].tier or 0,
 				})
 			end
-			PatentService.recordNaturalSynthesis(player, compoundId, data)
+			if Compounds[compoundId] and Compounds[compoundId].tier >= 2 then
+				PatentService.recordNaturalSynthesis(player, compoundId, data)
+			end
 			-- Contract progress counts for all reveals (natural and non-natural per §19)
 			local revealTier = Compounds[compoundId] and Compounds[compoundId].tier or 0
 			ContractService.recordProgress(player, data, "synthesis_t" .. revealTier, 1)

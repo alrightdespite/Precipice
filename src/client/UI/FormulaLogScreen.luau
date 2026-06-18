@@ -98,7 +98,7 @@ function FormulaLogScreen.open(uiController)
 					FontFace = Theme.Font.Label,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = cid,
+					Text = Compounds[cid] and Compounds[cid].name or cid,
 				}),
 				scope:New("TextLabel")({
 					LayoutOrder = 2,
@@ -173,7 +173,7 @@ function FormulaLogScreen.open(uiController)
 					FontFace = Theme.Font.Label,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = exoticId,
+					Text = Compounds[exoticId] and Compounds[exoticId].name or exoticId,
 				}),
 				scope:New("TextLabel")({
 					LayoutOrder = 2,

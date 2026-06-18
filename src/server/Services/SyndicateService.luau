@@ -38,12 +38,24 @@ end
 
 -- ── Read/write helpers ─────────────────────────────────────────────────────
 
+local function normalizeMemberKeys(record: any): any?
+	if not record or not record.members then return record end
+	local fixed = {}
+	for k, v in pairs(record.members) do
+		fixed[tonumber(k) or k] = v
+	end
+	record.members = fixed
+	return record
+end
+
 local function getRecord(syndicateId: string): any?
-	return _syndicateDs:GetAsync("syndicate:" .. syndicateId)
+	return normalizeMemberKeys(_syndicateDs:GetAsync("syndicate:" .. syndicateId))
 end
 
 local function updateRecord(syndicateId: string, fn: (any) -> any?)
-	_syndicateDs:UpdateAsync("syndicate:" .. syndicateId, fn)
+	_syndicateDs:UpdateAsync("syndicate:" .. syndicateId, function(record)
+		return fn(normalizeMemberKeys(record))
+	end)
 end
 
 -- Public accessor for JointSynthService (Phase 10B)

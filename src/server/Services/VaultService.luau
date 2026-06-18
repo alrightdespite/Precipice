@@ -125,6 +125,7 @@ function VaultService.init()
 						d.vault.compounds[id] = EconomyConstants.STARTING_COMPOUNDS_PER_STARTER
 					end
 				end
+				d.balances.pellets = EconomyConstants.STARTING_PELLETS
 			end)
 		end
 		local player = Players:GetPlayerByUserId(userId)

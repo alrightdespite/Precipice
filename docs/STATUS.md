@@ -1,6 +1,6 @@
 # Status
 
-## Current phase: Phase 12E — extraction picker fix + server-driven load gate
+## Current phase: Phase 12F — UI polish + layout overhaul (complete)
 
 **Last updated:** 2026-06-17
 
@@ -28,6 +28,9 @@
 - [x] Task 20: PRECIPICE_PHASE11 -- JointSynth DS budget fix (batch per-syndicate); vault contribute floor; FormulaLogRequest OnServerInvoke in LabService; event compound blueprint gate in SlotService; DataService.isLoaded session guards on all C2S handlers; MarketService self-trade SELF_TRADE check; SyndicateInvite userId validation (integer, positive, <10B, not-self); AnalyticsService stub (Events table + no-op track, wired at all emit points); RemoteHandlers CI spec; DataIntegrity known-limitation comment; 401/401 tests green
 - [x] Task 21: PRECIPICE_PHASE12A -- src/shared/Types.luau; LabButtonStateLogic + PrestigeLogic + HintTriggerLogic pure modules; RecipeResolver +getResultIds +isVariablePair; 17 client Controllers (StateController signal, RemoteController S2C wiring x20, SlotController chamber stub, LabController button-state, all feature controllers); UIController + 9 UI stubs (LoadingScreen with taglines, Home/Synthesize/Market/FormulaLog/Leaderboard/Syndicate/Prestige/Settings); ClientInit.client.luau boot order; 3 Lune specs (LabButtonState x14, PrestigeBlockers x9, HintTriggers x34); default.project.json +StarterGui; 457/457 tests green
 - [x] Task 22: PRECIPICE_PHASE12B -- Theme.luau + Components.luau (Button/Card/Label/TierBadge/Divider/ProgressBar/ScrollFrame); all 9 UI screens replaced with Fusion 0.3.0 implementations (LoadingScreen animated progress+taglines, HomeScreen slot cards with live timers+HUD+marquee+hint+offline-card, SynthesizeScreen pickers+formula-log, MarketScreen browse/my-listings+modal, FormulaLogScreen+ExoticRegistry, LeaderboardScreen 2 boards, SyndicateScreen full CRUD+joint slots, PrestigeScreen 2-step confirm, SettingsScreen toggles+gamepasses); UIController progress tracking + More drawer; 457/457 tests green; 0 selene errors; 0 stylua diffs
+
+- [x] Task 25: PRECIPICE_UI_POLISH -- Theme.luau (CornerRadius 4→8, CornerRadiusSmall/Pill, Padding 16, PaddingSmall, GapSmall/Medium); Components.luau (Button TextSize 15, secondary UIStroke, Card uses Padding+UIStroke, TierBadge pill 32×22 TextSize 12, Divider #3A3A42, ProgressBar height 8 pill track+fill); HomeScreen.luau (HUD 56→60 bottom-border, accent bar 6px, slot card positions adjusted, scroll frame padding, nav active indicator, RevealBanner/Marquee sizes); RevealCard.luau (corner 12→16, padding 16→20, CompoundName 24→26, patent banner 10→14 pad/22→24 title, Keep UIStroke, value label "⬡ N Pellets", card heights 320→300/400→380); 457/457 tests green
+- [x] Task 26: PRECIPICE_UI_LAYOUT -- HomeScreen full overhaul: uiVisible Value drives ScreenGui.Enabled (scope:Computed); activeTabValue lifted to HomeScreen.open scope; WorldHUD ScreenGui (DisplayOrder 5, always-on): circular open button + Heartbeat-driven timer strip (running/done summary); HUD 60→52 + minimize button (sets uiVisible=false); slot cards redesigned narrow (68px, pill accent bar, #N label, 48×24 action btn); left slot panel (200px, visible on Home tab, SLOTS header, ScrollingFrame 1px gap layout); bottom nav 56→52 + top separator + wrapper frame for border/tabs separation; makeHintBar AnchorPoint(0,1) at (0,0,1,-52); marquee/RevealBanner/OfflineCard positions updated; dead locals removed; 457/457 tests green
 
 ## Phase 12E completed (2026-06-17)
 

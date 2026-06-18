@@ -159,7 +159,7 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 			-- Left tier accent bar
 			scope:New("Frame")({
 				Name = "Accent",
-				Size = UDim2.new(0, 4, 1, 0),
+				Size = UDim2.new(0, 6, 1, 0),
 				BackgroundColor3 = accentColor,
 				BorderSizePixel = 0,
 				[Children] = {
@@ -169,15 +169,15 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 			-- Content area
 			scope:New("Frame")({
 				Name = "Content",
-				Size = UDim2.new(1, -56, 1, 0),
-				Position = UDim2.fromOffset(12, 0),
+				Size = UDim2.new(1, -66, 1, 0),
+				Position = UDim2.fromOffset(16, 0),
 				BackgroundTransparency = 1,
 				[Children] = {
 					scope:New("TextLabel")({
 						Name = "Main",
 						Text = mainText,
 						Size = UDim2.new(1, 0, 0, 24),
-						Position = UDim2.fromOffset(0, 14),
+						Position = UDim2.fromOffset(0, 16),
 						BackgroundTransparency = 1,
 						TextColor3 = scope:Computed(function(use)
 							if use(slotState) == "EMPTY" then
@@ -195,7 +195,7 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 						Name = "Timer",
 						Text = timerValue,
 						Size = UDim2.new(1, 0, 0, 18),
-						Position = UDim2.fromOffset(0, 42),
+						Position = UDim2.fromOffset(0, 44),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.Accent,
 						FontFace = Theme.Font.Value,
@@ -208,7 +208,7 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 						Name = "DoneLabel",
 						Text = "Ready to reveal",
 						Size = UDim2.new(1, 0, 0, 18),
-						Position = UDim2.fromOffset(0, 42),
+						Position = UDim2.fromOffset(0, 44),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.Success,
 						FontFace = Theme.Font.Label,
@@ -222,7 +222,7 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 			scope:New("TextButton")({
 				Name = "ActionBtn",
 				Size = UDim2.fromOffset(44, 44),
-				Position = UDim2.new(1, -48, 0.5, -22),
+				Position = UDim2.new(1, -52, 0.5, -22),
 				BackgroundColor3 = scope:Computed(function(use)
 					local st = use(slotState)
 					if st == "DONE" or st == "REVEALING" then
@@ -264,15 +264,17 @@ end
 local function makeHUD(scope, balanceValue, rankValue)
 	return scope:New("Frame")({
 		Name = "HUD",
-		Size = UDim2.new(1, 0, 0, 56),
+		Size = UDim2.new(1, 0, 0, 60),
 		BackgroundColor3 = Theme.Colors.Surface,
 		BorderSizePixel = 0,
 		ZIndex = 5,
 		[Children] = {
-			scope:New("UIStroke")({
-				Color = Theme.Colors.SurfaceRaised,
-				Thickness = 1,
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			scope:New("Frame")({
+				Name = "BottomBorder",
+				Size = UDim2.new(1, 0, 0, 2),
+				Position = UDim2.new(0, 0, 1, -2),
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
+				BorderSizePixel = 0,
 			}),
 			-- Pellets (left)
 			scope:New("Frame")({
@@ -343,13 +345,18 @@ end
 
 -- Bottom nav bar
 local function makeBottomNav(scope, uiController)
+	local activeTab = scope:Value("Home")
 	local tabs = {}
 	for _, name in ipairs(NAV_TABS) do
-		local isHome = name == "Home"
+		local isActive = scope:Computed(function(use)
+			return use(activeTab) == name
+		end)
 		local btn = scope:New("TextButton")({
 			Name = name,
 			Size = UDim2.new(1 / #NAV_TABS, 0, 1, 0),
-			BackgroundColor3 = isHome and Theme.Colors.AccentDim or Theme.Colors.Surface,
+			BackgroundColor3 = scope:Computed(function(use)
+				return use(isActive) and Theme.Colors.AccentDim or Theme.Colors.Surface
+			end),
 			BorderSizePixel = 0,
 			Text = "",
 			[Children] = {
@@ -357,10 +364,24 @@ local function makeBottomNav(scope, uiController)
 					Text = name,
 					Size = UDim2.fromScale(1, 1),
 					BackgroundTransparency = 1,
-					TextColor3 = isHome and Theme.Colors.Accent or Theme.Colors.TextSecondary,
+					TextColor3 = scope:Computed(function(use)
+						return use(isActive) and Theme.Colors.Accent or Theme.Colors.TextSecondary
+					end),
 					FontFace = Theme.Font.Label,
-					TextSize = 11,
+					TextSize = 12,
 					TextXAlignment = Enum.TextXAlignment.Center,
+				}),
+				scope:New("Frame")({
+					Name = "ActiveIndicator",
+					Size = UDim2.new(0.6, 0, 0, 3),
+					AnchorPoint = Vector2.new(0.5, 1),
+					Position = UDim2.new(0.5, 0, 1, 0),
+					BackgroundColor3 = Theme.Colors.Accent,
+					BorderSizePixel = 0,
+					Visible = isActive,
+					[Children] = {
+						scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+					},
 				}),
 			},
 			[OnEvent("Activated")] = function()
@@ -376,6 +397,7 @@ local function makeBottomNav(scope, uiController)
 						uiController.openDrawer()
 						return
 					end
+					activeTab:set(name)
 					uiController.openScreen(target)
 				end
 			end,
@@ -513,8 +535,8 @@ local function makeMarquee(scope, announcementsValue)
 
 	return scope:New("Frame")({
 		Name = "Marquee",
-		Size = UDim2.new(1, 0, 0, 28),
-		Position = UDim2.fromOffset(0, 56),
+		Size = UDim2.new(1, 0, 0, 32),
+		Position = UDim2.fromOffset(0, 60),
 		BackgroundColor3 = Theme.Colors.AccentDim,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
@@ -540,7 +562,7 @@ local function makeOfflineCard(scope, offlineIncomeValue)
 	return scope:New("Frame")({
 		Name = "OfflineCard",
 		Size = UDim2.new(1, -24, 0, 56),
-		Position = UDim2.fromOffset(12, 92),
+		Position = UDim2.fromOffset(12, 100),
 		BackgroundColor3 = Theme.Colors.Surface,
 		BorderSizePixel = 0,
 		Visible = isVisible,
@@ -639,8 +661,8 @@ function HomeScreen.open(uiController)
 	end
 
 	-- Top offset changes if offline card visible or marquee visible
-	local hudHeight = 56
-	local marqueeHeight = 28
+	local hudHeight = 60
+	local marqueeHeight = 32
 	local topPad = hudHeight + marqueeHeight + 4
 
 	scope:New("ScreenGui")({
@@ -655,8 +677,8 @@ function HomeScreen.open(uiController)
 			-- Queued-reveal counter ("N reveals queued") — §13 multi-reveal spec
 			scope:New("Frame")({
 				Name = "RevealBanner",
-				Size = UDim2.new(1, 0, 0, 24),
-				Position = UDim2.new(0, 0, 0, 88),
+				Size = UDim2.new(1, 0, 0, 28),
+				Position = UDim2.new(0, 0, 0, 96),
 				BackgroundColor3 = Theme.Colors.AccentDim,
 				BorderSizePixel = 0,
 				Visible = scope:Computed(function(use)
@@ -669,7 +691,7 @@ function HomeScreen.open(uiController)
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.Accent,
 						FontFace = Theme.Font.Label,
-						TextSize = 11,
+						TextSize = 12,
 						TextXAlignment = Enum.TextXAlignment.Center,
 						Text = scope:Computed(function(use)
 							local n = use(revealQueueValue)
@@ -723,6 +745,10 @@ function HomeScreen.open(uiController)
 								SortOrder = Enum.SortOrder.LayoutOrder,
 								FillDirection = Enum.FillDirection.Vertical,
 								Padding = UDim.new(0, 6),
+							}),
+							scope:New("UIPadding")({
+								PaddingLeft = UDim.new(0, 8),
+								PaddingRight = UDim.new(0, 8),
 							}),
 							table.unpack(slotCards),
 						},

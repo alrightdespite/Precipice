@@ -53,7 +53,7 @@ function RevealCard.show(props: RevealCardProps)
 	local flavorText: string = (compound :: any).flavor or ""
 
 	local borderColor = if props.isWorldFirst then Color3.fromHex("F59E0B") else tierColor
-	local cardHeight = if props.isWorldFirst then 400 else 320
+	local cardHeight = if props.isWorldFirst then 380 else 300
 
 	local function doKeep()
 		RevealCard.hide()
@@ -82,8 +82,8 @@ function RevealCard.show(props: RevealCardProps)
 				scope:New("UIPadding")({
 					PaddingLeft = UDim.new(0, 12),
 					PaddingRight = UDim.new(0, 12),
-					PaddingTop = UDim.new(0, 10),
-					PaddingBottom = UDim.new(0, 10),
+					PaddingTop = UDim.new(0, 14),
+					PaddingBottom = UDim.new(0, 14),
 				}),
 				scope:New("UIListLayout")({
 					SortOrder = Enum.SortOrder.LayoutOrder,
@@ -98,7 +98,7 @@ function RevealCard.show(props: RevealCardProps)
 					BackgroundTransparency = 1,
 					TextColor3 = Color3.fromHex("FCD34D"),
 					FontFace = Theme.Font.Header,
-					TextSize = 22,
+					TextSize = 24,
 					TextXAlignment = Enum.TextXAlignment.Center,
 				}),
 				scope:New("TextLabel")({
@@ -136,8 +136,8 @@ function RevealCard.show(props: RevealCardProps)
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
 			scope:New("UIPadding")({
-				PaddingLeft = UDim.new(0, 10),
-				PaddingRight = UDim.new(0, 10),
+				PaddingLeft = UDim.new(0, 12),
+				PaddingRight = UDim.new(0, 12),
 			}),
 			scope:New("TextLabel")({
 				Text = "T" .. tier .. " · " .. tierLabel,
@@ -163,7 +163,14 @@ function RevealCard.show(props: RevealCardProps)
 		FontFace = Theme.Font.Label,
 		TextSize = 14,
 		LayoutOrder = 1,
-		[Children] = { scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }) },
+		[Children] = {
+			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+			scope:New("UIStroke")({
+				Color = Theme.Colors.Accent,
+				Thickness = 1,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}),
+		},
 		[OnEvent("Activated")] = doKeep,
 	})
 
@@ -183,17 +190,17 @@ function RevealCard.show(props: RevealCardProps)
 	})
 
 	local cardChildren: { any } = {
-		scope:New("UICorner")({ CornerRadius = UDim.new(0, 12) }),
+		scope:New("UICorner")({ CornerRadius = UDim.new(0, 16) }),
 		scope:New("UIStroke")({
 			Color = borderColor,
 			Thickness = 2,
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		}),
 		scope:New("UIPadding")({
-			PaddingLeft = UDim.new(0, 16),
-			PaddingRight = UDim.new(0, 16),
-			PaddingTop = UDim.new(0, 16),
-			PaddingBottom = UDim.new(0, 16),
+			PaddingLeft = UDim.new(0, 20),
+			PaddingRight = UDim.new(0, 20),
+			PaddingTop = UDim.new(0, 20),
+			PaddingBottom = UDim.new(0, 20),
 		}),
 		scope:New("UIListLayout")({
 			SortOrder = Enum.SortOrder.LayoutOrder,
@@ -209,7 +216,7 @@ function RevealCard.show(props: RevealCardProps)
 			BackgroundTransparency = 1,
 			TextColor3 = Theme.Colors.TextPrimary,
 			FontFace = Theme.Font.Header,
-			TextSize = 24,
+			TextSize = 26,
 			TextXAlignment = Enum.TextXAlignment.Center,
 			LayoutOrder = 2,
 		}),
@@ -227,7 +234,7 @@ function RevealCard.show(props: RevealCardProps)
 		}),
 		scope:New("TextLabel")({
 			Name = "Value",
-			Text = "Base value: " .. tostring(baseValue) .. " Pellets",
+			Text = "⬡ " .. tostring(baseValue) .. " Pellets",
 			Size = UDim2.new(1, 0, 0, 22),
 			BackgroundTransparency = 1,
 			TextColor3 = Color3.fromHex("F59E0B"),

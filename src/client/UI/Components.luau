@@ -73,6 +73,11 @@ function Components.Button(scope, props)
 		BorderSizePixel = 0,
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+			style == "secondary" and scope:New("UIStroke")({
+				Color = Theme.Colors.SurfaceRaised,
+				Thickness = 1,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}) or nil,
 			scope:New("TextLabel")({
 				Name = "Label",
 				Text = props.Text or "",
@@ -80,7 +85,7 @@ function Components.Button(scope, props)
 				BackgroundTransparency = 1,
 				TextColor3 = textColor,
 				FontFace = Theme.Font.Value,
-				TextSize = 14,
+				TextSize = 15,
 				TextXAlignment = Enum.TextXAlignment.Center,
 			}),
 		},
@@ -109,19 +114,24 @@ function Components.Button(scope, props)
 	})
 end
 
--- Card(scope, { Children?, Padding? }) → Frame with Surface bg + 4px corner
+-- Card(scope, { Children?, Padding? }) → Frame with Surface bg + 8px corner + 1px border
 function Components.Card(scope, props)
 	local inner: { [any]: any } = {
 		scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+		scope:New("UIStroke")({
+			Color = Theme.Colors.SurfaceRaised,
+			Thickness = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		}),
 	}
 	if props.Padding then
 		table.insert(
 			inner,
 			scope:New("UIPadding")({
-				PaddingTop = Theme.Layout.CardPadding,
-				PaddingBottom = Theme.Layout.CardPadding,
-				PaddingLeft = Theme.Layout.CardPadding,
-				PaddingRight = Theme.Layout.CardPadding,
+				PaddingTop = Theme.Layout.Padding,
+				PaddingBottom = Theme.Layout.Padding,
+				PaddingLeft = Theme.Layout.Padding,
+				PaddingRight = Theme.Layout.Padding,
 			})
 		)
 	end
@@ -170,23 +180,23 @@ function Components.Label(scope, props)
 	})
 end
 
--- TierBadge(scope, { Tier }) → 28×20 badge with tier color
+-- TierBadge(scope, { Tier }) → 32×22 pill badge with tier color
 function Components.TierBadge(scope, props)
 	local tier = props.Tier or 1
 	local tierColor = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary
 	return scope:New("Frame")({
-		Size = UDim2.fromOffset(28, 20),
+		Size = UDim2.fromOffset(32, 22),
 		BackgroundColor3 = tierColor,
 		BorderSizePixel = 0,
 		[Children] = {
-			scope:New("UICorner")({ CornerRadius = UDim.new(0, 3) }),
+			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
 			scope:New("TextLabel")({
 				Text = "T" .. tostring(tier),
 				Size = UDim2.fromScale(1, 1),
 				BackgroundTransparency = 1,
 				TextColor3 = Color3.new(1, 1, 1),
 				FontFace = Theme.Font.Label,
-				TextSize = 11,
+				TextSize = 12,
 				TextXAlignment = Enum.TextXAlignment.Center,
 			}),
 		},
@@ -197,7 +207,7 @@ end
 function Components.Divider(scope)
 	return scope:New("Frame")({
 		Size = UDim2.new(1, 0, 0, 1),
-		BackgroundColor3 = Theme.Colors.SurfaceRaised,
+		BackgroundColor3 = Color3.fromHex("3A3A42"),
 		BorderSizePixel = 0,
 	})
 end
@@ -222,18 +232,21 @@ function Components.ProgressBar(scope, props)
 	end)
 	local springWidth = scope:Spring(fillWidth, 12, 1)
 	return scope:New("Frame")({
-		Size = props.Size or UDim2.new(1, 0, 0, 6),
+		Size = props.Size or UDim2.new(1, 0, 0, 8),
 		BackgroundColor3 = Theme.Colors.SurfaceRaised,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
 		[Children] = {
-			scope:New("UICorner")({ CornerRadius = UDim.new(0, 3) }),
+			scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
 			scope:New("Frame")({
 				Size = scope:Computed(function(use)
 					return UDim2.new(math.clamp(use(springWidth), 0, 1), 0, 1, 0)
 				end),
 				BackgroundColor3 = props.Color or Theme.Colors.Accent,
 				BorderSizePixel = 0,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+				},
 			}),
 		},
 	})

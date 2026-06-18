@@ -27,9 +27,14 @@ return {
 		Value = Font.fromName("GothamSSm", Enum.FontWeight.Bold),
 	},
 	Layout = {
-		CornerRadius = UDim.new(0, 4),
-		Padding = UDim.new(0, 12),
+		CornerRadius = UDim.new(0, 8),
+		CornerRadiusSmall = UDim.new(0, 4),
+		CornerRadiusPill = UDim.new(0.5, 0),
+		Padding = UDim.new(0, 16),
+		PaddingSmall = UDim.new(0, 8),
 		CardPadding = UDim.new(0, 16),
+		GapSmall = UDim.new(0, 6),
+		GapMedium = UDim.new(0, 12),
 		TapTarget = UDim.new(0, 44),
 	},
 }

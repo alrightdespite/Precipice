@@ -139,7 +139,7 @@ function UIController.openDrawer()
 	})
 end
 
-function UIController.openScreen(name: string)
+function UIController.openScreen(name: string, ...)
 	-- Close drawer on any nav
 	closeDrawer()
 
@@ -151,7 +151,7 @@ function UIController.openScreen(name: string)
 		-- Some screens take uiController as param for navigation callbacks
 		local screen = _screens[name]
 		if screen.open then
-			screen.open(UIController)
+			screen.open(UIController, ...)
 		end
 	else
 		warn("[UIController] unknown screen:", name)

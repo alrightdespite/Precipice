@@ -135,9 +135,8 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		local slot = peek(slotComputed)
 		local st = slot.state
 		if st == "EMPTY" then
-			-- Phase 12C: open slot picker. For now open Synthesize screen.
 			if uiController then
-				uiController.openScreen("Lab")
+				uiController.openScreen("Lab", "extraction")
 			end
 		elseif st == "RUNNING" then
 			SlotController.skip(slotIndex, "timer")

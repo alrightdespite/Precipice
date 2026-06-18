@@ -40,6 +40,7 @@
 - [x] **Extraction confirm wired** — `HomeScreen` threads `slotIndex` through `openScreen("Lab", "extraction", slotIndex)`; `SynthesizeScreen.open` gains `slotIndex` param; extraction `onSelect` calls `SlotController.startExtraction` then navigates Home. Synthesis `onSelect` unchanged.
 - [x] **Starter extraction unblocked** — `SlotStartExtraction` handler now allows starters (`compoundEntry.starter == true`) to bypass `formulaLog.discovered` check; non-starters still require discovery.
 - [x] **SlotController.startExtraction arg fix** — server handler takes only `compoundId`; client was incorrectly passing `(slotIndex, compoundId)` → `slotIndex` landed as `compoundId` → `"invalid args"`. Fixed to pass only `compoundId`; `_slotIndex` kept in signature for future per-slot routing.
+- [x] **SlotService state translation fix** — `fireSlotUpdate` and all direct `SlotStateUpdate:FireClient` calls were sending raw `SlotMachine.SlotRecord` objects (no `state` field). Client `HomeScreen` checks `slot.state` → always `nil` → showed `"—"`. Added `toClientSlot(raw)` translator: `workRemaining > 0` → `"RUNNING"`, `== 0` → `"DONE"`, else `"EMPTY"`. Applied to all 3 call sites (tick loop, `fireSlotUpdate`, `applySkipToSlot`). 457/457 tests green.
 
 ## In progress
 

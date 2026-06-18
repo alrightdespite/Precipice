@@ -61,62 +61,57 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose, mode, form
 		return list
 	end)
 
-	-- Build rows lazily via Observer
-	local rowsFrame = scope:Value(nil :: Frame?)
-	local rowsConn = scope:Observer(entries)
-	table.insert(
-		scope,
-		rowsConn:onChange(function()
-			local frame = peek(rowsFrame)
-			if not frame then
-				return
-			end
-			for _, child in ipairs(frame:GetChildren()) do
-				if child:IsA("TextButton") then
-					child:Destroy()
-				end
-			end
-			for i, entry in ipairs(peek(entries)) do
-				local tier = entry.tier
-				local btn = Instance.new("TextButton")
-				btn.Size = UDim2.new(1, 0, 0, 40)
-				btn.BackgroundColor3 = Theme.Colors.SurfaceRaised
-				btn.BorderSizePixel = 0
-				btn.Text = ""
-				btn.LayoutOrder = i
-				local label = Instance.new("TextLabel")
-				label.Size = UDim2.new(1, -52, 1, 0)
-				label.Position = UDim2.fromOffset(8, 0)
-				label.BackgroundTransparency = 1
-				label.TextColor3 = Theme.Colors.TextPrimary
-				label.FontFace = Theme.Font.Label
-				label.TextSize = 13
-				label.TextXAlignment = Enum.TextXAlignment.Left
-				label.Text = entry.id .. " ×" .. entry.qty
-				label.Parent = btn
-				local badge = Instance.new("Frame")
-				badge.Size = UDim2.fromOffset(28, 20)
-				badge.Position = UDim2.new(1, -32, 0.5, -10)
-				badge.BackgroundColor3 = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary
-				badge.BorderSizePixel = 0
-				local badgeLabel = Instance.new("TextLabel")
-				badgeLabel.Size = UDim2.fromScale(1, 1)
-				badgeLabel.BackgroundTransparency = 1
-				badgeLabel.TextColor3 = Color3.new(1, 1, 1)
-				badgeLabel.FontFace = Theme.Font.Label
-				badgeLabel.TextSize = 11
-				badgeLabel.TextXAlignment = Enum.TextXAlignment.Center
-				badgeLabel.Text = "T" .. tier
-				badgeLabel.Parent = badge
-				badge.Parent = btn
-				btn.Activated:Connect(function()
-					onSelect(entry.id)
-					onClose()
-				end)
-				btn.Parent = frame
-			end
-		end)
-	)
+	local rows = scope:Computed(function(use)
+		local list = use(entries)
+		local result = {}
+		for i, entry in ipairs(list) do
+			local tier = entry.tier
+			table.insert(
+				result,
+				scope:New("TextButton")({
+					Size = UDim2.new(1, 0, 0, 40),
+					BackgroundColor3 = Theme.Colors.SurfaceRaised,
+					BorderSizePixel = 0,
+					Text = "",
+					LayoutOrder = i,
+					[OnEvent("Activated")] = function()
+						onSelect(entry.id)
+						onClose()
+					end,
+					[Children] = {
+						scope:New("TextLabel")({
+							Size = UDim2.new(1, -52, 1, 0),
+							Position = UDim2.fromOffset(8, 0),
+							BackgroundTransparency = 1,
+							TextColor3 = Theme.Colors.TextPrimary,
+							FontFace = Theme.Font.Label,
+							TextSize = 13,
+							TextXAlignment = Enum.TextXAlignment.Left,
+							Text = entry.id .. " ×" .. entry.qty,
+						}),
+						scope:New("Frame")({
+							Size = UDim2.fromOffset(28, 20),
+							Position = UDim2.new(1, -32, 0.5, -10),
+							BackgroundColor3 = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary,
+							BorderSizePixel = 0,
+							[Children] = {
+								scope:New("TextLabel")({
+									Size = UDim2.fromScale(1, 1),
+									BackgroundTransparency = 1,
+									TextColor3 = Color3.new(1, 1, 1),
+									FontFace = Theme.Font.Label,
+									TextSize = 11,
+									TextXAlignment = Enum.TextXAlignment.Center,
+									Text = "T" .. tier,
+								}),
+							},
+						}),
+					},
+				})
+			)
+		end
+		return result
+	end)
 
 	local listFrame = scope:New("ScrollingFrame")({
 		Name = "List",
@@ -134,9 +129,9 @@ local function makeVaultBrowser(scope, vaultValue, onSelect, onClose, mode, form
 				FillDirection = Enum.FillDirection.Vertical,
 				Padding = UDim.new(0, 4),
 			}),
+			rows,
 		},
 	})
-	rowsFrame:set(listFrame)
 
 	return scope:New("Frame")({
 		Name = "VaultBrowser",

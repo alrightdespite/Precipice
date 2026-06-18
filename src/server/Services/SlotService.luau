@@ -171,16 +171,17 @@ local function wireRemotes()
 		local failErr = nil
 
 		DataService.updateProfile(userId, function(data)
-			if not data.formulaLog.discovered[compoundId] then
+			local compoundEntry = Compounds[compoundId]
+			if not compoundEntry then
+				failErr = "unknown compound"
+				return
+			end
+			if not compoundEntry.starter and not data.formulaLog.discovered[compoundId] then
 				failErr = "compound not discovered"
 				return
 			end
 			local cap = getSlotCap(data)
-			local compound = Compounds[compoundId]
-			if not compound then
-				failErr = "unknown compound"
-				return
-			end
+			local compound = compoundEntry
 			local newSlots, slotIdx, slotErr =
 				SlotMachine.startExtraction(data.slots, compoundId, compound.timeMins * 60, os.time(), cap)
 			if slotErr then

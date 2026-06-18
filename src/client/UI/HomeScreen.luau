@@ -17,7 +17,7 @@ local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
 local NAV_TABS = { "Home", "Lab", "Market", "Log", "More" }
-local SLOT_HEIGHT = 80
+local SLOT_HEIGHT = 68
 
 local function formatNum(n: number): string
 	if n >= 1000000 then
@@ -47,7 +47,7 @@ local function getDisplayTime(slot): string
 	return formatTime(secs)
 end
 
--- Single slot card — scope-owned, reacts to slotsValue
+-- Narrow slot card for 200px left panel
 local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesValue, uiController)
 	local slotComputed = scope:Computed(function(use)
 		local s = use(slotsValue)[slotIndex]
@@ -60,7 +60,8 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 
 	local bgColor = scope:Computed(function(use)
 		local st = use(slotState)
-		return (st == "RUNNING" or st == "DONE" or st == "REVEALING") and Theme.Colors.SurfaceRaised or Theme.Colors.Surface
+		return (st == "RUNNING" or st == "DONE" or st == "REVEALING") and Theme.Colors.SurfaceRaised
+			or Theme.Colors.Surface
 	end)
 
 	local accentColor = scope:Computed(function(use)
@@ -77,7 +78,6 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 	end)
 
 	local timerValue = scope:Value("--:--")
-	-- Heartbeat: update timer each frame while slot is running
 	table.insert(
 		scope,
 		RunService.Heartbeat:Connect(function()
@@ -91,7 +91,7 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 	local mainText = scope:Computed(function(use)
 		local slot = use(slotComputed)
 		if slot.state == "EMPTY" then
-			return "Slot idle — tap to start"
+			return "Slot idle"
 		elseif slot.state == "RUNNING" then
 			local cid = slot.compoundId
 			return cid and (Compounds[cid] and Compounds[cid].name or cid) or "Running…"
@@ -119,7 +119,6 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		return uses > 0
 	end)
 
-	-- Action button label
 	local actionLabel = scope:Computed(function(use)
 		local st = use(slotState)
 		if st == "EMPTY" then
@@ -154,75 +153,83 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		BackgroundColor3 = bgColor,
 		BorderSizePixel = 0,
 		LayoutOrder = slotIndex,
+		ClipsDescendants = false,
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-			-- Left tier accent bar
+			-- Left accent bar (pill, vertically centered with 12px margin)
 			scope:New("Frame")({
 				Name = "Accent",
-				Size = UDim2.new(0, 6, 1, 0),
+				Size = UDim2.new(0, 5, 1, -12),
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.new(0, 2, 0.5, 0),
 				BackgroundColor3 = accentColor,
 				BorderSizePixel = 0,
 				[Children] = {
-					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
 				},
 			}),
-			-- Content area
-			scope:New("Frame")({
-				Name = "Content",
-				Size = UDim2.new(1, -66, 1, 0),
-				Position = UDim2.fromOffset(16, 0),
+			-- Slot number (#N)
+			scope:New("TextLabel")({
+				Name = "SlotNum",
+				Text = "#" .. slotIndex,
+				Size = UDim2.new(1, -16, 0, 14),
+				Position = UDim2.fromOffset(12, 6),
 				BackgroundTransparency = 1,
-				[Children] = {
-					scope:New("TextLabel")({
-						Name = "Main",
-						Text = mainText,
-						Size = UDim2.new(1, 0, 0, 24),
-						Position = UDim2.fromOffset(0, 16),
-						BackgroundTransparency = 1,
-						TextColor3 = scope:Computed(function(use)
-							if use(slotState) == "EMPTY" then
-								return Theme.Colors.TextSecondary
-							end
-							return Theme.Colors.TextPrimary
-						end),
-						FontFace = Theme.Font.Label,
-						TextSize = 14,
-						TextXAlignment = Enum.TextXAlignment.Left,
-						TextTruncate = Enum.TextTruncate.AtEnd,
-					}),
-					-- Timer countdown (RUNNING only)
-					scope:New("TextLabel")({
-						Name = "Timer",
-						Text = timerValue,
-						Size = UDim2.new(1, 0, 0, 18),
-						Position = UDim2.fromOffset(0, 44),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.Accent,
-						FontFace = Theme.Font.Value,
-						TextSize = 13,
-						TextXAlignment = Enum.TextXAlignment.Left,
-						Visible = showTimer,
-					}),
-					-- "Ready to reveal" pulse (DONE only)
-					scope:New("TextLabel")({
-						Name = "DoneLabel",
-						Text = "Ready to reveal",
-						Size = UDim2.new(1, 0, 0, 18),
-						Position = UDim2.fromOffset(0, 44),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.Success,
-						FontFace = Theme.Font.Label,
-						TextSize = 13,
-						TextXAlignment = Enum.TextXAlignment.Left,
-						Visible = showDone,
-					}),
-				},
+				TextColor3 = Theme.Colors.TextSecondary,
+				FontFace = Theme.Font.Body,
+				TextSize = 10,
+				TextXAlignment = Enum.TextXAlignment.Left,
 			}),
-			-- Action button (right side, 44px wide)
+			-- Compound name (middle)
+			scope:New("TextLabel")({
+				Name = "Main",
+				Text = mainText,
+				Size = UDim2.new(1, -16, 0, 18),
+				Position = UDim2.fromOffset(12, 22),
+				BackgroundTransparency = 1,
+				TextColor3 = scope:Computed(function(use)
+					if use(slotState) == "EMPTY" then
+						return Theme.Colors.TextSecondary
+					end
+					return Theme.Colors.TextPrimary
+				end),
+				FontFace = Theme.Font.Label,
+				TextSize = 13,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+			}),
+			-- Timer countdown (RUNNING only)
+			scope:New("TextLabel")({
+				Name = "Timer",
+				Text = timerValue,
+				Size = UDim2.new(1, -60, 0, 14),
+				Position = UDim2.fromOffset(12, 44),
+				BackgroundTransparency = 1,
+				TextColor3 = Theme.Colors.Accent,
+				FontFace = Theme.Font.Value,
+				TextSize = 11,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Visible = showTimer,
+			}),
+			-- Done label (DONE/REVEALING)
+			scope:New("TextLabel")({
+				Name = "DoneLabel",
+				Text = "● Ready",
+				Size = UDim2.new(1, -60, 0, 14),
+				Position = UDim2.fromOffset(12, 44),
+				BackgroundTransparency = 1,
+				TextColor3 = Theme.Colors.Success,
+				FontFace = Theme.Font.Label,
+				TextSize = 11,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Visible = showDone,
+			}),
+			-- Action button (bottom-right)
 			scope:New("TextButton")({
 				Name = "ActionBtn",
-				Size = UDim2.fromOffset(44, 44),
-				Position = UDim2.new(1, -52, 0.5, -22),
+				Size = UDim2.fromOffset(48, 24),
+				AnchorPoint = Vector2.new(1, 1),
+				Position = UDim2.new(1, -6, 1, -6),
 				BackgroundColor3 = scope:Computed(function(use)
 					local st = use(slotState)
 					if st == "DONE" or st == "REVEALING" then
@@ -260,27 +267,28 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 	})
 end
 
--- HUD bar
-local function makeHUD(scope, balanceValue, rankValue)
+-- HUD bar (Zone A, 52px)
+local function makeHUD(scope, balanceValue, rankValue, uiVisible)
 	return scope:New("Frame")({
 		Name = "HUD",
-		Size = UDim2.new(1, 0, 0, 60),
+		Size = UDim2.new(1, 0, 0, 52),
 		BackgroundColor3 = Theme.Colors.Surface,
 		BorderSizePixel = 0,
-		ZIndex = 5,
+		ZIndex = 10,
 		[Children] = {
 			scope:New("Frame")({
 				Name = "BottomBorder",
-				Size = UDim2.new(1, 0, 0, 2),
-				Position = UDim2.new(0, 0, 1, -2),
+				Size = UDim2.new(1, 0, 0, 1),
+				AnchorPoint = Vector2.new(0, 1),
+				Position = UDim2.new(0, 0, 1, 0),
 				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 			}),
 			-- Pellets (left)
 			scope:New("Frame")({
 				Name = "Pellets",
-				Size = UDim2.fromOffset(120, 40),
-				Position = UDim2.new(0, 8, 0.5, -20),
+				Size = UDim2.fromOffset(130, 40),
+				Position = UDim2.new(0, 12, 0.5, -20),
 				BackgroundTransparency = 1,
 				[Children] = {
 					scope:New("UIListLayout")({
@@ -288,7 +296,6 @@ local function makeHUD(scope, balanceValue, rankValue)
 						VerticalAlignment = Enum.VerticalAlignment.Center,
 						Padding = UDim.new(0, 6),
 					}),
-					-- Yellow circle icon
 					scope:New("Frame")({
 						Size = UDim2.fromOffset(16, 16),
 						BackgroundColor3 = Color3.fromHex("F59E0B"),
@@ -298,7 +305,7 @@ local function makeHUD(scope, balanceValue, rankValue)
 						},
 					}),
 					scope:New("TextLabel")({
-						Size = UDim2.fromOffset(96, 24),
+						Size = UDim2.fromOffset(106, 24),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.TextPrimary,
 						FontFace = Theme.Font.Value,
@@ -310,7 +317,7 @@ local function makeHUD(scope, balanceValue, rankValue)
 					}),
 				},
 			}),
-			-- Rank title (center)
+			-- Rank (center)
 			scope:New("TextLabel")({
 				Name = "Rank",
 				Size = UDim2.new(0.4, 0, 1, 0),
@@ -325,31 +332,33 @@ local function makeHUD(scope, balanceValue, rankValue)
 					return r and r.title or "Researcher"
 				end),
 			}),
-			-- Catalysts (right)
-			scope:New("TextLabel")({
-				Name = "Catalysts",
-				Size = UDim2.fromOffset(100, 40),
-				Position = UDim2.new(1, -108, 0.5, -20),
+			-- Minimize button (world mode toggle)
+			scope:New("TextButton")({
+				Name = "MinimizeBtn",
+				Size = UDim2.fromOffset(36, 36),
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -8, 0.5, 0),
 				BackgroundTransparency = 1,
-				TextColor3 = Theme.Colors.Accent,
-				FontFace = Theme.Font.Value,
-				TextSize = 15,
-				TextXAlignment = Enum.TextXAlignment.Right,
-				Text = scope:Computed(function(use)
-					return "◈ " .. formatNum(use(balanceValue).catalysts)
-				end),
+				BorderSizePixel = 0,
+				Text = "—",
+				TextColor3 = Theme.Colors.TextSecondary,
+				FontFace = Theme.Font.Label,
+				TextSize = 18,
+				ZIndex = 11,
+				[OnEvent("Activated")] = function()
+					uiVisible:set(false)
+				end,
 			}),
 		},
 	})
 end
 
--- Bottom nav bar
-local function makeBottomNav(scope, uiController)
-	local activeTab = scope:Value("Home")
+-- Bottom nav bar (Zone C, 52px)
+local function makeBottomNav(scope, uiController, activeTabValue)
 	local tabs = {}
 	for _, name in ipairs(NAV_TABS) do
 		local isActive = scope:Computed(function(use)
-			return use(activeTab) == name
+			return use(activeTabValue) == name
 		end)
 		local btn = scope:New("TextButton")({
 			Name = name,
@@ -395,9 +404,9 @@ local function makeBottomNav(scope, uiController)
 					end
 					if target == "More" then
 						uiController.openDrawer()
-						return
+						return -- drawer is overlay; do not update activeTabValue
 					end
-					activeTab:set(name)
+					activeTabValue:set(name)
 					uiController.openScreen(target)
 				end
 			end,
@@ -407,17 +416,33 @@ local function makeBottomNav(scope, uiController)
 
 	return scope:New("Frame")({
 		Name = "BottomNav",
-		Size = UDim2.new(1, 0, 0, 56),
-		Position = UDim2.new(0, 0, 1, -56),
+		Size = UDim2.new(1, 0, 0, 52),
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 0, 1, 0),
 		BackgroundColor3 = Theme.Colors.Surface,
 		BorderSizePixel = 0,
-		ZIndex = 5,
+		ZIndex = 10,
 		[Children] = {
-			scope:New("UIListLayout")({
-				FillDirection = Enum.FillDirection.Horizontal,
-				SortOrder = Enum.SortOrder.LayoutOrder,
+			scope:New("Frame")({
+				Name = "TopBorder",
+				Size = UDim2.new(1, 0, 0, 1),
+				Position = UDim2.fromOffset(0, 0),
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
+				BorderSizePixel = 0,
 			}),
-			table.unpack(tabs),
+			scope:New("Frame")({
+				Name = "Tabs",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				[Children] = {
+					scope:New("UIListLayout")({
+						FillDirection = Enum.FillDirection.Horizontal,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+					}),
+					table.unpack(tabs),
+				},
+			}),
 		},
 	})
 end
@@ -426,14 +451,15 @@ end
 local function makeHintBar(scope, hintValue)
 	return scope:New("Frame")({
 		Name = "HintBar",
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.new(0, 0, 1, -100),
+		AnchorPoint = Vector2.new(0, 1),
+		Size = UDim2.new(1, 0, 0, 28),
+		Position = UDim2.new(0, 0, 1, -52),
 		BackgroundColor3 = Theme.Colors.AccentDim,
 		BorderSizePixel = 0,
 		Visible = scope:Computed(function(use)
 			return use(hintValue) ~= nil
 		end),
-		ZIndex = 4,
+		ZIndex = 7,
 		[Children] = {
 			scope:New("UIPadding")({
 				PaddingLeft = UDim.new(0, 12),
@@ -472,7 +498,7 @@ local function makeHintBar(scope, hintValue)
 	})
 end
 
--- Announcement marquee
+-- Announcement marquee (floating below HUD)
 local function makeMarquee(scope, announcementsValue)
 	local marqueeRef = scope:Value(nil :: TextLabel?)
 
@@ -489,7 +515,6 @@ local function makeMarquee(scope, announcementsValue)
 		return anns[#anns].message or ""
 	end)
 
-	-- Watch for new announcements and run marquee tween
 	local activeTween = nil
 	table.insert(scope, function()
 		if activeTween then
@@ -536,7 +561,7 @@ local function makeMarquee(scope, announcementsValue)
 	return scope:New("Frame")({
 		Name = "Marquee",
 		Size = UDim2.new(1, 0, 0, 32),
-		Position = UDim2.fromOffset(0, 60),
+		Position = UDim2.fromOffset(0, 52),
 		BackgroundColor3 = Theme.Colors.AccentDim,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
@@ -562,11 +587,11 @@ local function makeOfflineCard(scope, offlineIncomeValue)
 	return scope:New("Frame")({
 		Name = "OfflineCard",
 		Size = UDim2.new(1, -24, 0, 56),
-		Position = UDim2.fromOffset(12, 100),
+		Position = UDim2.new(0, 8, 0, 60),
 		BackgroundColor3 = Theme.Colors.Surface,
 		BorderSizePixel = 0,
 		Visible = isVisible,
-		ZIndex = 3,
+		ZIndex = 7,
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
 			scope:New("UIPadding")({
@@ -602,6 +627,148 @@ local function makeOfflineCard(scope, offlineIncomeValue)
 	})
 end
 
+-- WorldHUD: always-on overlay shown when main UI is minimized
+local function makeWorldHUD(scope, uiVisible, slotsValue)
+	local function getStripText(slots, now)
+		if not slots then
+			return ""
+		end
+		local running = 0
+		local doneCount = 0
+		local nextSecs = math.huge
+		for _, s in pairs(slots) do
+			if s.state == "RUNNING" then
+				running += 1
+				if s.workRemaining and s.lastTickAt then
+					local run: TimerMath.SlotRun = {
+						compoundId = s.compoundId or "",
+						workRemaining = s.workRemaining,
+						lastTickAt = s.lastTickAt,
+						mode = (s.mode or "online") :: TimerMath.RunMode,
+					}
+					local secs = TimerMath.displaySeconds(run, now, true)
+					if secs < nextSecs then
+						nextSecs = secs
+					end
+				end
+			elseif s.state == "DONE" then
+				doneCount += 1
+			end
+		end
+		local parts = {}
+		if doneCount > 0 then
+			table.insert(parts, doneCount .. " ready")
+		end
+		if running > 0 then
+			local mins = math.floor(nextSecs / 60)
+			local secs2 = math.floor(nextSecs) % 60
+			table.insert(parts, running .. " running · " .. string.format("%d:%02d", mins, secs2))
+		end
+		return table.concat(parts, "  ·  ")
+	end
+
+	local stripText = scope:Value("")
+	table.insert(
+		scope,
+		RunService.Heartbeat:Connect(function()
+			if peek(uiVisible) then
+				return
+			end
+			stripText:set(getStripText(peek(slotsValue), os.time()))
+		end)
+	)
+
+	local openBtnVisible = scope:Computed(function(use)
+		return not use(uiVisible)
+	end)
+
+	local stripVisible = scope:Computed(function(use)
+		if use(uiVisible) then
+			return false
+		end
+		local slots = use(slotsValue)
+		if not slots then
+			return false
+		end
+		for _, s in pairs(slots) do
+			if s.state == "RUNNING" or s.state == "DONE" then
+				return true
+			end
+		end
+		return false
+	end)
+
+	return scope:New("Frame")({
+		Name = "WorldHUDRoot",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		[Children] = {
+			-- Circular open button
+			scope:New("TextButton")({
+				Name = "OpenBtn",
+				Size = UDim2.fromOffset(52, 52),
+				AnchorPoint = Vector2.new(1, 1),
+				Position = UDim2.new(1, -12, 1, -72),
+				BackgroundColor3 = Theme.Colors.Accent,
+				BorderSizePixel = 0,
+				ZIndex = 10,
+				Text = "",
+				Visible = openBtnVisible,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.AccentDim,
+						Thickness = 2,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					}),
+					scope:New("TextLabel")({
+						Text = "P",
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = Color3.new(1, 1, 1),
+						FontFace = Theme.Font.Header,
+						TextSize = 22,
+						TextXAlignment = Enum.TextXAlignment.Center,
+					}),
+				},
+				[OnEvent("Activated")] = function()
+					uiVisible:set(true)
+				end,
+			}),
+			-- Minimal timer strip
+			scope:New("Frame")({
+				Name = "TimerStrip",
+				Size = UDim2.new(1, -76, 0, 32),
+				AnchorPoint = Vector2.new(0, 1),
+				Position = UDim2.new(0, 8, 1, -72),
+				BackgroundColor3 = Theme.Colors.Surface,
+				BackgroundTransparency = 0.15,
+				BorderSizePixel = 0,
+				ZIndex = 10,
+				Visible = stripVisible,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+					scope:New("UIPadding")({
+						PaddingLeft = UDim.new(0, 10),
+						PaddingRight = UDim.new(0, 10),
+					}),
+					scope:New("TextLabel")({
+						Name = "StripText",
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.TextPrimary,
+						FontFace = Theme.Font.Label,
+						TextSize = 12,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						Text = stripText,
+					}),
+				},
+			}),
+		},
+	})
+end
+
 local HomeScreen = {}
 local _scope = nil
 
@@ -612,6 +779,9 @@ function HomeScreen.open(uiController)
 	_scope = Fusion.scoped(Fusion)
 	local scope = _scope
 	local st = StateController.get()
+
+	local uiVisible = scope:Value(true)
+	local activeTabValue = scope:Value("Home")
 
 	-- Bridge StateController → individual Fusion Values
 	local balanceValue = scope:Value(st.balance)
@@ -624,7 +794,6 @@ function HomeScreen.open(uiController)
 		return use(balanceValue).timerSkipUses
 	end)
 
-	-- Active hint (from HintController, not StateController)
 	local hintValue = scope:Value(HintController.getActiveHint())
 
 	table.insert(
@@ -660,31 +829,51 @@ function HomeScreen.open(uiController)
 		table.insert(slotCards, makeSlotCard(scope, i, slotsValue, timerSkipUsesValue, uiController))
 	end
 
-	-- Top offset changes if offline card visible or marquee visible
-	local hudHeight = 60
-	local marqueeHeight = 32
-	local topPad = hudHeight + marqueeHeight + 4
+	-- WorldHUD ScreenGui (always visible; contents gated by uiVisible)
+	scope:New("ScreenGui")({
+		Name = "WorldHUD",
+		Enabled = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 5,
+		Parent = Players.LocalPlayer.PlayerGui,
+		[Children] = {
+			makeWorldHUD(scope, uiVisible, slotsValue),
+		},
+	})
 
+	-- Main HomeScreen ScreenGui (hidden when world mode active)
 	scope:New("ScreenGui")({
 		Name = "HomeScreen",
-		Enabled = true,
+		Enabled = scope:Computed(function(use)
+			return use(uiVisible)
+		end),
 		ResetOnSpawn = false,
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			makeHUD(scope, balanceValue, rankValue),
+			-- Background fill
+			scope:New("Frame")({
+				Name = "Bg",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundColor3 = Theme.Colors.Background,
+				BorderSizePixel = 0,
+				ZIndex = 1,
+			}),
+			-- HUD (Zone A)
+			makeHUD(scope, balanceValue, rankValue, uiVisible),
+			-- Marquee (floating below HUD)
 			makeMarquee(scope, announcementsValue),
-			-- Queued-reveal counter ("N reveals queued") — §13 multi-reveal spec
+			-- Reveal queue banner
 			scope:New("Frame")({
 				Name = "RevealBanner",
-				Size = UDim2.new(1, 0, 0, 28),
-				Position = UDim2.new(0, 0, 0, 96),
+				Size = UDim2.new(1, 0, 0, 26),
+				Position = UDim2.new(0, 0, 0, 52),
 				BackgroundColor3 = Theme.Colors.AccentDim,
 				BorderSizePixel = 0,
 				Visible = scope:Computed(function(use)
 					return use(revealQueueValue) > 0
 				end),
-				ZIndex = 4,
+				ZIndex = 8,
 				[Children] = {
 					scope:New("TextLabel")({
 						Size = UDim2.fromScale(1, 1),
@@ -700,63 +889,84 @@ function HomeScreen.open(uiController)
 					}),
 				},
 			}),
+			-- Offline income card
 			makeOfflineCard(scope, offlineIncomeValue),
-			-- Slot panel toggle
-			(function()
-				local slotPanelVisible = scope:Value(true)
-				return {
-					scope:New("TextButton")({
-						Name = "SlotToggle",
-						Size = UDim2.new(0, 88, 0, 28),
-						AnchorPoint = Vector2.new(1, 1),
-						Position = UDim2.new(1, -12, 1, -220),
-						BackgroundColor3 = Theme.Colors.Surface,
+			-- Left slot panel (Zone B, 200px, visible on Home tab)
+			scope:New("Frame")({
+				Name = "SlotPanel",
+				Size = UDim2.new(0, 200, 1, -104),
+				Position = UDim2.new(0, 0, 0, 52),
+				BackgroundColor3 = Theme.Colors.Surface,
+				BorderSizePixel = 0,
+				ZIndex = 8,
+				Visible = scope:Computed(function(use)
+					return use(activeTabValue) == "Home"
+				end),
+				[Children] = {
+					scope:New("Frame")({
+						Name = "RightBorder",
+						Size = UDim2.new(0, 1, 1, 0),
+						AnchorPoint = Vector2.new(1, 0),
+						Position = UDim2.new(1, 0, 0, 0),
+						BackgroundColor3 = Theme.Colors.SurfaceRaised,
 						BorderSizePixel = 0,
-						Text = scope:Computed(function(use)
-							return use(slotPanelVisible) and "Hide" or "Show Slots"
-						end),
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Label,
-						TextSize = 13,
-						ZIndex = 5,
-						[Children] = {
-							scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-						},
-						[OnEvent("Activated")] = function()
-							slotPanelVisible:set(not peek(slotPanelVisible))
-						end,
 					}),
-					-- Slot scroll panel
+					scope:New("Frame")({
+						Name = "Header",
+						Size = UDim2.new(1, 0, 0, 32),
+						BackgroundTransparency = 1,
+						BorderSizePixel = 0,
+						[Children] = {
+							scope:New("TextLabel")({
+								Text = "SLOTS",
+								Size = UDim2.new(1, -16, 1, 0),
+								Position = UDim2.fromOffset(8, 0),
+								BackgroundTransparency = 1,
+								TextColor3 = Theme.Colors.TextSecondary,
+								FontFace = Theme.Font.Label,
+								TextSize = 10,
+								TextXAlignment = Enum.TextXAlignment.Left,
+							}),
+							scope:New("Frame")({
+								Name = "BottomBorder",
+								Size = UDim2.new(1, 0, 0, 1),
+								AnchorPoint = Vector2.new(0, 1),
+								Position = UDim2.new(0, 0, 1, 0),
+								BackgroundColor3 = Theme.Colors.SurfaceRaised,
+								BorderSizePixel = 0,
+							}),
+						},
+					}),
 					scope:New("ScrollingFrame")({
-						Name = "SlotPanel",
-						Size = UDim2.new(1, -24, 0, 200),
-						AnchorPoint = Vector2.new(0, 1),
-						Position = UDim2.new(0, 12, 1, -12),
+						Name = "SlotScroll",
+						Size = UDim2.new(1, 0, 1, -33),
+						Position = UDim2.fromOffset(0, 33),
 						BackgroundTransparency = 1,
 						BorderSizePixel = 0,
 						ScrollBarThickness = 0,
 						AutomaticCanvasSize = Enum.AutomaticSize.Y,
 						CanvasSize = UDim2.fromScale(0, 0),
-						Visible = scope:Computed(function(use)
-							return use(slotPanelVisible)
-						end),
 						[Children] = {
 							scope:New("UIListLayout")({
 								SortOrder = Enum.SortOrder.LayoutOrder,
 								FillDirection = Enum.FillDirection.Vertical,
-								Padding = UDim.new(0, 6),
+								Padding = UDim.new(0, 1),
 							}),
 							scope:New("UIPadding")({
-								PaddingLeft = UDim.new(0, 8),
-								PaddingRight = UDim.new(0, 8),
+								PaddingTop = UDim.new(0, 4),
+								PaddingBottom = UDim.new(0, 4),
+								PaddingLeft = UDim.new(0, 6),
+								PaddingRight = UDim.new(0, 6),
 							}),
 							table.unpack(slotCards),
 						},
 					}),
-				}
-			end)(),
+				},
+			}),
+			-- Hint bar
 			makeHintBar(scope, hintValue),
-			makeBottomNav(scope, uiController),
+			-- Bottom nav (Zone C)
+			makeBottomNav(scope, uiController, activeTabValue),
 		},
 	})
 end

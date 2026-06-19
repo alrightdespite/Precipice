@@ -43,4 +43,6 @@ UIController.init()
 -- Wait for server to confirm all initial state has been sent before showing Home.
 RemoteController.connect("PlayerReady", function()
 	StateController.set({ loaded = true })
+	-- Plot/chambers exist by now; wire the in-world reveal prompts.
+	SlotController.bindRevealPrompts()
 end)

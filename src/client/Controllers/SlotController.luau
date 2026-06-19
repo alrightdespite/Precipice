@@ -53,6 +53,50 @@ function SlotController.getChamberPart(slotIndex: number): BasePart?
 	return nil
 end
 
+-- Chambers physically exist for slots 1..6 in the current map; higher indices
+-- resolve nil and are skipped (see STATUS B4).
+local CHAMBER_COUNT = 10
+
+-- Wires each chamber's RevealPrompt to reveal that slot, but only while the slot
+-- is DONE. The prompt is enabled/disabled to match slot state so players can't
+-- trigger it on empty or still-running chambers. Reveal stays UI-driven too
+-- (HomeScreen "tap" path); this is the in-world equivalent.
+function SlotController.bindRevealPrompts()
+	local StateController = require(script.Parent.StateController)
+	local connected: { [number]: boolean } = {}
+
+	local function isDone(i: number): boolean
+		local slot = StateController.get().slots[i]
+		return slot ~= nil and (slot :: any).state == "DONE"
+	end
+
+	local function refresh()
+		for i = 1, CHAMBER_COUNT do
+			local chamber = SlotController.getChamberPart(i)
+			local prompt = chamber and chamber:FindFirstChild("RevealPrompt")
+			if prompt and prompt:IsA("ProximityPrompt") then
+				prompt.Enabled = isDone(i)
+				prompt.ActionText = "Reveal"
+				if not connected[i] then
+					connected[i] = true
+					prompt.Triggered:Connect(function()
+						if isDone(i) then
+							SlotController.reveal(i)
+						end
+					end)
+				end
+			end
+		end
+	end
+
+	StateController.Changed:Connect(function(patch)
+		if patch.slots ~= nil then
+			refresh()
+		end
+	end)
+	refresh()
+end
+
 function SlotController.init(): typeof(SlotController)
 	return SlotController
 end

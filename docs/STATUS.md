@@ -40,10 +40,11 @@ Live loop-walk in Studio (extraction → synthesis → lab discovery → reveal 
 - [x] **B2 — patent world-first race** — `SlotReveal` now returns authoritative `isPatent`; `PatentService.recordNaturalSynthesis` returns `didClaim`, threaded through `SlotService` into the payload. `RevealController` reads `result.isPatent` instead of racing the `PatentClaim` S2C event (dead `StateController.patents` poll + unused `Players` import removed). Manifest `SlotReveal` payloadDesc updated.
 - [x] **B6 — skipped runs claimed patents** — reveal recorded patents for tier ≥ 2 regardless of `isNatural`, violating §14. Now gated `if isNatural and tier >= 2`.
 - [x] **B3 — plot overlap** — `PlotService` clones were never moved, stacking all plots at the template origin. Now tiled in an 8-col grid (stride = template extents + 64 studs) via `PivotTo`, with reusable slot indices freed on logout. Spawn routing added: per-player `RespawnLocation` → own plot spawn, existing character teleported on, origin template spawn disabled. Verified live: plot at z=2055 vs template z=-9, character routed on.
+- [x] **B5 — RevealPrompt wired** — `SlotController.bindRevealPrompts` (called on `PlayerReady`) connects each chamber's `RevealPrompt.Triggered` → `SlotController.reveal(i)`, guarded to DONE slots, and toggles `prompt.Enabled` to match slot state (`ActionText = "Reveal"`). Reveal stays UI-driven too; this is the in-world equivalent. Verified live: prompt enables when a slot completes, disables after reveal, skipped on chambers >6.
 
 **Cleared (not bugs):** B7 timer "online speedup" — model stores `workRemaining` at online rate (1.0 baseline); offline is 0.8 (20% slower) per §9. Display and completion agree. · "DataService session bug" (old memory) — false alarm from the Studio MCP `execute_luau` separate require cache; real session loads fine (verified via remote round-trips).
 
-**Still open:** B4 chambers 7–10 (map build), B5 RevealPrompt inert (wire `Triggered → reveal` or disable).
+**Still open:** B4 chambers 7–10 (map build — the only remaining item; needs building parts in Studio, not pure code).
 
 ## Phase 12E completed (2026-06-17)
 
@@ -60,7 +61,7 @@ Live loop-walk in Studio (extraction → synthesis → lab discovery → reveal 
 
 ## In progress
 
-Phase 13 Studio debug pass. B1/B2/B3/B6 done. Next: B5 (RevealPrompt), then B4 (chambers 7–10).
+Phase 13 Studio debug pass. B1/B2/B3/B5/B6 done. Only B4 (chambers 7–10, map build) remains.
 
 ## Phase 12D — Lab world build (done in Studio)
 
@@ -70,7 +71,7 @@ Full lab + exterior built as clone-safe BaseParts. Lives at **`workspace.Plots.P
 
 - **B4 — Slots 7–10:** map has chambers `"1"–"6"`; `MAX_SLOTS=10` (Expanded-Lab gamepass → 7). Reveals for slots >6 resolve nil and skip VFX gracefully. Add chambers 7–10 if/when expanded lab ships.
 - **WingLight dim is invisible:** `WingLight` is a Folder-child PointLight (no transform → no light), so the reveal dim has no visible effect. To make it visible: `RevealController` searches recursively + WingLights live on parts. Map currently matches the existing contract.
-- **B5 — RevealPrompt inert:** reveal is UI-driven; the chamber `ProximityPrompt` isn't wired. Either connect `Triggered → SlotController.reveal(i)` (guard on slot-complete) or disable the prompt.
+- ~~**B5 — RevealPrompt inert**~~ — fixed in Phase 13: `SlotController.bindRevealPrompts` wires `Triggered → reveal(i)`, enabled only on DONE slots.
 - ~~**Plot overlap (PlotService)**~~ — fixed in Phase 13 (B3): clones now grid-offset via `PivotTo`, players routed to own plot.
 
 ## Known issues

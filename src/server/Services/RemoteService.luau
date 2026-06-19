@@ -3,6 +3,7 @@
 -- Boot order: called by GameInit after Config and Data tables load.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Manifest = require(ReplicatedStorage.Shared.Remotes.Manifest)
 
 local REMOTES_FOLDER_NAME = "Remotes"
@@ -18,7 +19,13 @@ function RemoteService.init()
 	_remotesFolder.Name = REMOTES_FOLDER_NAME
 	_remotesFolder.Parent = ReplicatedStorage
 
+	local created = 0
 	for _, entry in ipairs(Manifest) do
+		-- studioOnly remotes (e.g. the debug hook) never exist in production.
+		if entry.studioOnly and not RunService:IsStudio() then
+			continue
+		end
+
 		local existing = _remotesFolder:FindFirstChild(entry.name)
 		if existing then
 			error(string.format("RemoteService: duplicate remote '%s' in Manifest", entry.name))
@@ -32,9 +39,10 @@ function RemoteService.init()
 		end
 		remote.Name = entry.name
 		remote.Parent = _remotesFolder
+		created += 1
 	end
 
-	print(string.format("RemoteService: created %d remotes", #Manifest))
+	print(string.format("RemoteService: created %d remotes", created))
 end
 
 function RemoteService.getEvent(name: string): RemoteEvent

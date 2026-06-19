@@ -133,6 +133,10 @@ end)
 local PlotService = require(ServerScriptService.Server.Services.PlotService)
 PlotService.init()
 
+-- ── 21. DebugService (Studio-only; no-op in production) ───────────────────
+local DebugService = require(ServerScriptService.Server.Services.DebugService)
+DebugService.init()
+
 -- ── PlayerAdded / PlayerRemoving — ALWAYS last ────────────────────────────
 local function onPlayerAdded(player: Player)
 	PlotService.spawnPlot(player)

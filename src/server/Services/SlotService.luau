@@ -588,6 +588,33 @@ function SlotService.fireSlotCap(player: Player, data: any)
 	RemoteService.getEvent("SlotCapUpdate"):FireClient(player, getSlotCap(data))
 end
 
+-- Studio/debug only (called by DebugService): drains a running slot to natural
+-- completion. Unlike a catalyst/TimerSkip skip, isNatural is preserved, so the
+-- run still counts toward patents/Sprint/rank — lets us test the full natural
+-- pipeline without waiting out real timers. Not a player code path.
+function SlotService.forceCompleteSlot(player: Player, slotIndex: number): boolean
+	local userId = player.UserId
+	if not _loaded[userId] then
+		return false
+	end
+	local completed = nil
+	DataService.updateProfile(userId, function(data)
+		for _, s in ipairs(data.slots) do
+			if s.index == slotIndex and s.workRemaining > 0 then
+				s.workRemaining = 0
+				s.lastTickAt = os.time()
+				completed = s
+				break
+			end
+		end
+	end)
+	if completed then
+		fireSlotUpdate(player, completed)
+		return true
+	end
+	return false
+end
+
 function SlotService.init()
 	DataService.onProfileLoaded:Connect(function(userId)
 		_loaded[userId] = true

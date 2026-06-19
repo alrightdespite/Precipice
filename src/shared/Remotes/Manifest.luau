@@ -12,6 +12,8 @@ export type RemoteEntry = {
 	direction: "S2C" | "C2S" | "Bidirectional",
 	rateLimit: number?,
 	payloadDesc: string,
+	-- studioOnly remotes are skipped by RemoteService in production (RunService:IsStudio()).
+	studioOnly: boolean?,
 }
 
 local Manifest: { RemoteEntry } = {
@@ -407,6 +409,15 @@ local Manifest: { RemoteEntry } = {
 		kind = "Event",
 		direction = "S2C",
 		payloadDesc = "() — all initial state sent; client may show Home",
+	},
+
+	-- ── Debug (Studio-only; skipped by RemoteService in production) ────────────
+	{
+		name = "DebugCommand",
+		kind = "Function",
+		direction = "C2S",
+		studioOnly = true,
+		payloadDesc = "cmd: string, arg1: any?, arg2: any? → ok: boolean, result: any?",
 	},
 }
 

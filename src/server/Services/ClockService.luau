@@ -100,6 +100,7 @@ local _patentService: any = nil
 local _rankService: any = nil
 local _marketService: any = nil
 local _seedResolver: any = nil
+local _announcementService: any = nil
 
 local function resolveDeps()
 	if _resolved then
@@ -112,6 +113,7 @@ local function resolveDeps()
 	_rankService = require(ServerScriptService.Server.Services.RankService)
 	_marketService = require(ServerScriptService.Server.Services.MarketService)
 	_seedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
+	_announcementService = require(ServerScriptService.Server.Services.AnnouncementService)
 	_resolved = true
 end
 
@@ -125,10 +127,12 @@ end
 
 -- Seed-epoch announcement (Monday step 4). The variable-recipe seed is deterministic from the week
 -- number (§7) — every server already agrees, so there is no state to write; this step only
--- announces the new week. AnnouncementService (§15) is not built yet.
+-- announces the new week. The seed itself is deterministic (every server already agrees).
 function ClockService._announceSeedEpoch(now: number)
-	-- TODO Phase 14 (AnnouncementService): broadcast seed-epoch / new-week marquee here.
 	local week = _seedResolver and _seedResolver.getCurrentWeekNumber(now) or ClockService.weekIndex(now)
+	if _announcementService then
+		_announcementService.announceSeedEpoch(week)
+	end
 	print(string.format("ClockService: seed epoch — week %d active", week))
 end
 

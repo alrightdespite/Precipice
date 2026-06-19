@@ -13,6 +13,7 @@ local _compounds: any = nil -- Compounds data table (for sweep iteration)
 local _pw: any = nil -- PatentWindow module
 local _eventCompounds: any = nil -- EventCompounds data table
 local _eventService: any = nil -- EventService (for event patent guards)
+local _announcementService: any = nil -- AnnouncementService (§15 marquee; optional)
 local _analyticsService: any = { track = function() end, Events = {} }
 
 -- ── Module ─────────────────────────────────────────────────────────────────
@@ -41,6 +42,9 @@ function PatentService._setEventCompounds(ec: any)
 end
 function PatentService._setEventService(es: any)
 	_eventService = es
+end
+function PatentService._setAnnouncementService(as: any)
+	_announcementService = as
 end
 
 function PatentService.isEventCompound(compoundId: string): boolean
@@ -180,6 +184,12 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 				userId = userId,
 				compoundId = compoundId,
 			})
+			-- §15: first claims announce globally at every patentable tier. The claimant is the
+			-- local player, so the name is available without an async lookup.
+			if _announcementService then
+				local compound = _compounds[compoundId]
+				_announcementService.announceFirstClaim(compoundId, player.Name, compound and compound.tier or 2)
+			end
 		elseif challengeOpened then
 			_rs.getEvent("PatentChallengeAlert"):FireClient(player, compoundId, challengeWindowEnd)
 		end
@@ -250,7 +260,11 @@ function PatentService.runDecaySweep(now: number?)
 			return newRecord
 		end)
 
-		-- TODO Phase 10: fire PatentResolved to relevant players via AnnouncementService
+		-- §15: a patent transfer (holder actually changed) announces globally only at T4+.
+		-- Cosmetic marquee (F2) — a duplicate across servers is harmless (dedup + 30s gap).
+		if _announcementService and winnerId ~= peek.holderId and peek.tier >= 4 then
+			_announcementService.announcePatentTransfer(compoundId, peek.holderId, winnerId, peek.tier)
+		end
 	end
 end
 

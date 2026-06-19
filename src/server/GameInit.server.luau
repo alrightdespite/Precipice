@@ -85,6 +85,11 @@ EventService.init()
 SlotService._setEventService(EventService)
 PatentService._setEventService(EventService)
 
+-- ── 16b. AnnouncementService (§15 cross-server marquee) ───────────────────
+local AnnouncementService = require(ServerScriptService.Server.Services.AnnouncementService)
+AnnouncementService.init()
+PatentService._setAnnouncementService(AnnouncementService)
+
 -- ── 17. SyndicateService ──────────────────────────────────────────────────
 local SyndicateService = require(ServerScriptService.Server.Services.SyndicateService)
 SyndicateService.init()

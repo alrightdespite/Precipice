@@ -168,6 +168,11 @@ local function wireS2C()
 		StateController.set({ streak = { day = day, safeUntil = safeUntil } })
 	end)
 
+	-- CosmeticUpdate: replace owned + equipped maps (§24)
+	_remotes["CosmeticUpdate"].OnClientEvent:Connect(function(owned: { [string]: boolean }, equipped: { [string]: string })
+		StateController.set({ cosmetics = { owned = owned or {}, equipped = equipped or {} } })
+	end)
+
 	-- Announcement: append, cap at 10
 	_remotes["Announcement"].OnClientEvent:Connect(function(kind: string, message: string, tier: number?)
 		local list = table.clone(StateController.get().announcements)

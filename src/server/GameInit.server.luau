@@ -90,6 +90,10 @@ local AnnouncementService = require(ServerScriptService.Server.Services.Announce
 AnnouncementService.init()
 PatentService._setAnnouncementService(AnnouncementService)
 
+-- ── 16c. CosmeticService (§24 personal cosmetics) ─────────────────────────
+local CosmeticService = require(ServerScriptService.Server.Services.CosmeticService)
+CosmeticService.init()
+
 -- ── 17. SyndicateService ──────────────────────────────────────────────────
 local SyndicateService = require(ServerScriptService.Server.Services.SyndicateService)
 SyndicateService.init()
@@ -115,6 +119,7 @@ DataService.onProfileLoaded:Connect(function(userId)
 	StreakService.onLogin(player, data, os.time())
 	ContractService.refreshIfStale(player, data, os.time())
 	RankService.loadChampionships(userId, data)
+	CosmeticService.fireCosmeticUpdate(player, data)
 	MonetizationService.refreshGamepasses(player, data)
 	if MonetizationService.ownsGamepass(data, "compoundArchive") then
 		MonetizationService.grantArchiveUses(player, data, os.time())

@@ -372,6 +372,28 @@ local Manifest: { RemoteEntry } = {
 		payloadDesc = "passes: { [string]: boolean }",
 	},
 
+	-- ── Cosmetics (§24, personal) ──────────────────────────────────────────────
+	{
+		name = "CosmeticPurchase",
+		kind = "Function",
+		direction = "C2S",
+		rateLimit = 2,
+		payloadDesc = "cosmeticId: string → ok: boolean, err: string?",
+	},
+	{
+		name = "CosmeticEquip",
+		kind = "Function",
+		direction = "C2S",
+		rateLimit = 4,
+		payloadDesc = "cosmeticId: string → ok: boolean, err: string?",
+	},
+	{
+		name = "CosmeticUpdate",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "owned: { [string]: boolean }, equipped: { [string]: string }",
+	},
+
 	-- ── Events ────────────────────────────────────────────────────────────────
 	{
 		name = "FluxUpdate",

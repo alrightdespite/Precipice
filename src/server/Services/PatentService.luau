@@ -225,69 +225,73 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 	return didClaim
 end
 
+-- Resolve one patent's expired defense window: the higher 30-day count takes the patent, the
+-- queue advances (or immunity applies), and a T4+ transfer is announced. Shared by the compound
+-- and exotic sweeps. No DS reads inside the UpdateAsync transform (counts pre-fetched).
+local function sweepPatent(compoundId: string, now: number)
+	local patentKey = "patent:" .. compoundId
+
+	local peek = _ds:GetAsync(patentKey)
+	if peek == nil then
+		return -- unclaimed
+	end
+	if not _pw.windowExpired(peek, now) then
+		return -- no expired challenge window
+	end
+
+	local holderCount = _scs.getCountForUser(compoundId, peek.holderId, 30, now)
+	local challengerCount = _scs.getCountForUser(compoundId, peek.challenge.challengerId, 30, now)
+	local winnerId = (challengerCount > holderCount) and peek.challenge.challengerId or peek.holderId
+
+	_ds:UpdateAsync(patentKey, function(record)
+		if record == nil then
+			return nil
+		end
+		-- Guard: another server may have already resolved this window
+		if not _pw.windowExpired(record, now) then
+			return nil
+		end
+
+		local newRecord = copyRecord(record)
+		newRecord.holderId = winnerId
+		newRecord.synthLeaderId = winnerId
+		newRecord.challenge = nil
+		newRecord.immunityUntil = nil
+
+		-- Process challengeQueue: pop front and open a new window immediately,
+		-- OR apply immunity to the new holder if queue is empty.
+		if #newRecord.challengeQueue > 0 then
+			local nextC = table.remove(newRecord.challengeQueue, 1)
+			-- newRecord.tier is still correct (unchanged from copyRecord)
+			newRecord.challenge = _pw.newChallenge(newRecord, nextC.challengerId, now)
+			-- No immunity: queued challenger had priority
+		else
+			newRecord.immunityUntil = now + _pw.immunitySeconds
+		end
+
+		return newRecord
+	end)
+
+	-- §15: a patent transfer (holder actually changed) announces globally only at T4+.
+	-- Cosmetic marquee (F2) — a duplicate across servers is harmless (dedup + 30s gap).
+	if _announcementService and winnerId ~= peek.holderId and peek.tier >= 4 then
+		_announcementService.announcePatentTransfer(compoundId, peek.holderId, winnerId, peek.tier)
+	end
+end
+
 -- Called by GlobalJobService as the "decaySweep" step of PatentDividendSweep (H1, R2).
--- Runs every sweepIntervalSeconds (900s). Iterates the finite compound set.
--- now: injectable for tests; defaults to os.time() in production.
+-- Runs every sweepIntervalSeconds (900s). Iterates the finite compound set AND the exotic set —
+-- exotic patents share the Patents DS and are contestable via the 7-day T6/T7 window (§13/§23),
+-- so the sweep must cover them too. now: injectable for tests; defaults to os.time().
 function PatentService.runDecaySweep(now: number?)
 	now = now or os.time()
 
-	for compoundId, _ in pairs(_compounds) do
-		local patentKey = "patent:" .. compoundId
-
-		-- Cheap pre-filter: skip unclaimed or non-expired compounds
-		local peek = _ds:GetAsync(patentKey)
-		if peek == nil then
-			continue
-		end
-		if not _pw.windowExpired(peek, now) then
-			continue
-		end
-
-		-- Pre-fetch counts before UpdateAsync transform (no DS reads inside transform)
-		local holderCount = _scs.getCountForUser(compoundId, peek.holderId, 30, now)
-		local challengerCount = _scs.getCountForUser(
-			compoundId,
-			peek.challenge.challengerId,
-			30,
-			now
-		)
-
-		local winnerId = (challengerCount > holderCount) and peek.challenge.challengerId
-			or peek.holderId
-
-		_ds:UpdateAsync(patentKey, function(record)
-			if record == nil then
-				return nil
-			end
-			-- Guard: another server may have already resolved this window
-			if not _pw.windowExpired(record, now) then
-				return nil
-			end
-
-			local newRecord = copyRecord(record)
-			newRecord.holderId = winnerId
-			newRecord.synthLeaderId = winnerId
-			newRecord.challenge = nil
-			newRecord.immunityUntil = nil
-
-			-- Process challengeQueue: pop front and open a new window immediately,
-			-- OR apply immunity to the new holder if queue is empty.
-			if #newRecord.challengeQueue > 0 then
-				local next = table.remove(newRecord.challengeQueue, 1)
-				-- newRecord.tier is still correct (unchanged from copyRecord)
-				newRecord.challenge = _pw.newChallenge(newRecord, next.challengerId, now)
-				-- No immunity: queued challenger had priority
-			else
-				newRecord.immunityUntil = now + _pw.immunitySeconds
-			end
-
-			return newRecord
-		end)
-
-		-- §15: a patent transfer (holder actually changed) announces globally only at T4+.
-		-- Cosmetic marquee (F2) — a duplicate across servers is harmless (dedup + 30s gap).
-		if _announcementService and winnerId ~= peek.holderId and peek.tier >= 4 then
-			_announcementService.announcePatentTransfer(compoundId, peek.holderId, winnerId, peek.tier)
+	for compoundId in pairs(_compounds) do
+		sweepPatent(compoundId, now :: number)
+	end
+	if _exotics then
+		for exoticId in pairs(_exotics) do
+			sweepPatent(exoticId, now :: number)
 		end
 	end
 end

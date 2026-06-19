@@ -1,8 +1,57 @@
 # Status
 
-## Current phase: Phase 13 — Studio debug pass (in progress)
+## Current phase: Phase 14 — Finish-line build (planned). Phase 13 (Studio debug pass) complete.
 
-**Last updated:** 2026-06-18
+**Last updated:** 2026-06-19
+
+## Phase 14 — Finish-line build (planned)
+
+Goal: take the game from "backend ~85%, loop verified" to feature-complete + launch-ready. Grounded in a code/STATUS audit on 2026-06-19. Priority: 🔴 blocker, 🟡 important, 🟢 nice-to-have.
+
+### A. Core systems with NO implementation (build from scratch)
+- 🔴 **ClockService** — only a `TODO` in GameInit. Drives epoch boundaries (Monday weekly + daily). Without it: GlobalJobService runs on a poll stub only; Sprint never archives/resets; patent dividends never pay; patent decay sweep isn't scheduled; seed-epoch announcement never fires. Wire per `docs/01_ARCHITECTURE.md` boot order (before GlobalJobService) and the H1/H3 patterns. Trigger `GlobalJobService` Monday steps (dividends → Sprint archive → Sprint wipe → seed epoch) and the 900s patent sweep.
+- 🔴 **AnnouncementService** — §15 MessagingService announcements (patent claim/challenge/world-first, tier-scoped, 30s queue, H3 hint-not-truth). Wire at PatentService/MarketService emit points.
+- 🟡 **CosmeticService** — §3 skins: catalog, purchase (Pellets), equip.
+- 🟡 **AdminService** — moderation/admin tooling.
+
+### B. Client UI unwired / incomplete
+- 🔴 **SynthesizeScreen → real synthesis** — currently analyze-only ("Phase 12B: just analyze for now"); never calls `startSynthesis`. Build: pair → slot routing, Synthesize button, **variant picker + Stabilized toggle** (server supports it via B9: pass `desiredResultId`), confirm, input consumption feedback. This is the core loop's missing production UI.
+- 🟡 **PrestigeScreen** — prestige level stubbed to 0; wire real level + 2-step confirm to `PrestigeConfirm`.
+- 🟡 **Live-verify built screens** — Market buy/sell/cancel, Syndicate CRUD, Leaderboard, Settings gamepasses, FormulaLog/ExoticRegistry, Contract/Streak claim, Event/Flux UI.
+
+### C. Server features half-built (TODOs in shipped code)
+- 🔴 **PatentService** — weekly dividend payout (§15) TODO; `PatentResolved`/release announcements TODO; sweep needs ClockService.
+- 🔴 **RankService.archiveSprint** + champion badges = stub (Monday job).
+- 🟡 **LeaderboardService** percentile blob never populated (own-rank = -1 fallback).
+- 🟡 **MarketService** — MemoryStore fast browse; market-sale rank on offline path; expiry sweep via GlobalJob.
+- 🟡 **SeedResolver** — HMAC is a placeholder stub (seeds rotate by date but unsalted).
+- 🟢 **AnalyticsService** — no-op stub (§30); wire a provider eventually.
+
+### D. Security / hardening
+- 🔴 **Rate limiting NOT enforced** — Manifest defines `rateLimit` per remote but RemoteService never enforces it. Every C2S remote is spammable. Add a server-side throttle wrapper keyed by player+remote.
+- 🟡 **Strip/secure DebugService** before ship (studioOnly-gated now; verify unreachable in prod).
+- 🟡 Configure real Robux product/gamepass IDs in `GameConfig`.
+
+### E. Built + Lune-green but NEVER Studio-tested end-to-end (integration sweep)
+Use the DebugService hook (grant/discover/`completeSlot` natural skip) to drive these fast:
+Market full loop · Syndicate lifecycle · Joint Synthesis T6/T7 · Exotics (decay/world-first; verify T7 id scheme — `T7_01` doesn't exist) · Prestige full reset (§22 wipe-vs-persist) · Events/Flux · Streak · Contracts · Monetization receipts/gamepasses · Offline income · **Multiplayer 2+** (patent contests, cross-player market, plot tiling).
+
+### F. Map / world (Studio `.rbxl`, gitignored — manual save required)
+- 🔴 **SAVE chambers 7–10** (B4) — currently unsaved, lost on Studio close.
+- 🟡 Plot stride ~2000 studs (Exterior bounds inflate it) — add a dedicated bounds part for tighter tiling.
+- 🟡 WingLight reveal-dim invisible (lighting fix); world space/art for chambers 7–10.
+
+### G. Content / data verification
+- Economy data (rates/fees/timers) vs the two workbooks, all tiers · Exotic/T7 ids + recipes · event compounds/blueprints · contract pool reward values.
+
+### Suggested order
+1. 🔴 ClockService (unblocks C/E sprint+dividend+epoch testing)
+2. 🔴 Rate limiting (security, isolated)
+3. 🔴 SynthesizeScreen synthesis UI (+ PatentService dividends, RankService archiveSprint once Clock exists)
+4. 🔴 AnnouncementService
+5. 🟡 Build CosmeticService/AdminService; finish half-built server features
+6. 🟡 Integration sweep (§E) with the debug hook; live-verify UI (§B)
+7. 🟡 Map saves/polish (§F), content verification (§G), hardening (§D)
 
 ## Done
 

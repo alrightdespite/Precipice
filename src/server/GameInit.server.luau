@@ -17,8 +17,11 @@ RemoteService.init()
 local DataService = require(ServerScriptService.Server.Services.DataService)
 DataService.init()
 
--- ── 5. ClockService (Phase 4) ─────────────────────────────────────────────
--- TODO Phase 4: ClockService.init() goes here before GlobalJobService.
+-- ── 5. ClockService ───────────────────────────────────────────────────────
+-- Drives epoch boundaries (Monday weekly + daily) and the timed global jobs. Must init before
+-- GlobalJobService (H9); the tick loop resolves dependent services lazily once boot completes.
+local ClockService = require(ServerScriptService.Server.Services.ClockService)
+ClockService.init()
 
 -- ── 5b. GlobalJobService ──────────────────────────────────────────────────
 local GlobalJobService = require(ServerScriptService.Server.Services.GlobalJobService)

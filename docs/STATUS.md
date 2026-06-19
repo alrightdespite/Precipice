@@ -8,8 +8,11 @@
 
 Goal: take the game from "backend ~85%, loop verified" to feature-complete + launch-ready. Grounded in a code/STATUS audit on 2026-06-19. Priority: 🔴 blocker, 🟡 important, 🟢 nice-to-have.
 
+### Phase 14 progress (2026-06-19)
+- [x] **ClockService** (suggested-order 1) — built `src/server/Services/ClockService.luau`: 60s UTC tick (E3), daily + Monday-weekly boundary detection (pure, Lune-tested), drives GlobalJobService CAS jobs (F1 ledger): Monday `WeeklyEpochRotation` (dividends → sprintArchive → sprintWipe → seedEpoch, R3 order), 900s `PatentDividendSweep` (E2), hourly `MarketExpirySweep` (E7). Wired GameInit step 5 (before GlobalJobService, H9). Removed GlobalJobService dead poll loop; updated stale PatentService/MarketService wiring TODOs. **Latent bug fixed:** MarketExpirySweep previously had no driver — listings never expired in prod. 467/467 tests green; 0 selene errors; live boot-verified. NOTE: `payDividends`/`archiveSprint` still stubs (suggested-order 3); `seedEpoch` step logs only until AnnouncementService exists.
+
 ### A. Core systems with NO implementation (build from scratch)
-- 🔴 **ClockService** — only a `TODO` in GameInit. Drives epoch boundaries (Monday weekly + daily). Without it: GlobalJobService runs on a poll stub only; Sprint never archives/resets; patent dividends never pay; patent decay sweep isn't scheduled; seed-epoch announcement never fires. Wire per `docs/01_ARCHITECTURE.md` boot order (before GlobalJobService) and the H1/H3 patterns. Trigger `GlobalJobService` Monday steps (dividends → Sprint archive → Sprint wipe → seed epoch) and the 900s patent sweep.
+- [x] ~~🔴 **ClockService**~~ — DONE (see Phase 14 progress above).
 - 🔴 **AnnouncementService** — §15 MessagingService announcements (patent claim/challenge/world-first, tier-scoped, 30s queue, H3 hint-not-truth). Wire at PatentService/MarketService emit points.
 - 🟡 **CosmeticService** — §3 skins: catalog, purchase (Pellets), equip.
 - 🟡 **AdminService** — moderation/admin tooling.

@@ -485,14 +485,8 @@ function MarketService.init()
 			return MarketService.browseTier(player, tierNum, math.max(1, math.floor(page)))
 		end
 
-	-- TODO Phase 4 wiring: GlobalJobService.getInstance():runJob({
-	--   name = "MarketExpirySweep",
-	--   steps = {{ name = "expirySweep", fn = function()
-	--     local t = os.time()
-	--     MarketService.runExpirySweep(t)
-	--   end }},
-	-- }, "marketsweep:" .. tostring(math.floor(os.time() / 3600)))
-	-- once ClockService exists to drive the hourly trigger.
+	-- MarketExpirySweep is driven by ClockService: it attempts the GlobalJobService claim hourly
+	-- via ClockService._runMarketSweep, which calls MarketService.runExpirySweep.
 end
 
 return MarketService

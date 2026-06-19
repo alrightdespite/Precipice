@@ -152,23 +152,14 @@ GlobalJobService.NOOP_JOB = {
 
 local _instance: any = nil
 
--- Called from GameInit after DataService (H9 boot order).
--- ClockService will wire epoch-boundary triggers in Phase 4; for now the poll
--- loop runs independently every 60 s as the H3 backstop.
+-- Called from GameInit after DataService (H9 boot order). Creates the singleton instance only;
+-- ClockService is the driver — it ticks every 60s (E3) and calls runJob on this instance at each
+-- daily/weekly/sweep boundary. No poll loop lives here.
 function GlobalJobService.init()
 	local DataStoreService = game:GetService("DataStoreService")
 	local ds = DataStoreService:GetDataStore("GlobalJobs")
 	local serverId = (game.JobId ~= "" and game.JobId) or ("dev-" .. tostring(math.random(1, 99999)))
 	_instance = GlobalJobService.new(ds, os.time, serverId)
-
-	-- Poll every 60s: re-check epoch ledger in case MessagingService delivery
-	-- was missed (H3). Phase 4 will replace this stub with ClockService calls.
-	task.spawn(function()
-		while true do
-			task.wait(60)
-			-- TODO Phase 4: ClockService.onEpochBoundary → runJobIfLeader
-		end
-	end)
 end
 
 function GlobalJobService.getInstance(): any

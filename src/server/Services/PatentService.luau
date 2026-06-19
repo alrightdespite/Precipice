@@ -315,12 +315,8 @@ function PatentService.init()
 		return PatentService.getRecord(compoundId)
 	end
 
-	-- Register PatentDividendSweep with GlobalJobService.
-	-- TODO Phase 4: wire ClockService tick to attempt PatentDividendSweep claim every 900s
-	-- Pattern: GlobalJobService.getInstance():runJob({
-	--   name = "PatentDividendSweep",
-	--   steps = {{ name = "decaySweep", fn = function() PatentService.runDecaySweep() end }},
-	-- }, "sweep:" .. math.floor(os.time() / 900))
+	-- PatentDividendSweep is driven by ClockService: it attempts the GlobalJobService claim
+	-- every 900s (PatentWindow.sweepIntervalSeconds) via ClockService._runPatentSweep.
 end
 
 return PatentService

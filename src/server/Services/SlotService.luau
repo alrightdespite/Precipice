@@ -233,13 +233,15 @@ local function wireRemotes()
 		slotIndex: any,
 		input1: any,
 		input2: any,
-		stabilized: any
+		stabilized: any,
+			desiredResultId: any
 	)
 		if
 			type(slotIndex) ~= "number"
 			or type(input1) ~= "string"
 			or type(input2) ~= "string"
 			or type(stabilized) ~= "boolean"
+				or (desiredResultId ~= nil and type(desiredResultId) ~= "string")
 		then
 			return false, "invalid args"
 		end
@@ -260,7 +262,26 @@ local function wireRemotes()
 			end
 
 			local weekSeed = SeedService.getCurrentWeekSeed()
+			-- Default to this week's active variant. Stabilized Synthesis (§8) may
+			-- force a specific already-discovered variant of the same pair instead
+			-- — that is the whole point of paying the ×1.5 timer. Non-stabilized
+			-- runs ignore desiredResultId and always produce the active variant.
 			local resultId = RecipeResolver.resolve(input1, input2, weekSeed)
+			if stabilized and desiredResultId ~= nil then
+				local isValidVariant = false
+				for _, rid in ipairs(RecipeResolver.getResultIds(input1, input2)) do
+					if rid == desiredResultId then
+						isValidVariant = true
+						break
+					end
+				end
+				if isValidVariant and data.formulaLog.discovered[desiredResultId] then
+					resultId = desiredResultId
+				else
+					failErr = "variant not discovered for these inputs"
+					return
+				end
+			end
 			if not resultId then
 				failErr = "no recipe for these inputs"
 				return

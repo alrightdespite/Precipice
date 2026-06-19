@@ -31,7 +31,7 @@ local Manifest: { RemoteEntry } = {
 		kind = "Function",
 		direction = "C2S",
 		rateLimit = 2,
-		payloadDesc = "slotIndex: number, input1: string, input2: string, stabilized: boolean → ok: boolean, err: string?",
+		payloadDesc = "slotIndex: number, input1: string, input2: string, stabilized: boolean, desiredResultId: string? → ok: boolean, err: string?",
 	},
 	{
 		name = "SlotCancel",

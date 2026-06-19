@@ -9,13 +9,16 @@ function SlotController.startExtraction(_slotIndex: number, compoundId: string):
 	return RemoteController.invoke("SlotStartExtraction", compoundId)
 end
 
+-- desiredResultId: only honored when stabilized — forces a specific discovered
+-- variant of a variable pair (§8). nil → this week's active variant.
 function SlotController.startSynthesis(
 	slotIndex: number,
 	input1: string,
 	input2: string,
-	stabilized: boolean
+	stabilized: boolean,
+	desiredResultId: string?
 ): (boolean, string?)
-	return RemoteController.invoke("SlotStartSynthesis", slotIndex, input1, input2, stabilized)
+	return RemoteController.invoke("SlotStartSynthesis", slotIndex, input1, input2, stabilized, desiredResultId)
 end
 
 function SlotController.cancel(slotIndex: number): (boolean, string?)

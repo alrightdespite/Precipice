@@ -26,7 +26,7 @@ Goal: take the game from "backend ~85%, loop verified" to feature-complete + lau
 - 🟡 **Live-verify built screens** — Market buy/sell/cancel, Syndicate CRUD, Leaderboard, Settings gamepasses, FormulaLog/ExoticRegistry, Contract/Streak claim, Event/Flux UI.
 
 ### C. Server features half-built (TODOs in shipped code)
-- 🔴 **PatentService** — weekly dividend payout (§15) TODO; `PatentResolved`/release announcements TODO; sweep needs ClockService.
+- [x] ~~🔴 **PatentService weekly dividend payout**~~ — DONE: `payDividends(weekKey, now)` pays each held patent its §15 tier dividend (T2 800 → T6 100k) — online to balance + BalanceUpdate, offline to PendingCredits; idempotent via `dividendPaidThruWeek` stamp (F1 resume-safe). Driven by ClockService Monday job. Live-verified: held patents paid (+90,800), same-week re-run paid nothing. NOTE: T7 Exotic dividends (200k) still TODO (exotic holders live in ExoticService, not the Patents DS). `PatentResolved`/release marquee = AnnouncementService transfer (T4+) wired; per-party PatentResolved S2C still a follow-up.
 - 🔴 **RankService.archiveSprint** + champion badges = stub (Monday job).
 - 🟡 **LeaderboardService** percentile blob never populated (own-rank = -1 fallback).
 - 🟡 **MarketService** — MemoryStore fast browse; market-sale rank on offline path; expiry sweep via GlobalJob.

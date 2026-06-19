@@ -15,6 +15,19 @@ local _eventCompounds: any = nil -- EventCompounds data table
 local _eventService: any = nil -- EventService (for event patent guards)
 local _announcementService: any = nil -- AnnouncementService (§15 marquee; optional)
 local _analyticsService: any = { track = function() end, Events = {} }
+local _pendingDs: any = nil -- DataStore("PendingCredits") — offline dividend delivery
+local _dataService: any = nil -- DataService — online dividend balance writes
+local _players: any = nil -- Players service — online holder lookup
+
+-- Weekly patent dividend by compound tier (§15 dividend table).
+local DIVIDEND_BY_TIER: { [number]: number } = {
+	[2] = 800,
+	[3] = 5000,
+	[4] = 15000,
+	[5] = 60000,
+	[6] = 100000,
+	[7] = 200000,
+}
 
 -- ── Module ─────────────────────────────────────────────────────────────────
 
@@ -300,10 +313,78 @@ function PatentService.getRecord(compoundId: string): any
 	return _ds:GetAsync("patent:" .. compoundId)
 end
 
+-- Append-only, idempotent PendingCredits write (R13: per-user key, never the locked profile).
+-- Mirrors MarketService's writer; drained into balance at login (DataService.drainPending).
+local function writePendingCredit(userId: number, creditId: string, amount: number, source: string)
+	_pendingDs:UpdateAsync("PendingCredits/" .. tostring(userId), function(stored)
+		local credits = (stored and stored.credits) or {}
+		for _, c in ipairs(credits) do
+			if c.creditId == creditId then
+				return nil -- already written; idempotent
+			end
+		end
+		local newCredits = { table.unpack(credits) }
+		table.insert(newCredits, { creditId = creditId, amount = amount, source = source })
+		return { credits = newCredits }
+	end)
+end
+
 -- Monday job step 1 (R3 mandated order: dividends → Sprint archive → seed).
--- weekKey: e.g. "2026-W24" — uniquely identifies this payout run.
-function PatentService.payDividends(_weekKey: string, _now: number?)
-	-- TODO Phase 6: dividend payout via PendingCredits per R3 step 1
+-- weekKey: e.g. "weekly:<weekIndex>" — uniquely identifies this payout run, also stamped on each
+-- patent record (dividendPaidThruWeek) so a resumed/re-run job never double-pays (F1).
+-- §15: the holder at firing time is paid the tier dividend — online to balance, offline to
+-- PendingCredits. Whoever holds the patent at this moment gets paid; no retroactive grants.
+function PatentService.payDividends(weekKey: string, now: number?)
+	now = now or os.time()
+
+	for compoundId in pairs(_compounds) do
+		local patentKey = "patent:" .. compoundId
+		local peek = _ds:GetAsync(patentKey)
+		if peek == nil or peek.holderId == nil then
+			continue
+		end
+		if peek.dividendPaidThruWeek == weekKey then
+			continue -- already paid this week (idempotent resume guard)
+		end
+		local amount = DIVIDEND_BY_TIER[peek.tier]
+		if amount == nil then
+			continue
+		end
+
+		local holderId = peek.holderId
+		local player = _players and _players:GetPlayerByUserId(holderId)
+		if player and _dataService and _dataService.isLoaded(holderId) then
+			_dataService.updateProfile(holderId, function(data)
+				data.balances.pellets += amount
+			end)
+			local data = _dataService.getProfile(holderId)
+			if _rs then
+				_rs.getEvent("BalanceUpdate"):FireClient(
+					player,
+					data.balances.pellets,
+					data.balances.catalysts,
+					data.monetization.rushUses,
+					data.monetization.timerSkipUses or 0
+				)
+			end
+		else
+			-- creditId includes weekKey → idempotent even if the step is re-run.
+			writePendingCredit(holderId, "dividend:" .. compoundId .. ":" .. weekKey, amount, "patent_dividend")
+		end
+
+		-- Stamp the record so a resumed job skips this patent (paid above).
+		_ds:UpdateAsync(patentKey, function(record)
+			if record == nil or record.dividendPaidThruWeek == weekKey then
+				return nil
+			end
+			local newRecord = copyRecord(record)
+			newRecord.dividendPaidThruWeek = weekKey
+			return newRecord
+		end)
+	end
+
+	-- TODO: T7 Exotic dividends (200k/week) once Exotic patent holders are integrated here —
+	-- exotic claims/holders are currently ExoticService's domain (separate from the Patents DS).
 end
 
 -- ── Production init ────────────────────────────────────────────────────────
@@ -314,10 +395,13 @@ function PatentService.init()
 	local ServerScriptService = game:GetService("ServerScriptService")
 
 	_ds = DataStoreService:GetDataStore("Patents")
+	_pendingDs = DataStoreService:GetDataStore("PendingCredits")
 	_pw = require(ReplicatedStorage.Shared.Core.PatentWindow)
 	_compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 	_scs = require(ServerScriptService.Server.Services.SynthCountService)
 	_rs = require(ServerScriptService.Server.Services.RemoteService)
+	_dataService = require(ServerScriptService.Server.Services.DataService)
+	_players = game:GetService("Players")
 	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 
 	-- Wire PatentQuery C2S remote (rate-limited via setInvoke)

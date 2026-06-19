@@ -11,6 +11,7 @@
 --   "discoverRecipe", resultId                → marks a recipe discovered
 --   "completeSlot",   slotIndex               → natural completion (counts for patents/rank)
 --   "announce",       message, tier?          → queues a §15 marquee announcement (test pipe)
+--   "payDividends"                            → runs the Monday patent-dividend step now
 --   "dumpProfile"                             → returns a state snapshot
 
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -22,6 +23,7 @@ local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
 local SlotService = require(ServerScriptService.Server.Services.SlotService)
 local AnnouncementService = require(ServerScriptService.Server.Services.AnnouncementService)
+local PatentService = require(ServerScriptService.Server.Services.PatentService)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 
 local DebugService = {}
@@ -90,6 +92,10 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		-- Exercises the §15 marquee pipe (queue → MessagingService publish → Announcement S2C).
 		AnnouncementService.broadcast("debug", tostring(arg1), tonumber(arg2))
 		return true, "announcement queued"
+	elseif cmd == "payDividends" then
+		-- Runs the Monday dividend step directly (unique weekKey so it always pays).
+		PatentService.payDividends("debug:" .. tostring(os.time()), os.time())
+		return true, "dividends paid"
 	elseif cmd == "dumpProfile" then
 		local data = DataService.getProfile(userId)
 		return true, {

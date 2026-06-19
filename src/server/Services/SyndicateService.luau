@@ -473,6 +473,12 @@ function SyndicateService.purchaseUpgrade(player: any, upgradeName: any): (boole
 		return false, "unknown upgrade"
 	end
 
+	-- §17 crest progression: Animated requires Syndicate Crest; Broadcast requires Animated.
+	local requires: { [string]: string } = {
+		animatedCrest = "crest",
+		broadcastCrest = "animatedCrest",
+	}
+
 	local callerId = player.UserId
 	local data = _dataService.getProfile(callerId)
 	if data.syndicate == nil then return false, "not in a syndicate" end
@@ -488,6 +494,11 @@ function SyndicateService.purchaseUpgrade(player: any, upgradeName: any): (boole
 
 	if record.upgrades[upgradeName] then
 		return false, "upgrade already owned"
+	end
+
+	local prereq = requires[upgradeName]
+	if prereq and not record.upgrades[prereq] then
+		return false, "requires " .. prereq
 	end
 
 	if record.vaultBalance < cost then

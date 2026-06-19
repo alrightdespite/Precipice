@@ -17,8 +17,8 @@ Goal: take the game from "backend ~85%, loop verified" to feature-complete + lau
 ### A. Core systems with NO implementation (build from scratch)
 - [x] ~~🔴 **ClockService**~~ — DONE (see Phase 14 progress above).
 - [x] ~~🔴 **AnnouncementService**~~ — DONE (see Phase 14 progress above): §15 tier-scoped marquee over MessagingService + 30s-gap queue; wired at PatentService first-claim/transfer emit points + ClockService seed epoch.
-- 🟡 **CosmeticService** — §3 skins: catalog, purchase (Pellets), equip.
-- 🟡 **AdminService** — moderation/admin tooling.
+- 🟡 **CosmeticService** — §3 individual **lab skins**: catalog, purchase (Pellets), equip. NOTE: the §17 crests are *Syndicate* upgrades (already in `SyndicateService.purchaseUpgrade`; the §17 prerequisite chain was just enforced + tested). CosmeticService proper needs an authored §3 skin catalog (content) before it can be built — `cosmetics = { owned, equipped }` profile field already exists.
+- 🟡 **AdminService** — moderation/admin tooling. Per spec: chat-driven (no client remote), UserId whitelist + place owner, commands give/setbalance/kick/inspect/tp, actions logged.
 
 ### B. Client UI unwired / incomplete
 - [x] ~~🔴 **SynthesizeScreen → real synthesis**~~ — DONE (see Phase 14 progress above): config modal with slot routing + variant picker + Stabilized toggle → `startSynthesis`.

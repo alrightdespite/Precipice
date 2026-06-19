@@ -470,6 +470,48 @@ describe("SyndicateService — purchaseUpgrade", function()
 		expect(ok).toBeFalse()
 		expect(err ~= nil).toBeTrue()
 	end)
+
+	it("animatedCrest without crest: fails (§17 prerequisite)", function()
+		local ctx = setup()
+		local synId = createSyndicate()
+		ctx.syndicateDs:UpdateAsync("syndicate:" .. synId, function(rec)
+			rec.vaultBalance = EconomyConstants.SYNDICATE_ANIMATED_CREST_COST * 2
+			return rec
+		end)
+		local ok, err = SyndicateService.purchaseUpgrade(player1, "animatedCrest")
+		expect(ok).toBeFalse()
+		expect(err).toBe("requires crest")
+	end)
+
+	it("broadcastCrest requires animatedCrest first (§17 chain)", function()
+		local ctx = setup()
+		local synId = createSyndicate()
+		ctx.syndicateDs:UpdateAsync("syndicate:" .. synId, function(rec)
+			rec.vaultBalance = EconomyConstants.SYNDICATE_BROADCAST_CREST_COST * 2
+			rec.upgrades.crest = true -- has base crest but not animated
+			return rec
+		end)
+		local ok, err = SyndicateService.purchaseUpgrade(player1, "broadcastCrest")
+		expect(ok).toBeFalse()
+		expect(err).toBe("requires animatedCrest")
+	end)
+
+	it("full crest chain: crest → animatedCrest → broadcastCrest succeeds", function()
+		local ctx = setup()
+		local synId = createSyndicate()
+		ctx.syndicateDs:UpdateAsync("syndicate:" .. synId, function(rec)
+			rec.vaultBalance = EconomyConstants.SYNDICATE_CREST_COST
+				+ EconomyConstants.SYNDICATE_ANIMATED_CREST_COST
+				+ EconomyConstants.SYNDICATE_BROADCAST_CREST_COST
+			return rec
+		end)
+		expect((SyndicateService.purchaseUpgrade(player1, "crest"))).toBeTrue()
+		expect((SyndicateService.purchaseUpgrade(player1, "animatedCrest"))).toBeTrue()
+		expect((SyndicateService.purchaseUpgrade(player1, "broadcastCrest"))).toBeTrue()
+		local record = ctx.syndicateDs:GetAsync("syndicate:" .. synId)
+		expect(record.upgrades.broadcastCrest).toBeTrue()
+		expect(record.vaultBalance).toBe(0)
+	end)
 end)
 
 -- ── expandMemberCap ────────────────────────────────────────────────────────

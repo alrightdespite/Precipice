@@ -631,65 +631,65 @@ function SyndicateService.init()
 	local rs = _remoteService
 	local function guard(player) return _dataService.isLoaded(player.UserId) end
 
-	rs.getFunction("SyndicateCreate").OnServerInvoke = function(player, name)
+	rs.setInvoke("SyndicateCreate", function(player, name)
 		if not guard(player) then return nil, "session not ready" end
 		return SyndicateService.create(player, name)
-	end
+	end)
 
-	rs.getFunction("SyndicateInvite").OnServerInvoke = function(player, targetUserId)
+	rs.setInvoke("SyndicateInvite", function(player, targetUserId)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.invite(player, targetUserId)
-	end
+	end)
 
-	rs.getFunction("SyndicateKick").OnServerInvoke = function(player, targetUserId)
+	rs.setInvoke("SyndicateKick", function(player, targetUserId)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.kick(player, targetUserId)
-	end
+	end)
 
-	rs.getFunction("SyndicatePromote").OnServerInvoke = function(player, targetUserId)
+	rs.setInvoke("SyndicatePromote", function(player, targetUserId)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.promote(player, targetUserId)
-	end
+	end)
 
-	rs.getFunction("SyndicateContributeVault").OnServerInvoke = function(player, amount)
+	rs.setInvoke("SyndicateContributeVault", function(player, amount)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.contributeVault(player, amount)
-	end
+	end)
 
-	rs.getFunction("SyndicateAcceptInvite").OnServerInvoke = function(player, syndicateId)
+	rs.setInvoke("SyndicateAcceptInvite", function(player, syndicateId)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.acceptInvite(player, syndicateId)
-	end
+	end)
 
-	rs.getFunction("SyndicateDeclineInvite").OnServerInvoke = function(player)
+	rs.setInvoke("SyndicateDeclineInvite", function(player)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.declineInvite(player)
-	end
+	end)
 
-	rs.getFunction("SyndicateRename").OnServerInvoke = function(player, newName)
+	rs.setInvoke("SyndicateRename", function(player, newName)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.rename(player, newName)
-	end
+	end)
 
-	rs.getFunction("SyndicatePurchaseUpgrade").OnServerInvoke = function(player, upgradeName)
+	rs.setInvoke("SyndicatePurchaseUpgrade", function(player, upgradeName)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.purchaseUpgrade(player, upgradeName)
-	end
+	end)
 
-	rs.getFunction("SyndicateExpandCap").OnServerInvoke = function(player)
+	rs.setInvoke("SyndicateExpandCap", function(player)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.expandMemberCap(player)
-	end
+	end)
 
-	rs.getFunction("SyndicateDisband").OnServerInvoke = function(player)
+	rs.setInvoke("SyndicateDisband", function(player)
 		if not guard(player) then return 0, false, "session not ready" end
 		return SyndicateService.disband(player)
-	end
+	end)
 
-	rs.getFunction("SyndicateDisbandConfirm").OnServerInvoke = function(player)
+	rs.setInvoke("SyndicateDisbandConfirm", function(player)
 		if not guard(player) then return false, "session not ready" end
 		return SyndicateService.disbandConfirm(player)
-	end
+	end)
 end
 
 return SyndicateService

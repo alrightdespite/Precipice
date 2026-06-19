@@ -170,10 +170,10 @@ function LeaderboardService.init()
 	_seedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 	_globalJobsDs = game:GetService("DataStoreService"):GetDataStore("GlobalJobs")
 
-	_remoteService.getFunction("LeaderboardRequest").OnServerInvoke =
+	_remoteService.setInvoke("LeaderboardRequest",
 		function(player: any, board: any)
 			return handleLeaderboardRequest(player, board)
-		end
+		end)
 end
 
 return LeaderboardService

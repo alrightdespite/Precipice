@@ -4,13 +4,23 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 local Manifest = require(ReplicatedStorage.Shared.Remotes.Manifest)
+local RateLimiter = require(ReplicatedStorage.Shared.Core.RateLimiter)
 
 local REMOTES_FOLDER_NAME = "Remotes"
 
 local RemoteService = {}
 
 local _remotesFolder: Folder
+
+-- name → Manifest entry, built at init for O(1) rateLimit lookup in setInvoke.
+local _entryByName: { [string]: any } = {}
+
+-- Token buckets keyed "<userId>:<remoteName>" for C2S throttling (§D). os.clock() is a
+-- monotonic high-resolution server timer — correct for sub-second rates (os.time's 1s
+-- resolution is too coarse).
+local _buckets: { [string]: { tokens: number, lastRefill: number } } = {}
 
 function RemoteService.init()
 	assert(not _remotesFolder, "RemoteService.init called twice")
@@ -39,10 +49,45 @@ function RemoteService.init()
 		end
 		remote.Name = entry.name
 		remote.Parent = _remotesFolder
+		_entryByName[entry.name] = entry
 		created += 1
 	end
 
+	-- Drop a leaving player's throttle buckets so the table never grows without bound.
+	Players.PlayerRemoving:Connect(function(player)
+		RateLimiter.clear(_buckets, tostring(player.UserId) .. ":")
+	end)
+
 	print(string.format("RemoteService: created %d remotes", created))
+end
+
+-- Register a C2S RemoteFunction handler with server-side rate limiting (§D). The Manifest
+-- rateLimit (requests/sec/player) is enforced per (player, remote): a request over the limit
+-- is rejected with (nil, "rate_limited") and the handler never runs. rateLimit = nil means no
+-- throttle. Every C2S handler must register through this — never assign OnServerInvoke directly.
+function RemoteService.setInvoke(name: string, handler: (Player, ...any) -> ...any)
+	local fn = RemoteService.getFunction(name)
+	local entry = _entryByName[name]
+	local rate = entry and entry.rateLimit
+
+	if not rate then
+		fn.OnServerInvoke = handler
+		return
+	end
+
+	-- Capacity = the rate rounded up to at least one whole token, so a 2/s remote may burst 2
+	-- and a 0.1/s remote allows a single call then refills slowly.
+	local capacity = math.max(1, math.ceil(rate))
+
+	fn.OnServerInvoke = function(player: Player, ...)
+		local key = tostring(player.UserId) .. ":" .. name
+		-- Drop silently when over the limit — emitting a log per dropped request would itself
+		-- be a log-flood vector under spam.
+		if not RateLimiter.allow(_buckets, key, rate, capacity, os.clock()) then
+			return nil, "rate_limited"
+		end
+		return handler(player, ...)
+	end
 end
 
 function RemoteService.getEvent(name: string): RemoteEvent

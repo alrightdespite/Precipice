@@ -10,6 +10,7 @@ Goal: take the game from "backend ~85%, loop verified" to feature-complete + lau
 
 ### Phase 14 progress (2026-06-19)
 - [x] **ClockService** (suggested-order 1) — built `src/server/Services/ClockService.luau`: 60s UTC tick (E3), daily + Monday-weekly boundary detection (pure, Lune-tested), drives GlobalJobService CAS jobs (F1 ledger): Monday `WeeklyEpochRotation` (dividends → sprintArchive → sprintWipe → seedEpoch, R3 order), 900s `PatentDividendSweep` (E2), hourly `MarketExpirySweep` (E7). Wired GameInit step 5 (before GlobalJobService, H9). Removed GlobalJobService dead poll loop; updated stale PatentService/MarketService wiring TODOs. **Latent bug fixed:** MarketExpirySweep previously had no driver — listings never expired in prod. 467/467 tests green; 0 selene errors; live boot-verified. NOTE: `payDividends`/`archiveSprint` still stubs (suggested-order 3); `seedEpoch` step logs only until AnnouncementService exists.
+- [x] **Rate limiting** (suggested-order 2, §D) — built `src/shared/Core/RateLimiter.luau` (token bucket, clock-injected, Lune-tested). `RemoteService.setInvoke(name, handler)` enforces per-(player, remote) throttle from the Manifest `rateLimit` (capacity = ceil(rate); over-limit → `(nil, "rate_limited")`, handler skipped). Buckets keyed `userId:remote`, cleared on PlayerRemoving. Migrated all 33 C2S `OnServerInvoke` sites across 13 services to `setInvoke` (only RemoteService assigns OnServerInvoke now). RemoteHandlers CI guard updated to detect `setInvoke`. 474/474 tests green; 0 selene errors. Live-verified: PatentQuery (2/s) spammed 8× → `ok ok THROTTLED×6 ... ok` (burst 2, then refill).
 
 ### A. Core systems with NO implementation (build from scratch)
 - [x] ~~🔴 **ClockService**~~ — DONE (see Phase 14 progress above).
@@ -31,7 +32,7 @@ Goal: take the game from "backend ~85%, loop verified" to feature-complete + lau
 - 🟢 **AnalyticsService** — no-op stub (§30); wire a provider eventually.
 
 ### D. Security / hardening
-- 🔴 **Rate limiting NOT enforced** — Manifest defines `rateLimit` per remote but RemoteService never enforces it. Every C2S remote is spammable. Add a server-side throttle wrapper keyed by player+remote.
+- [x] ~~🔴 **Rate limiting NOT enforced**~~ — DONE (see Phase 14 progress above): `RemoteService.setInvoke` enforces Manifest `rateLimit` per (player, remote) via `Core/RateLimiter`.
 - 🟡 **Strip/secure DebugService** before ship (studioOnly-gated now; verify unreachable in prod).
 - 🟡 Configure real Robux product/gamepass IDs in `GameConfig`.
 

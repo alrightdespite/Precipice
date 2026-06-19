@@ -63,8 +63,7 @@ end
 -- ── VaultInstantSell remote (§16) ─────────────────────────────────────────────
 
 local function wireRemotes()
-	local sellFn = RemoteService.getFunction("VaultInstantSell")
-	sellFn.OnServerInvoke = function(player: Player, compoundId: any, quantity: any)
+	RemoteService.setInvoke("VaultInstantSell", function(player: Player, compoundId: any, quantity: any)
 		if not DataService.isLoaded(player.UserId) then
 			return 0, "session not ready"
 		end
@@ -107,7 +106,7 @@ local function wireRemotes()
 		RemoteService.getEvent("BalanceUpdate"):FireClient(player, data.balances.pellets, data.balances.catalysts)
 
 		return earned, nil
-	end
+	end)
 end
 
 -- ── Init ─────────────────────────────────────────────────────────────────────

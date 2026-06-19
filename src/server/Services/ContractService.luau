@@ -333,8 +333,7 @@ function ContractService.init()
 	end
 	_analyticsService = require(game:GetService("ServerScriptService").Server.Services.AnalyticsService)
 
-	local claimFn = _remoteService.getFunction("ContractClaim")
-	claimFn.OnServerInvoke = function(player: any, slotIndex: any)
+	_remoteService.setInvoke("ContractClaim", function(player: any, slotIndex: any)
 		if not _dataService.isLoaded(player.UserId) then return { ok = false, err = "session not ready" } end
 		if type(slotIndex) ~= "number" then
 			return { ok = false, err = "invalid args" }
@@ -343,7 +342,7 @@ function ContractService.init()
 		local data = _dataService.getProfile(player.UserId)
 		local ok, err = ContractService.claimReward(player, data, slotIndex)
 		return ok and { ok = true } or { ok = false, err = err }
-	end
+	end)
 end
 
 return ContractService

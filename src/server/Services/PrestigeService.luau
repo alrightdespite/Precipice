@@ -188,17 +188,17 @@ function PrestigeService.init()
 	_profileTemplate = require(ReplicatedStorage.Shared.Core.ProfileTemplate)
 
 	-- PrestigeRequest: check eligibility, return blockers
-	_remoteService.getFunction("PrestigeRequest").OnServerInvoke = function(player: Player)
+	_remoteService.setInvoke("PrestigeRequest", function(player: Player)
 		local data = _dataService.getProfile(player.UserId)
 		local blockers = PrestigeService.getBlockers(data, player)
 		if #blockers > 0 then
 			return { ok = false, blockers = blockers }
 		end
 		return { ok = true, blockers = {} }
-	end
+	end)
 
 	-- PrestigeConfirm: double-check then execute
-	_remoteService.getFunction("PrestigeConfirm").OnServerInvoke = function(player: Player)
+	_remoteService.setInvoke("PrestigeConfirm", function(player: Player)
 		local data = _dataService.getProfile(player.UserId)
 		local blockers = PrestigeService.getBlockers(data, player)
 		if #blockers > 0 then
@@ -230,7 +230,7 @@ function PrestigeService.init()
 		})
 
 		return { ok = true }
-	end
+	end)
 end
 
 return PrestigeService

@@ -306,14 +306,13 @@ function PatentService.init()
 	_rs = require(ServerScriptService.Server.Services.RemoteService)
 	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 
-	-- Wire PatentQuery C2S remote
-	local patentQueryFn = _rs.getFunction("PatentQuery")
-	patentQueryFn.OnServerInvoke = function(_player: Player, compoundId: any)
+	-- Wire PatentQuery C2S remote (rate-limited via setInvoke)
+	_rs.setInvoke("PatentQuery", function(_player: Player, compoundId: any)
 		if type(compoundId) ~= "string" then
 			return nil
 		end
 		return PatentService.getRecord(compoundId)
-	end
+	end)
 
 	-- PatentDividendSweep is driven by ClockService: it attempts the GlobalJobService claim
 	-- every 900s (PatentWindow.sweepIntervalSeconds) via ClockService._runPatentSweep.

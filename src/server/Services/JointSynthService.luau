@@ -668,20 +668,20 @@ function JointSynthService.init()
 
 	local rs = _remoteService
 
-	rs.getFunction("JointStage").OnServerInvoke = function(player, slotIndex, myCompound, partnerCompound, async, accelerated)
+	rs.setInvoke("JointStage", function(player, slotIndex, myCompound, partnerCompound, async, accelerated)
 		if not _dataService.isLoaded(player.UserId) then return false, "session not ready" end
 		return JointSynthService.stage(player, slotIndex, myCompound, partnerCompound, async, accelerated)
-	end
+	end)
 
-	rs.getFunction("JointContribute").OnServerInvoke = function(player, slotIndex, compound)
+	rs.setInvoke("JointContribute", function(player, slotIndex, compound)
 		if not _dataService.isLoaded(player.UserId) then return false, "session not ready" end
 		return JointSynthService.contribute(player, slotIndex, compound)
-	end
+	end)
 
-	rs.getFunction("JointCancel").OnServerInvoke = function(player, slotIndex)
+	rs.setInvoke("JointCancel", function(player, slotIndex)
 		if not _dataService.isLoaded(player.UserId) then return false, "session not ready" end
 		return JointSynthService.cancel(player, slotIndex)
-	end
+	end)
 
 	-- Tick loop
 	_spawnFn(function()

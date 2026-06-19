@@ -104,7 +104,7 @@ function DebugService.init()
 	if not RunService:IsStudio() then
 		return
 	end
-	RemoteService.getFunction("DebugCommand").OnServerInvoke = function(player, cmd, arg1, arg2)
+	RemoteService.setInvoke("DebugCommand", function(player, cmd, arg1, arg2)
 		-- handle returns (ok, result); pcall wraps it once so the command runs exactly once.
 		local results = table.pack(pcall(handle, player, cmd, arg1, arg2))
 		if not results[1] then
@@ -112,7 +112,7 @@ function DebugService.init()
 			return false, tostring(results[2])
 		end
 		return results[2], results[3]
-	end
+	end)
 end
 
 return DebugService

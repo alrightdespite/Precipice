@@ -22,8 +22,7 @@ local LabService = {}
 -- ── Remote handler ─────────────────────────────────────────────────────────
 
 local function wireRemotes()
-	local analyzeFn = RemoteService.getFunction("LabAnalyze")
-	analyzeFn.OnServerInvoke = function(player: Player, input1: any, input2: any)
+	RemoteService.setInvoke("LabAnalyze", function(player: Player, input1: any, input2: any)
 		if type(input1) ~= "string" or type(input2) ~= "string" then
 			return nil, "invalid args"
 		end
@@ -185,7 +184,7 @@ local function wireRemotes()
 		})
 
 		return result, nil
-	end
+	end)
 end
 
 -- ── Init ───────────────────────────────────────────────────────────────────
@@ -199,12 +198,12 @@ function LabService.init()
 	end)
 	wireRemotes()
 
-	RemoteService.getFunction("FormulaLogRequest").OnServerInvoke = function(player: Player)
+	RemoteService.setInvoke("FormulaLogRequest", function(player: Player)
 		local userId = player.UserId
 		if not _loaded[userId] then return {} end
 		local data = DataService.getProfile(userId)
 		return data.formulaLog
-	end
+	end)
 end
 
 return LabService

@@ -306,8 +306,7 @@ function EventService.init()
 	end)
 
 	-- Wire BlueprintPurchase C2S Function
-	local bpFn = _remoteService.getFunction("BlueprintPurchase")
-	bpFn.OnServerInvoke = function(player: Player, compoundId: any)
+	_remoteService.setInvoke("BlueprintPurchase", function(player: Player, compoundId: any)
 		if type(compoundId) ~= "string" then
 			return { ok = false, err = "invalid args" }
 		end
@@ -344,7 +343,7 @@ function EventService.init()
 			end
 		end)
 		return result
-	end
+	end)
 end
 
 return EventService

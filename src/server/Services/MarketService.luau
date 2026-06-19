@@ -452,38 +452,38 @@ function MarketService.init()
 	_clock = os.time
 
 	-- Wire C2S remotes
-	_remoteService.getFunction("MarketCreateListing").OnServerInvoke =
+	_remoteService.setInvoke("MarketCreateListing",
 		function(player: Player, compoundId: any, quantity: any, price: any)
 			if type(compoundId) ~= "string" or type(quantity) ~= "number" or type(price) ~= "number" then
 				return nil, "invalid args"
 			end
 			return MarketService.createListing(player, compoundId, math.floor(quantity), math.floor(price))
-		end
+		end)
 
-	_remoteService.getFunction("MarketCancelListing").OnServerInvoke =
+	_remoteService.setInvoke("MarketCancelListing",
 		function(player: Player, listingId: any)
 			if type(listingId) ~= "string" then
 				return false, "invalid args"
 			end
 			return MarketService.cancelListing(player, listingId)
-		end
+		end)
 
-	_remoteService.getFunction("MarketBuyListing").OnServerInvoke =
+	_remoteService.setInvoke("MarketBuyListing",
 		function(player: Player, listingId: any)
 			if type(listingId) ~= "string" then
 				return false, "invalid args"
 			end
 			return MarketService.buyListing(player, listingId)
-		end
+		end)
 
-	_remoteService.getFunction("MarketBrowse").OnServerInvoke =
+	_remoteService.setInvoke("MarketBrowse",
 		function(player: Player, tier: any, page: any)
 			if type(page) ~= "number" then
 				return {}, "invalid args"
 			end
 			local tierNum: number? = if type(tier) == "number" then tier else nil
 			return MarketService.browseTier(player, tierNum, math.max(1, math.floor(page)))
-		end
+		end)
 
 	-- MarketExpirySweep is driven by ClockService: it attempts the GlobalJobService claim hourly
 	-- via ClockService._runMarketSweep, which calls MarketService.runExpirySweep.

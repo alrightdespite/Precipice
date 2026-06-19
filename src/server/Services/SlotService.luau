@@ -177,8 +177,7 @@ end
 
 local function wireRemotes()
 	-- SlotStartExtraction ── auto-picks first free slot
-	local startExtractionFn = RemoteService.getFunction("SlotStartExtraction")
-	startExtractionFn.OnServerInvoke = function(player: Player, compoundId: any)
+	RemoteService.setInvoke("SlotStartExtraction", function(player: Player, compoundId: any)
 		if type(compoundId) ~= "string" then
 			return false, "invalid args"
 		end
@@ -224,11 +223,10 @@ local function wireRemotes()
 			fireSlotUpdate(player, newSlotRecord)
 		end
 		return true, nil
-	end
+	end)
 
 	-- SlotStartSynthesis ── player specifies slot index
-	local startSynthesisFn = RemoteService.getFunction("SlotStartSynthesis")
-	startSynthesisFn.OnServerInvoke = function(
+	RemoteService.setInvoke("SlotStartSynthesis", function(
 		player: Player,
 		slotIndex: any,
 		input1: any,
@@ -356,11 +354,10 @@ local function wireRemotes()
 			fireSlotUpdate(player, newSlotRecord)
 		end
 		return true, nil
-	end
+	end)
 
 	-- SlotCancel ── removes slot, no reward
-	local cancelFn = RemoteService.getFunction("SlotCancel")
-	cancelFn.OnServerInvoke = function(player: Player, slotIndex: any)
+	RemoteService.setInvoke("SlotCancel", function(player: Player, slotIndex: any)
 		if type(slotIndex) ~= "number" then
 			return false, "invalid args"
 		end
@@ -385,11 +382,10 @@ local function wireRemotes()
 		end
 		fireSlotCleared(player, slotIndex)
 		return true, nil
-	end
+	end)
 
 	-- SlotReveal ── awards compound, scores natural (§14)
-	local revealFn = RemoteService.getFunction("SlotReveal")
-	revealFn.OnServerInvoke = function(player: Player, slotIndex: any)
+	RemoteService.setInvoke("SlotReveal", function(player: Player, slotIndex: any)
 		if type(slotIndex) ~= "number" then
 			return nil, "invalid args"
 		end
@@ -448,11 +444,10 @@ local function wireRemotes()
 		VaultService.fireVaultUpdate(player, DataService.getProfile(userId))
 		fireSlotCleared(player, slotIndex)
 		return { compoundId = awardedId, isNatural = isNatural, isPatent = isPatentClaim }, nil
-	end
+	end)
 
 	-- SlotSkip ── marks non-natural, drains slot (§14)
-	local skipFn = RemoteService.getFunction("SlotSkip")
-	skipFn.OnServerInvoke = function(player: Player, slotIndex: any, skipType: any)
+	RemoteService.setInvoke("SlotSkip", function(player: Player, slotIndex: any, skipType: any)
 		if type(slotIndex) ~= "number" or type(skipType) ~= "string" then
 			return false, "invalid args"
 		end
@@ -539,7 +534,7 @@ local function wireRemotes()
 			skipData.monetization.timerSkipUses or 0
 		)
 		return true, nil
-	end
+	end)
 end
 
 -- ── Heartbeat tick ─────────────────────────────────────────────────────────

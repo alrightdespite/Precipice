@@ -1,5 +1,7 @@
--- RemoteHandlers: CI guard — every C2S RemoteFunction in Manifest has an OnServerInvoke binding.
+-- RemoteHandlers: CI guard — every C2S RemoteFunction in Manifest has a server handler.
 -- Catches gaps like the FormulaLogRequest hole fixed in Phase 11.
+-- Handlers register via RemoteService.setInvoke("Name", fn) (rate-limited, §D). A legacy direct
+-- `getFunction("Name").OnServerInvoke` binding is still accepted as a fallback.
 -- All service files are scanned as source text; no Roblox globals required.
 
 local spec = require("../spec")
@@ -43,20 +45,13 @@ local allSource = getAllServiceSource()
 
 -- ── Tests ────────────────────────────────────────────────────────────────────
 
-describe("RemoteHandlers — every C2S Function has an OnServerInvoke binding", function()
+describe("RemoteHandlers — every C2S Function has a server handler", function()
 	for _, remoteName in ipairs(c2sFunctions) do
 		local name = remoteName
-		it(name .. " has OnServerInvoke wired in a service", function()
-			-- Match either: getFunction("Name").OnServerInvoke or getFunction("Name")…OnServerInvoke
-			local pattern1 = 'getFunction%("' .. name .. '"%)%.OnServerInvoke'
-			local pattern2 = 'getFunction%("' .. name .. '"%)' .. ".+OnServerInvoke"
-			local found = allSource:find(pattern1) ~= nil
-			if not found then
-				-- Some services store the function first, then assign OnServerInvoke on the next line
-				found = allSource:find('getFunction%("' .. name .. '"%)') ~= nil
-					and allSource:find(name .. '"%)') ~= nil
-			end
-			-- Broader: just check that the name appears near OnServerInvoke somewhere
+		it(name .. " is registered via setInvoke (or a legacy OnServerInvoke binding)", function()
+			-- Canonical: RemoteService.setInvoke("Name", fn) — rate-limited registration (§D).
+			local found = allSource:find('setInvoke("' .. name .. '"', 1, true) ~= nil
+			-- Legacy fallback: getFunction("Name") near an OnServerInvoke assignment.
 			if not found then
 				-- Scan for the pattern: remote name adjacent to OnServerInvoke (within 200 chars)
 				local pos = 1

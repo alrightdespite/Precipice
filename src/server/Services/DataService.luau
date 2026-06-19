@@ -37,6 +37,12 @@ local migrations: { [number]: (data: any) -> () } = {
 		-- syndicate field added in schemaVersion 4.
 		-- Reconcile() handles new fields; no action needed here.
 	end,
+	[4] = function(data)
+		-- championships field (§18 Sprint champions) added in schemaVersion 5.
+		if data.championships == nil then
+			data.championships = {}
+		end
+	end,
 }
 
 local STORE_NAME = "PlayerData_v1"

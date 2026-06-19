@@ -11,6 +11,9 @@ local _seedResolver: any = nil -- SeedResolver core module
 local _compounds: any = nil    -- Compounds data module (lazy-loaded in production)
 local _dataStoreService: any = nil
 local _chiefOds: any = nil
+local _champDs: any = nil -- DataStore("Championships") — §18 champion awards (offline-safe)
+local _hofDs: any = nil -- DataStore("SprintHallOfFame") — per-week top-3 snapshot
+local _dataService: any = nil -- DataService — reflect awards into online winners' profiles
 local _sprintOdsFactory: ((number) -> any)? = nil -- injectable for Lune tests
 local _lastSprintWrite: { [number]: number } = {} -- debounce: userId → last written score
 -- task.spawn is a Roblox global unavailable in Lune. Default to synchronous
@@ -188,9 +191,95 @@ function RankService.writeChiefBoardScore(player: any, data: any)
 	end)
 end
 
--- Stub: award champion badges from Sprint_{weekEpoch} ODS top-3. Phase 7 implements fully.
-function RankService.archiveSprint(_weekEpoch: number)
-	warn("RankService.archiveSprint: not yet implemented")
+-- Monday job step 2 (§18): archive the ending week's Sprint and award champion badges to the
+-- top 3. Winners are often offline at Monday midnight, so awards write to the dedicated,
+-- non-session-locked Championships DataStore (offline-safe, idempotent per weekEpoch); the
+-- profile.championships field is a synced cache refreshed at login (loadChampionships). The
+-- score wipe is implicit — the next week uses a fresh Sprint_{weekEpoch} OrderedDataStore.
+function RankService.archiveSprint(weekEpoch: number)
+	local now = os.time()
+
+	local ods = RankService.getSprintOds(weekEpoch)
+	local ok, pages = pcall(function()
+		return ods:GetSortedAsync(false, 3) -- descending, top 3
+	end)
+	if not ok then
+		warn("RankService.archiveSprint: sprint ODS read failed:", pages)
+		return
+	end
+
+	local entries: { { userId: number, score: number, rank: number } } = {}
+	for rank, row in ipairs(pages:GetCurrentPage()) do
+		entries[rank] = { userId = tonumber(row.key) or 0, score = row.value, rank = rank }
+	end
+
+	-- Hall of Fame snapshot (LeaderboardService / client read this per week).
+	if _hofDs then
+		local hofOk, hofErr = pcall(function()
+			_hofDs:SetAsync("week:" .. tostring(weekEpoch), {
+				weekEpoch = weekEpoch,
+				entries = entries,
+				archivedAt = now,
+			})
+		end)
+		if not hofOk then
+			warn("RankService.archiveSprint: Hall of Fame write failed:", hofErr)
+		end
+	end
+
+	-- Award each champion. Idempotent per weekEpoch so a resumed Monday job never double-awards.
+	for _, e in ipairs(entries) do
+		if _champDs and e.userId ~= 0 then
+			local awOk, awErr = pcall(function()
+				_champDs:UpdateAsync("Championships/" .. tostring(e.userId), function(stored)
+					local list = (stored and stored.championships) or {}
+					for _, c in ipairs(list) do
+						if c.weekEpoch == weekEpoch then
+							return nil -- already awarded this week
+						end
+					end
+					local newList = { table.unpack(list) }
+					table.insert(newList, { weekEpoch = weekEpoch, score = e.score, rank = e.rank, awardedAt = now })
+					return { championships = newList }
+				end)
+			end)
+			if not awOk then
+				warn("RankService.archiveSprint: championship award failed for", e.userId, "—", awErr)
+			end
+		end
+
+		-- Reflect into an online winner's profile cache immediately.
+		if _dataService and _dataService.isLoaded(e.userId) then
+			local data = _dataService.getProfile(e.userId)
+			if data then
+				data.championships = data.championships or {}
+				local has = false
+				for _, c in ipairs(data.championships) do
+					if c.weekEpoch == weekEpoch then
+						has = true
+						break
+					end
+				end
+				if not has then
+					table.insert(data.championships, { weekEpoch = weekEpoch, score = e.score, rank = e.rank, awardedAt = now })
+				end
+			end
+		end
+	end
+end
+
+-- Refresh the profile.championships cache from the canonical Championships DataStore. Called from
+-- the post-profile-load hook (GameInit) so a player who won while offline sees the badge at login.
+function RankService.loadChampionships(userId: number, data: any)
+	if not _champDs then
+		return
+	end
+	local ok, stored = pcall(function()
+		return _champDs:GetAsync("Championships/" .. tostring(userId))
+	end)
+	if ok and stored and stored.championships then
+		data.championships = stored.championships
+	end
 end
 
 -- ── Init ───────────────────────────────────────────────────────────────────
@@ -205,6 +294,9 @@ function RankService.init()
 	_seedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 	_compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 	_chiefOds = _dataStoreService:GetOrderedDataStore("ChiefBoard")
+	_champDs = _dataStoreService:GetDataStore("Championships")
+	_hofDs = _dataStoreService:GetDataStore("SprintHallOfFame")
+	_dataService = require(ServerScriptService.Server.Services.DataService)
 	_spawnFn = task.spawn -- use Roblox's task.spawn in production
 	-- Sprint ODS instances created on demand via getSprintOds(weekEpoch)
 end

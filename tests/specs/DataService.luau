@@ -14,7 +14,7 @@ describe("ProfileTemplate — DEFAULT shape", function()
 		expect(d.schemaVersion).toBe(GameConfig.SCHEMA_VERSION)
 	end)
 
-	it("has all 15 top-level keys", function()
+	it("has all 16 top-level keys", function()
 		local required = {
 			"schemaVersion",
 			"balances",
@@ -29,6 +29,7 @@ describe("ProfileTemplate — DEFAULT shape", function()
 			"prestige",
 			"monetization",
 			"cosmetics",
+			"championships",
 			"eventState",
 			"pendingCreditsApplied",
 		}

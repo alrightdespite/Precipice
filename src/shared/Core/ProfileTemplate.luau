@@ -7,7 +7,7 @@ local ProfileTemplate = {}
 -- Hard-copied by ProfileStore.New as the DataStore template.
 -- Never mutate this table at runtime.
 ProfileTemplate.DEFAULT = {
-	schemaVersion = 4,
+	schemaVersion = 5,
 
 	balances = { pellets = 0, catalysts = 0 },
 
@@ -46,6 +46,9 @@ ProfileTemplate.DEFAULT = {
 	},
 
 	cosmetics = { owned = {}, equipped = {} },
+
+	-- Weekly Sprint Championships (§18) — synced cache of the canonical Championships DataStore.
+	championships = {},
 
 	eventState = {
 		fluxBySeason = {},

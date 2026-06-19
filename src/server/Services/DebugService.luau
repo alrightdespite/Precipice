@@ -12,6 +12,8 @@
 --   "completeSlot",   slotIndex               → natural completion (counts for patents/rank)
 --   "announce",       message, tier?          → queues a §15 marquee announcement (test pipe)
 --   "payDividends"                            → runs the Monday patent-dividend step now
+--   "grantSprintPoints", amount               → adds Sprint ODS points (for archiveSprint tests)
+--   "archiveSprint"                           → archives this week's Sprint + awards champions
 --   "dumpProfile"                             → returns a state snapshot
 
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -24,6 +26,8 @@ local VaultService = require(ServerScriptService.Server.Services.VaultService)
 local SlotService = require(ServerScriptService.Server.Services.SlotService)
 local AnnouncementService = require(ServerScriptService.Server.Services.AnnouncementService)
 local PatentService = require(ServerScriptService.Server.Services.PatentService)
+local RankService = require(ServerScriptService.Server.Services.RankService)
+local SeedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 
 local DebugService = {}
@@ -96,6 +100,16 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		-- Runs the Monday dividend step directly (unique weekKey so it always pays).
 		PatentService.payDividends("debug:" .. tostring(os.time()), os.time())
 		return true, "dividends paid"
+	elseif cmd == "grantSprintPoints" then
+		-- Seed a Sprint ODS score so archiveSprint has a champion to award.
+		local amount = math.max(1, math.floor(tonumber(arg1) or 1000))
+		RankService.addSprintPoints(player, DataService.getProfile(userId), amount, os.time())
+		return true, "granted " .. amount .. " sprint points"
+	elseif cmd == "archiveSprint" then
+		-- Archives the current week's Sprint + awards champion badges.
+		local week = SeedResolver.getCurrentWeekNumber(os.time())
+		RankService.archiveSprint(week)
+		return true, "archived sprint week " .. week
 	elseif cmd == "dumpProfile" then
 		local data = DataService.getProfile(userId)
 		return true, {
@@ -105,6 +119,7 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 			slots = data.slots,
 			discovered = data.formulaLog.discovered,
 			prestige = data.prestige,
+			championships = data.championships,
 		}
 	end
 

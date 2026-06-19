@@ -114,6 +114,7 @@ DataService.onProfileLoaded:Connect(function(userId)
 	local data = DataService.getProfile(userId)
 	StreakService.onLogin(player, data, os.time())
 	ContractService.refreshIfStale(player, data, os.time())
+	RankService.loadChampionships(userId, data)
 	MonetizationService.refreshGamepasses(player, data)
 	if MonetizationService.ownsGamepass(data, "compoundArchive") then
 		MonetizationService.grantArchiveUses(player, data, os.time())

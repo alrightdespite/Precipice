@@ -1,7 +1,6 @@
 -- LabService: formula lab analysis (§11).
 -- Handles refusal, fee, vault mutations, residue, Rush Analysis, and formulaLog writes.
 
-local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -69,6 +68,27 @@ local function wireRemotes()
 			-- Rush Analysis: data.monetization.rushUses > 0 (§25, D18)
 			local isRush = data.monetization.rushUses > 0
 
+			-- Resolve first (pure lookup). Rush forces the primary variant
+			-- regardless of seed (§25, D7).
+			local weekSeed = SeedService.getCurrentWeekSeed()
+			local labResult = RecipeResolver.getLabResult(input1, input2, weekSeed, isRush)
+
+			-- Already-discovered recipe → the action is Synthesize, not Analyze
+			-- (§11). Reject without charging the fee, consuming inputs, spending a
+			-- Rush use, or re-granting a specimen. Re-analysis would otherwise be
+			-- an instant, slot-free, timer-free production bypass. (Server-side
+			-- guard: the client already shows "Synthesize" for known recipes, but
+			-- remote args must never be trusted.)
+			if labResult.valid and data.formulaLog.discovered[labResult.resultId :: string] then
+				result = {
+					status = "already_discovered",
+					resultId = labResult.resultId,
+					feePaid = 0,
+					isRush = false,
+				}
+				return
+			end
+
 			-- Fee: waived for Rush, otherwise bracket by min tier + prestige (§11, §22/C32)
 			local fee = if isRush then 0 else LabAnalysis.getFee(minT, data.prestige.level)
 
@@ -96,10 +116,6 @@ local function wireRemotes()
 			if isRush then
 				data.monetization.rushUses = math.max(0, data.monetization.rushUses - 1)
 			end
-
-			-- Resolve: Rush forces primary variant regardless of seed (§25, D7)
-			local weekSeed = SeedService.getCurrentWeekSeed()
-			local labResult = RecipeResolver.getLabResult(input1, input2, weekSeed, isRush)
 
 			if labResult.valid then
 				-- Success: consume inputs, award discovered compound (§11)

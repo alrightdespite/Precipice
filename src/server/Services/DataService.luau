@@ -148,6 +148,12 @@ function DataService.openSession(player: Player)
 	end)
 
 	activeSessions[userId] = { profile = profile }
+
+	-- Deliver PendingCredits accrued while offline (patent dividends, market sales, expiry
+	-- refunds) at login — §15 "delivered on next login". Idempotent via pendingCreditsApplied.
+	-- Runs before onProfileLoaded so every service sees the drained balance.
+	flushPendingCredits(userId, profile.Data)
+
 	DataService.onProfileLoaded:Fire(userId)
 end
 

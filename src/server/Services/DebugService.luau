@@ -12,6 +12,7 @@
 --   "completeSlot",   slotIndex               → natural completion (counts for patents/rank)
 --   "announce",       message, tier?          → queues a §15 marquee announcement (test pipe)
 --   "payDividends"                            → runs the Monday patent-dividend step now
+--   "drainPending"                            → drains PendingCredits into the live session
 --   "grantSprintPoints", amount               → adds Sprint ODS points (for archiveSprint tests)
 --   "archiveSprint"                           → archives this week's Sprint + awards champions
 --   "dumpProfile"                             → returns a state snapshot
@@ -100,6 +101,10 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		-- Runs the Monday dividend step directly (unique weekKey so it always pays).
 		PatentService.payDividends("debug:" .. tostring(os.time()), os.time())
 		return true, "dividends paid"
+	elseif cmd == "drainPending" then
+		-- Drains PendingCredits into the live session (same call openSession makes at login).
+		DataService.drainPending(userId, DataService.getProfile(userId))
+		return true, DataService.getProfile(userId).balances.pellets
 	elseif cmd == "grantSprintPoints" then
 		-- Seed a Sprint ODS score so archiveSprint has a champion to award.
 		local amount = math.max(1, math.floor(tonumber(arg1) or 1000))

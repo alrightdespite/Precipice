@@ -16,6 +16,7 @@ type JointSlotRecord = Types.JointSlotRecord
 
 type State = {
 	loaded: boolean,
+	slotCap: number,
 	slots: { [number]: SlotRecord },
 	vault: VaultData,
 	balance: BalanceData,
@@ -39,6 +40,7 @@ type State = {
 
 local _state: State = {
 	loaded = false,
+	slotCap = 5,
 	slots = {},
 	vault = {},
 	balance = { pellets = 0, catalysts = 0, rushUses = 0, timerSkipUses = 0 },

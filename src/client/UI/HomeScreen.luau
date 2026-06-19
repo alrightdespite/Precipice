@@ -48,7 +48,7 @@ local function getDisplayTime(slot): string
 end
 
 -- Narrow slot card for 200px left panel
-local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesValue, uiController)
+local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, timerSkipUsesValue, uiController)
 	local slotComputed = scope:Computed(function(use)
 		local s = use(slotsValue)[slotIndex]
 		return s or { state = "EMPTY", isActive = false }
@@ -153,6 +153,11 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, timerSkipUsesV
 		BackgroundColor3 = bgColor,
 		BorderSizePixel = 0,
 		LayoutOrder = slotIndex,
+		-- Only render slots the player actually owns (§8 cap). Hidden cards
+		-- collapse out of the UIListLayout.
+		Visible = scope:Computed(function(use)
+			return slotIndex <= use(slotCapValue)
+		end),
 		ClipsDescendants = false,
 		[Children] = {
 			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
@@ -786,6 +791,7 @@ function HomeScreen.open(uiController)
 	-- Bridge StateController → individual Fusion Values
 	local balanceValue = scope:Value(st.balance)
 	local slotsValue = scope:Value(st.slots)
+	local slotCapValue = scope:Value(st.slotCap or 5)
 	local rankValue = scope:Value(st.rank)
 	local announcementsValue = scope:Value(st.announcements)
 	local offlineIncomeValue = scope:Value(st.offlineIncome)
@@ -804,6 +810,9 @@ function HomeScreen.open(uiController)
 			end
 			if patch.slots ~= nil then
 				slotsValue:set(patch.slots)
+			end
+			if patch.slotCap ~= nil then
+				slotCapValue:set(patch.slotCap)
 			end
 			if patch.rank ~= nil then
 				rankValue:set(patch.rank)
@@ -826,7 +835,7 @@ function HomeScreen.open(uiController)
 	-- Build slot cards
 	local slotCards = {}
 	for i = 1, 10 do
-		table.insert(slotCards, makeSlotCard(scope, i, slotsValue, timerSkipUsesValue, uiController))
+		table.insert(slotCards, makeSlotCard(scope, i, slotsValue, slotCapValue, timerSkipUsesValue, uiController))
 	end
 
 	-- WorldHUD ScreenGui (always visible; contents gated by uiVisible)

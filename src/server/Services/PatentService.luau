@@ -184,6 +184,11 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 			_rs.getEvent("PatentChallengeAlert"):FireClient(player, compoundId, challengeWindowEnd)
 		end
 	end
+
+	-- True when this completion was the first-ever claim (world-first). Lets the
+	-- reveal flow show the WORLD FIRST banner authoritatively instead of racing
+	-- the PatentClaim S2C event (see RevealController).
+	return didClaim
 end
 
 -- Called by GlobalJobService as the "decaySweep" step of PatentDividendSweep (H1, R2).

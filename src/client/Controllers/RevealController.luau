@@ -3,7 +3,6 @@
 -- VFX steps (dim WingLight → spotlight → pulse → particles → fade chamber)
 -- are guarded by chamber-part availability; card always shows.
 
-local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -145,22 +144,14 @@ local function playReveal(slotIndex: number)
 
 	local compoundId = (result :: any).compoundId :: string
 	local isNatural = (result :: any).isNatural :: boolean
+	local isWorldFirst = (result :: any).isPatent == true
 	local compound = Compounds[compoundId]
 	local tier: number = (compound and compound.tier) or 1
 	local chamberPart = SlotController.getChamberPart(slotIndex)
 
 	playVFX(chamberPart, tier, function()
-		-- PatentClaim S2C has had ~0.5s to arrive. Check now.
-		local isWorldFirst = false
-		if isNatural then
-			local localUserId = Players.LocalPlayer.UserId
-			local patents = StateController.get().patents
-			local patent = patents[compoundId]
-			if patent and patent.holderId == localUserId and (patent.holderCount or 0) <= 1 then
-				isWorldFirst = true
-			end
-		end
-
+		-- isWorldFirst comes authoritatively from the SlotReveal payload (isPatent),
+		-- not a race against the PatentClaim S2C event.
 		getRevealCard().show({
 			compoundId = compoundId,
 			compound = compound,

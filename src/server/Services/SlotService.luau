@@ -380,6 +380,7 @@ local function wireRemotes()
 
 		local awardedId = nil
 		local isNatural = false
+		local isPatentClaim = false
 		local failErr = nil
 
 		DataService.updateProfile(userId, function(data)
@@ -410,8 +411,10 @@ local function wireRemotes()
 					tier = Compounds[compoundId] and Compounds[compoundId].tier or 0,
 				})
 			end
-			if Compounds[compoundId] and Compounds[compoundId].tier >= 2 then
-				PatentService.recordNaturalSynthesis(player, compoundId, data)
+			-- §14: only natural completions count toward patents. Skipped runs
+			-- (isNatural == false) are delivered but never claim a patent.
+			if isNatural and Compounds[compoundId] and Compounds[compoundId].tier >= 2 then
+				isPatentClaim = PatentService.recordNaturalSynthesis(player, compoundId, data) == true
 			end
 			-- Contract progress counts for all reveals (natural and non-natural per §19)
 			local revealTier = Compounds[compoundId] and Compounds[compoundId].tier or 0
@@ -423,7 +426,7 @@ local function wireRemotes()
 		end
 		VaultService.fireVaultUpdate(player, DataService.getProfile(userId))
 		fireSlotCleared(player, slotIndex)
-		return { compoundId = awardedId, isNatural = isNatural }, nil
+		return { compoundId = awardedId, isNatural = isNatural, isPatent = isPatentClaim }, nil
 	end
 
 	-- SlotSkip ── marks non-natural, drains slot (§14)
@@ -579,10 +582,20 @@ end
 
 -- ── Init ───────────────────────────────────────────────────────────────────
 
+-- Pushes the player's current personal slot cap (§8) so the UI renders the
+-- correct number of slot cards. Re-fired on gamepass/prestige changes.
+function SlotService.fireSlotCap(player: Player, data: any)
+	RemoteService.getEvent("SlotCapUpdate"):FireClient(player, getSlotCap(data))
+end
+
 function SlotService.init()
 	DataService.onProfileLoaded:Connect(function(userId)
 		_loaded[userId] = true
 		task.spawn(settleOfflineForPlayer, userId)
+		local player = Players:GetPlayerByUserId(userId)
+		if player then
+			SlotService.fireSlotCap(player, DataService.getProfile(userId))
+		end
 	end)
 
 	DataService.onProfileReleased:Connect(function(userId)

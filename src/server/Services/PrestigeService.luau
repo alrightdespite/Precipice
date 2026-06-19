@@ -220,6 +220,10 @@ function PrestigeService.init()
 			_rankService.addScore(player, freshData, 0, "synthesis")
 		end
 
+		-- Prestige 1/3/5 each grant +1 slot (§8); re-push the cap.
+		local SlotService = require(ServerScriptService.Server.Services.SlotService)
+		SlotService.fireSlotCap(player, _dataService.getProfile(player.UserId))
+
 		_analyticsService.track(_analyticsService.Events.PRESTIGE or "prestige", {
 			userId = player.UserId,
 			level = _dataService.getProfile(player.UserId).prestige.level,

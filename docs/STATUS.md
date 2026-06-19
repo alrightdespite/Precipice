@@ -1,8 +1,8 @@
 # Status
 
-## Current phase: Phase 12F — UI polish + layout overhaul (complete)
+## Current phase: Phase 13 — Studio debug pass (in progress)
 
-**Last updated:** 2026-06-17
+**Last updated:** 2026-06-18
 
 ## Done
 
@@ -32,6 +32,19 @@
 - [x] Task 25: PRECIPICE_UI_POLISH -- Theme.luau (CornerRadius 4→8, CornerRadiusSmall/Pill, Padding 16, PaddingSmall, GapSmall/Medium); Components.luau (Button TextSize 15, secondary UIStroke, Card uses Padding+UIStroke, TierBadge pill 32×22 TextSize 12, Divider #3A3A42, ProgressBar height 8 pill track+fill); HomeScreen.luau (HUD 56→60 bottom-border, accent bar 6px, slot card positions adjusted, scroll frame padding, nav active indicator, RevealBanner/Marquee sizes); RevealCard.luau (corner 12→16, padding 16→20, CompoundName 24→26, patent banner 10→14 pad/22→24 title, Keep UIStroke, value label "⬡ N Pellets", card heights 320→300/400→380); 457/457 tests green
 - [x] Task 26: PRECIPICE_UI_LAYOUT -- HomeScreen full overhaul: uiVisible Value drives ScreenGui.Enabled (scope:Computed); activeTabValue lifted to HomeScreen.open scope; WorldHUD ScreenGui (DisplayOrder 5, always-on): circular open button + Heartbeat-driven timer strip (running/done summary); HUD 60→52 + minimize button (sets uiVisible=false); slot cards redesigned narrow (68px, pill accent bar, #N label, 48×24 action btn); left slot panel (200px, visible on Home tab, SLOTS header, ScrollingFrame 1px gap layout); bottom nav 56→52 + top separator + wrapper frame for border/tabs separation; makeHintBar AnchorPoint(0,1) at (0,0,1,-52); marquee/RevealBanner/OfflineCard positions updated; dead locals removed; 457/457 tests green
 
+## Phase 13 — Studio debug pass (2026-06-18)
+
+Live loop-walk in Studio (extraction → synthesis → lab discovery → reveal → market → vault → prestige/syndicate blockers) against design v4.6. Most systems verified working. Bugs fixed:
+
+- [x] **B1 — slot count UI** — HomeScreen hardcoded `for i = 1, 10`, ignoring the personal slot cap (design §8: base 5). Added S2C remote `SlotCapUpdate`; server fires cap on profile load (`SlotService.fireSlotCap`), gamepass refresh (`MonetizationService.refreshGamepasses`), and prestige confirm (`PrestigeService`). Client `StateController.slotCap` (default 5) drives per-card `Visible = slotIndex <= slotCap`. Verified live: base player renders 5 cards, 6–10 hidden.
+- [x] **B2 — patent world-first race** — `SlotReveal` now returns authoritative `isPatent`; `PatentService.recordNaturalSynthesis` returns `didClaim`, threaded through `SlotService` into the payload. `RevealController` reads `result.isPatent` instead of racing the `PatentClaim` S2C event (dead `StateController.patents` poll + unused `Players` import removed). Manifest `SlotReveal` payloadDesc updated.
+- [x] **B6 — skipped runs claimed patents** — reveal recorded patents for tier ≥ 2 regardless of `isNatural`, violating §14. Now gated `if isNatural and tier >= 2`.
+- [x] **B3 — plot overlap** — `PlotService` clones were never moved, stacking all plots at the template origin. Now tiled in an 8-col grid (stride = template extents + 64 studs) via `PivotTo`, with reusable slot indices freed on logout. Spawn routing added: per-player `RespawnLocation` → own plot spawn, existing character teleported on, origin template spawn disabled. Verified live: plot at z=2055 vs template z=-9, character routed on.
+
+**Cleared (not bugs):** B7 timer "online speedup" — model stores `workRemaining` at online rate (1.0 baseline); offline is 0.8 (20% slower) per §9. Display and completion agree. · "DataService session bug" (old memory) — false alarm from the Studio MCP `execute_luau` separate require cache; real session loads fine (verified via remote round-trips).
+
+**Still open:** B4 chambers 7–10 (map build), B5 RevealPrompt inert (wire `Triggered → reveal` or disable).
+
 ## Phase 12E completed (2026-06-17)
 
 - [x] **Starter compound seed** — `VaultService.onProfileLoaded` seeds 5 `starter=true` compounds (T1_01–T1_05) at `STARTING_COMPOUNDS_PER_STARTER = 1` when `vault.compounds` is empty (fresh profile). `EconomyConstants.STARTING_COMPOUNDS_PER_STARTER` consumed for the first time.
@@ -47,7 +60,7 @@
 
 ## In progress
 
-None.
+Phase 13 Studio debug pass. B1/B2/B3/B6 done. Next: B5 (RevealPrompt), then B4 (chambers 7–10).
 
 ## Phase 12D — Lab world build (done in Studio)
 
@@ -55,14 +68,14 @@ Full lab + exterior built as clone-safe BaseParts. Lives at **`workspace.Plots.P
 
 ## Next
 
-- **Slots 7–10:** map has chambers `"1"–"6"`; `MAX_SLOTS=10` (Expanded-Lab gamepass → 7). Reveals for slots >6 resolve nil and skip VFX gracefully. Add chambers 7–10 if/when expanded lab ships.
+- **B4 — Slots 7–10:** map has chambers `"1"–"6"`; `MAX_SLOTS=10` (Expanded-Lab gamepass → 7). Reveals for slots >6 resolve nil and skip VFX gracefully. Add chambers 7–10 if/when expanded lab ships.
 - **WingLight dim is invisible:** `WingLight` is a Folder-child PointLight (no transform → no light), so the reveal dim has no visible effect. To make it visible: `RevealController` searches recursively + WingLights live on parts. Map currently matches the existing contract.
-- **RevealPrompt inert:** reveal is UI-driven; the chamber `ProximityPrompt` isn't wired. Either connect `Triggered → SlotController.reveal(i)` (guard on slot-complete) or disable the prompt.
-- **Plot overlap (PlotService):** clones aren't position-offset, so multi-player plots stack at origin. Code-side fix (offset each clone) — not a map issue.
+- **B5 — RevealPrompt inert:** reveal is UI-driven; the chamber `ProximityPrompt` isn't wired. Either connect `Triggered → SlotController.reveal(i)` (guard on slot-complete) or disable the prompt.
+- ~~**Plot overlap (PlotService)**~~ — fixed in Phase 13 (B3): clones now grid-offset via `PivotTo`, players routed to own plot.
 
 ## Known issues
 
-- **RevealCard patent timing (12D fix):** `isWorldFirst` in RevealController checks `StateController.patents` after VFX (~0.5s), relying on `PatentClaim` S2C arriving within that window. Fix: add `isPatent: boolean` to `SlotReveal` server response payload so the flag is authoritative and synchronous. Affects `SlotService.luau` (return value) and `RevealController.luau` (read from result instead of StateController).
+- ~~**RevealCard patent timing (12D fix)**~~ — fixed in Phase 13 (B2): `SlotReveal` returns authoritative `isPatent`; `RevealController` reads it instead of polling `StateController.patents`.
 
 ## Phase 12C completed (2026-06-15)
 

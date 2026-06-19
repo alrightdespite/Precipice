@@ -43,7 +43,7 @@ local Manifest: { RemoteEntry } = {
 		kind = "Function",
 		direction = "C2S",
 		rateLimit = 4,
-		payloadDesc = "slotIndex: number → result: CompoundResult, err: string?",
+		payloadDesc = "slotIndex: number → result: { compoundId: string, isNatural: boolean, isPatent: boolean }, err: string?",
 	},
 	{
 		name = "SlotSkip",
@@ -84,6 +84,12 @@ local Manifest: { RemoteEntry } = {
 		kind = "Event",
 		direction = "S2C",
 		payloadDesc = "amount: number, breakdown: { tier: number, pellets: number }[]",
+	},
+	{
+		name = "SlotCapUpdate",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "slotCap: number",
 	},
 
 	-- ── Formula Lab ────────────────────────────────────────────────────────────

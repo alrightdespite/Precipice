@@ -54,6 +54,10 @@ function MonetizationService.refreshGamepasses(player: Player, data: any)
 	if _remoteService then
 		_remoteService.getEvent("GamepassStatus"):FireClient(player, { passes = passes })
 	end
+	-- ExpandedLab changes the personal slot cap (§8); re-push it.
+	if _slotService then
+		_slotService.fireSlotCap(player, data)
+	end
 end
 
 function MonetizationService.ownsGamepass(data: any, passName: string): boolean

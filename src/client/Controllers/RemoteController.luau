@@ -61,6 +61,11 @@ local function wireS2C()
 		StateController.set({ offlineIncome = { amount = amount, breakdown = breakdown } })
 	end)
 
+	-- SlotCapUpdate: personal slot count (§8)
+	_remotes["SlotCapUpdate"].OnClientEvent:Connect(function(slotCap: number)
+		StateController.set({ slotCap = slotCap })
+	end)
+
 	-- LabDiscovery: append entry to formulaLog
 	_remotes["LabDiscovery"].OnClientEvent:Connect(function(compoundId: string, recipeId: string)
 		local log = table.clone(StateController.get().formulaLog)

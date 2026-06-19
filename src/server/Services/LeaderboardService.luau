@@ -170,9 +170,12 @@ function LeaderboardService.init()
 	_seedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 	_globalJobsDs = game:GetService("DataStoreService"):GetDataStore("GlobalJobs")
 
+	-- The client expects two return values (entries, ownRow) per the Manifest; the internal
+	-- handler returns a { entries, ownRow } table (asserted by Lune tests), so unpack it here.
 	_remoteService.setInvoke("LeaderboardRequest",
 		function(player: any, board: any)
-			return handleLeaderboardRequest(player, board)
+			local result = handleLeaderboardRequest(player, board)
+			return result.entries, result.ownRow
 		end)
 end
 

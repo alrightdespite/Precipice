@@ -42,6 +42,17 @@ Goal: take the game from "backend ~85%, loop verified" to feature-complete + lau
 Use the DebugService hook (grant/discover/`completeSlot` natural skip) to drive these fast:
 Market full loop · Syndicate lifecycle · Joint Synthesis T6/T7 · Exotics (decay/world-first; verify T7 id scheme — `T7_01` doesn't exist) · Prestige full reset (§22 wipe-vs-persist) · Events/Flux · Streak · Contracts · Monetization receipts/gamepasses · Offline income · **Multiplayer 2+** (patent contests, cross-player market, plot tiling).
 
+**Sweep pass 1 (2026-06-19, single client):**
+- [x] **Market full loop** — create (in-bounds), out-of-bounds price rejected ("price out of allowed range"), browse shows own listing, self-buy rejected (`SELF_TRADE`), cancel returns stock. ✓
+- [x] **Prestige blockers** — `PrestigeRequest` correctly returns rank-gate (250k) + pellet-cost (500k) blockers. ✓
+- [x] **Contracts** — `ContractClaim` validates `completed`/`claimed` (claimed a genuinely-complete contract; rejects otherwise). ✓
+- [x] **Leaderboard** — 🐛 **FOUND + FIXED**: server `LeaderboardRequest` returned one `{entries, ownRow}` table but the client destructures two values `(entries, ownRow)` → board showed garbage + nil own-row. Fixed: remote wiring unpacks to a tuple (internal handler/Lune tests unchanged). Verified: returns entries + ownRow (rank 1, score 4468). ✓
+- [x] **Syndicate lifecycle** — create / contributeVault / purchaseUpgrade(crest, 1M from vault) / disband (deletes vault) all work; rate limiting (1/s upgrade, 0.1/s disband) confirmed firing in practice. ✓
+- [x] **Exotic id scheme** — confirmed `EX_001..EX_120` (120 exotics); **no `T7_xx` compounds exist** (`T7_01`=nil, Compounds T6=15/T7=0); `resolveExotic(T6_01+T6_01)=EX_001`. Matches the handoff flag. ✓
+- [x] **Events gate** — `BlueprintPurchase` rejects "no active event" when none active. ✓
+- ⏭️ **Needs 2 clients:** cross-player Market buy + seller PendingCredits, patent contests/challenges, Joint Synthesis (syndicate + T4 qual + partner), plot tiling.
+- ⏭️ **Needs special setup:** Monetization receipts (real Robux dev-product purchase), Offline income (logout/login time gap), Prestige full reset (needs 250k rank + 500k pellets — blockers verified, reset table is Lune-covered).
+
 ### F. Map / world (Studio `.rbxl`, gitignored — manual save required)
 - 🔴 **SAVE chambers 7–10** (B4) — currently unsaved, lost on Studio close.
 - 🟡 Plot stride ~2000 studs (Exterior bounds inflate it) — add a dedicated bounds part for tighter tiling.

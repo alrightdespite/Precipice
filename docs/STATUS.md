@@ -44,7 +44,9 @@ Live loop-walk in Studio (extraction → synthesis → lab discovery → reveal 
 
 **Cleared (not bugs):** B7 timer "online speedup" — model stores `workRemaining` at online rate (1.0 baseline); offline is 0.8 (20% slower) per §9. Display and completion agree. · "DataService session bug" (old memory) — false alarm from the Studio MCP `execute_luau` separate require cache; real session loads fine (verified via remote round-trips).
 
-**Still open:** B4 chambers 7–10 (map build — the only remaining item; needs building parts in Studio, not pure code).
+- [x] **B4 — chambers 7–10** — cloned chamber 6 four times in `workspace.Plots.PLOT_TEMPLATE.Lab.Chambers`, named 7–10, positioned continuing the 3-wide grid (row z=-29: 7/8/9 at x=-22/0/22; 10 at x=-22 z=-49). Each carries the full assembly + `RevealPrompt`. Verified live: all 10 chambers resolve in the cloned player plot and bind reveal prompts. **NOTE: this is a Studio place-file change (`.rbxl` is gitignored) — must be saved in Studio (Ctrl+S) to persist; not captured by git.**
+
+**Still open:** none. B1–B6 all resolved (B4 pending a manual Studio save).
 
 ## Phase 12E completed (2026-06-17)
 
@@ -61,7 +63,7 @@ Live loop-walk in Studio (extraction → synthesis → lab discovery → reveal 
 
 ## In progress
 
-Phase 13 Studio debug pass. B1/B2/B3/B5/B6 done. Only B4 (chambers 7–10, map build) remains.
+Phase 13 Studio debug pass complete. B1–B6 all resolved. B4 (chambers 7–10) is a Studio place-file change — save the place in Studio to persist it.
 
 ## Phase 12D — Lab world build (done in Studio)
 
@@ -69,7 +71,7 @@ Full lab + exterior built as clone-safe BaseParts. Lives at **`workspace.Plots.P
 
 ## Next
 
-- **B4 — Slots 7–10:** map has chambers `"1"–"6"`; `MAX_SLOTS=10` (Expanded-Lab gamepass → 7). Reveals for slots >6 resolve nil and skip VFX gracefully. Add chambers 7–10 if/when expanded lab ships.
+- ~~**B4 — Slots 7–10**~~ — fixed in Phase 13: chambers 7–10 added to PLOT_TEMPLATE (must be saved in Studio to persist; `.rbxl` is gitignored).
 - **WingLight dim is invisible:** `WingLight` is a Folder-child PointLight (no transform → no light), so the reveal dim has no visible effect. To make it visible: `RevealController` searches recursively + WingLights live on parts. Map currently matches the existing contract.
 - ~~**B5 — RevealPrompt inert**~~ — fixed in Phase 13: `SlotController.bindRevealPrompts` wires `Triggered → reveal(i)`, enabled only on DONE slots.
 - ~~**Plot overlap (PlotService)**~~ — fixed in Phase 13 (B3): clones now grid-offset via `PivotTo`, players routed to own plot.

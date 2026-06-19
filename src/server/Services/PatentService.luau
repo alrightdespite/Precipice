@@ -10,6 +10,7 @@ local _ds: any = nil -- DataStore("Patents")
 local _scs: any = nil -- SynthCountService
 local _rs: any = nil -- RemoteService
 local _compounds: any = nil -- Compounds data table (for sweep iteration)
+local _exotics: any = nil -- Exotics data table (T7 dividend iteration)
 local _pw: any = nil -- PatentWindow module
 local _eventCompounds: any = nil -- EventCompounds data table
 local _eventService: any = nil -- EventService (for event patent guards)
@@ -66,6 +67,18 @@ end
 
 -- ── Internal helpers ───────────────────────────────────────────────────────
 
+-- Resolve a patentable compound's tier. Exotic ids (EX_xxx) are not in Compounds — they are T7.
+local function tierOf(compoundId: string): number
+	local compound = _compounds and _compounds[compoundId]
+	if compound then
+		return compound.tier
+	end
+	if _exotics and _exotics[compoundId] then
+		return 7
+	end
+	return 1
+end
+
 -- Deep-enough copy for patent records: top-level fields + a fresh challengeQueue array.
 local function copyRecord(record: any): any
 	return {
@@ -121,10 +134,9 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 		-- ── First ever claim ──────────────────────────────────────────────
 		if record == nil then
 			didClaim = true
-			local compound = _compounds[compoundId]
 			return {
 				compoundId = compoundId,
-				tier = compound and compound.tier or 1,
+				tier = tierOf(compoundId),
 				holderId = userId,
 				firstClaimantId = userId,
 				challenge = nil,
@@ -200,8 +212,7 @@ function PatentService.recordNaturalSynthesis(player: any, compoundId: string, _
 			-- §15: first claims announce globally at every patentable tier. The claimant is the
 			-- local player, so the name is available without an async lookup.
 			if _announcementService then
-				local compound = _compounds[compoundId]
-				_announcementService.announceFirstClaim(compoundId, player.Name, compound and compound.tier or 2)
+				_announcementService.announceFirstClaim(compoundId, player.Name, tierOf(compoundId))
 			end
 		elseif challengeOpened then
 			_rs.getEvent("PatentChallengeAlert"):FireClient(player, compoundId, challengeWindowEnd)
@@ -329,62 +340,76 @@ local function writePendingCredit(userId: number, creditId: string, amount: numb
 	end)
 end
 
+-- Pay one patent's current holder its weekly dividend, then stamp the record. Online → balance +
+-- BalanceUpdate; offline → PendingCredits. The dividendPaidThruWeek stamp + weekKey'd creditId
+-- make a resumed/re-run job (F1) never double-pay. amountFn(record) → Pellets (or nil to skip).
+local function payPatentDividend(patentKey: string, weekKey: string, amountFn: (any) -> number?)
+	local peek = _ds:GetAsync(patentKey)
+	if peek == nil or peek.holderId == nil then
+		return
+	end
+	if peek.dividendPaidThruWeek == weekKey then
+		return -- already paid this week (idempotent resume guard)
+	end
+	local amount = amountFn(peek)
+	if amount == nil or amount <= 0 then
+		return
+	end
+
+	local holderId = peek.holderId
+	local player = _players and _players:GetPlayerByUserId(holderId)
+	if player and _dataService and _dataService.isLoaded(holderId) then
+		_dataService.updateProfile(holderId, function(data)
+			data.balances.pellets += amount
+		end)
+		local data = _dataService.getProfile(holderId)
+		if _rs then
+			_rs.getEvent("BalanceUpdate"):FireClient(
+				player,
+				data.balances.pellets,
+				data.balances.catalysts,
+				data.monetization.rushUses,
+				data.monetization.timerSkipUses or 0
+			)
+		end
+	else
+		writePendingCredit(holderId, "dividend:" .. patentKey .. ":" .. weekKey, amount, "patent_dividend")
+	end
+
+	_ds:UpdateAsync(patentKey, function(record)
+		if record == nil or record.dividendPaidThruWeek == weekKey then
+			return nil
+		end
+		local newRecord = copyRecord(record)
+		newRecord.dividendPaidThruWeek = weekKey
+		return newRecord
+	end)
+end
+
 -- Monday job step 1 (R3 mandated order: dividends → Sprint archive → seed).
 -- weekKey: e.g. "weekly:<weekIndex>" — uniquely identifies this payout run, also stamped on each
 -- patent record (dividendPaidThruWeek) so a resumed/re-run job never double-pays (F1).
 -- §15: the holder at firing time is paid the tier dividend — online to balance, offline to
 -- PendingCredits. Whoever holds the patent at this moment gets paid; no retroactive grants.
-function PatentService.payDividends(weekKey: string, now: number?)
-	now = now or os.time()
-
+function PatentService.payDividends(weekKey: string, _now: number?)
+	-- Compound patents (T2–T6): rate by the record's tier.
+	local function byTier(record: any): number?
+		return DIVIDEND_BY_TIER[record.tier]
+	end
 	for compoundId in pairs(_compounds) do
-		local patentKey = "patent:" .. compoundId
-		local peek = _ds:GetAsync(patentKey)
-		if peek == nil or peek.holderId == nil then
-			continue
-		end
-		if peek.dividendPaidThruWeek == weekKey then
-			continue -- already paid this week (idempotent resume guard)
-		end
-		local amount = DIVIDEND_BY_TIER[peek.tier]
-		if amount == nil then
-			continue
-		end
-
-		local holderId = peek.holderId
-		local player = _players and _players:GetPlayerByUserId(holderId)
-		if player and _dataService and _dataService.isLoaded(holderId) then
-			_dataService.updateProfile(holderId, function(data)
-				data.balances.pellets += amount
-			end)
-			local data = _dataService.getProfile(holderId)
-			if _rs then
-				_rs.getEvent("BalanceUpdate"):FireClient(
-					player,
-					data.balances.pellets,
-					data.balances.catalysts,
-					data.monetization.rushUses,
-					data.monetization.timerSkipUses or 0
-				)
-			end
-		else
-			-- creditId includes weekKey → idempotent even if the step is re-run.
-			writePendingCredit(holderId, "dividend:" .. compoundId .. ":" .. weekKey, amount, "patent_dividend")
-		end
-
-		-- Stamp the record so a resumed job skips this patent (paid above).
-		_ds:UpdateAsync(patentKey, function(record)
-			if record == nil or record.dividendPaidThruWeek == weekKey then
-				return nil
-			end
-			local newRecord = copyRecord(record)
-			newRecord.dividendPaidThruWeek = weekKey
-			return newRecord
-		end)
+		payPatentDividend("patent:" .. compoundId, weekKey, byTier)
 	end
 
-	-- TODO: T7 Exotic dividends (200k/week) once Exotic patent holders are integrated here —
-	-- exotic claims/holders are currently ExoticService's domain (separate from the Patents DS).
+	-- Exotic patents (T7, EX_xxx): flat 200k/week regardless of decay (§15/§23). Exotic patents
+	-- share the Patents DS — ExoticService.onPairCompleted calls recordNaturalSynthesis(exoticId).
+	if _exotics then
+		local function exoticRate(): number?
+			return DIVIDEND_BY_TIER[7]
+		end
+		for exoticId in pairs(_exotics) do
+			payPatentDividend("patent:" .. exoticId, weekKey, exoticRate)
+		end
+	end
 end
 
 -- ── Production init ────────────────────────────────────────────────────────
@@ -398,6 +423,7 @@ function PatentService.init()
 	_pendingDs = DataStoreService:GetDataStore("PendingCredits")
 	_pw = require(ReplicatedStorage.Shared.Core.PatentWindow)
 	_compounds = require(ReplicatedStorage.Shared.Data.Compounds)
+	_exotics = require(ReplicatedStorage.Shared.Data.Exotics)
 	_scs = require(ServerScriptService.Server.Services.SynthCountService)
 	_rs = require(ServerScriptService.Server.Services.RemoteService)
 	_dataService = require(ServerScriptService.Server.Services.DataService)

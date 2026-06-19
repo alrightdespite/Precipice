@@ -142,6 +142,10 @@ end)
 local PlotService = require(ServerScriptService.Server.Services.PlotService)
 PlotService.init()
 
+-- ── 20b. AdminService (chat-driven; whitelist + place owner) ──────────────
+local AdminService = require(ServerScriptService.Server.Services.AdminService)
+AdminService.init()
+
 -- ── 21. DebugService (Studio-only; no-op in production) ───────────────────
 local DebugService = require(ServerScriptService.Server.Services.DebugService)
 DebugService.init()

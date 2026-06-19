@@ -10,6 +10,11 @@ return {
 	-- Server size (doc §31)
 	MAX_PLAYERS_PER_SERVER = 8,
 
+	-- Admin whitelist (AdminService). The place owner (game.CreatorId) is always an admin;
+	-- add extra moderator UserIds here. Spec note: keep this list private — prefer adding IDs
+	-- via a local/gitignored override rather than committing real moderator IDs publicly.
+	ADMIN_USER_IDS = {} :: { number },
+
 	-- Offline income caps (doc §10)
 	OFFLINE_CAP_BASE_HOURS = 12,
 	OFFLINE_CAP_EXTENDED_HOURS = 24,

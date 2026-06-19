@@ -17,6 +17,7 @@ local LeaderboardScreen = require(script.Parent.Parent.UI.LeaderboardScreen)
 local SyndicateScreen = require(script.Parent.Parent.UI.SyndicateScreen)
 local PrestigeScreen = require(script.Parent.Parent.UI.PrestigeScreen)
 local SettingsScreen = require(script.Parent.Parent.UI.SettingsScreen)
+local CosmeticsScreen = require(script.Parent.Parent.UI.CosmeticsScreen)
 
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
@@ -33,6 +34,7 @@ local _screens = {
 	Syndicate = SyndicateScreen,
 	Prestige = PrestigeScreen,
 	Settings = SettingsScreen,
+	Cosmetics = CosmeticsScreen,
 }
 
 local _current: string? = nil
@@ -60,6 +62,7 @@ function UIController.openDrawer()
 	local MORE_ITEMS = {
 		{ label = "Leaderboard", screen = "Leaderboard" },
 		{ label = "Syndicate", screen = "Syndicate" },
+		{ label = "Cosmetics", screen = "Cosmetics" },
 		{ label = "Prestige", screen = "Prestige" },
 		{ label = "Settings", screen = "Settings" },
 	}
@@ -114,8 +117,8 @@ function UIController.openDrawer()
 			-- Drawer panel (slides up from bottom)
 			scope:New("Frame")({
 				Name = "Panel",
-				Size = UDim2.new(1, 0, 0, 280),
-				Position = UDim2.new(0, 0, 1, -280),
+				Size = UDim2.new(1, 0, 0, 340),
+				Position = UDim2.new(0, 0, 1, -340),
 				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 				ZIndex = 2,

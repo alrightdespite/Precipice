@@ -48,6 +48,39 @@ function CosmeticCatalog.get(id: string): any
 	return CosmeticCatalog.ITEMS[id]
 end
 
+-- Items in a category, in stable display order: free default first, then Pellet items by price,
+-- then Catalyst items by price, then unlocks (prestige/event); ties broken by id. For the UI.
+function CosmeticCatalog.byCategory(category: string): { { id: string, item: any } }
+	local out = {}
+	for id, item in pairs(CosmeticCatalog.ITEMS) do
+		if item.category == category then
+			table.insert(out, { id = id, item = item })
+		end
+	end
+	local function rank(e): number
+		if e.item.default then
+			return 0
+		elseif e.item.currency == "pellets" then
+			return 1
+		elseif e.item.currency == "catalysts" then
+			return 2
+		end
+		return 3 -- prestige5 / event unlocks
+	end
+	table.sort(out, function(a, b)
+		local ra, rb = rank(a), rank(b)
+		if ra ~= rb then
+			return ra < rb
+		end
+		local pa, pb = a.item.price or 0, b.item.price or 0
+		if pa ~= pb then
+			return pa < pb
+		end
+		return a.id < b.id
+	end)
+	return out
+end
+
 local function prestigeLevel(data: any): number
 	return (data.prestige and data.prestige.level) or 0
 end

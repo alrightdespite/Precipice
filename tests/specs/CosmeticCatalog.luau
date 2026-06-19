@@ -80,6 +80,31 @@ describe("CosmeticCatalog — canPurchase", function()
 	end)
 end)
 
+describe("CosmeticCatalog — byCategory", function()
+	it("returns only the category's items, default first", function()
+		local skins = CosmeticCatalog.byCategory("labSkin")
+		expect(#skins).toBe(7)
+		expect(skins[1].id).toBe("skin_industrial_standard") -- the free default
+		for _, e in ipairs(skins) do
+			expect(e.item.category).toBe("labSkin")
+		end
+	end)
+
+	it("orders Pellet items by ascending price after the default", function()
+		local skins = CosmeticCatalog.byCategory("labSkin")
+		-- default, then arctic (500), then carbon (1200) ...
+		expect(skins[2].id).toBe("skin_arctic_research")
+		expect(skins[3].id).toBe("skin_carbon_black")
+	end)
+
+	it("places unlocks (prestige/event) last", function()
+		local skins = CosmeticCatalog.byCategory("labSkin")
+		local lastTwo = { skins[#skins - 1].item.unlock, skins[#skins].item.unlock }
+		expect(lastTwo[1] ~= nil).toBeTrue()
+		expect(lastTwo[2] ~= nil).toBeTrue()
+	end)
+end)
+
 describe("CosmeticCatalog — canEquip", function()
 	it("a free default can be equipped", function()
 		expect((CosmeticCatalog.canEquip(profile(0, 0, 0), "hud_blue_white"))).toBeTrue()

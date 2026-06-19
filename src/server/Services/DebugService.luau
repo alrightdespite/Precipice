@@ -14,6 +14,7 @@
 --   "payDividends"                            → runs the Monday patent-dividend step now
 --   "drainPending"                            → drains PendingCredits into the live session
 --   "patentSweep"                             → runs the patent decay sweep (compounds + exotics)
+--   "percentileJob"                           → recomputes the leaderboard percentile blob
 --   "grantSprintPoints", amount               → adds Sprint ODS points (for archiveSprint tests)
 --   "archiveSprint"                           → archives this week's Sprint + awards champions
 --   "dumpProfile"                             → returns a state snapshot
@@ -110,6 +111,11 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		-- Runs the 900s patent decay sweep now (resolves expired defense windows).
 		PatentService.runDecaySweep(os.time())
 		return true, "patent sweep run"
+	elseif cmd == "percentileJob" then
+		-- Recomputes the leaderboard percentile blob now (hourly job, §21).
+		local LeaderboardService = require(ServerScriptService.Server.Services.LeaderboardService)
+		LeaderboardService.computePercentileBlob(os.time())
+		return true, "percentile blob computed"
 	elseif cmd == "grantSprintPoints" then
 		-- Seed a Sprint ODS score so archiveSprint has a champion to award.
 		local amount = math.max(1, math.floor(tonumber(arg1) or 1000))

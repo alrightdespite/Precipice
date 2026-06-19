@@ -101,6 +101,7 @@ local _rankService: any = nil
 local _marketService: any = nil
 local _seedResolver: any = nil
 local _announcementService: any = nil
+local _leaderboardService: any = nil
 
 local function resolveDeps()
 	if _resolved then
@@ -114,6 +115,7 @@ local function resolveDeps()
 	_marketService = require(ServerScriptService.Server.Services.MarketService)
 	_seedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 	_announcementService = require(ServerScriptService.Server.Services.AnnouncementService)
+	_leaderboardService = require(ServerScriptService.Server.Services.LeaderboardService)
 	_resolved = true
 end
 
@@ -204,6 +206,23 @@ function ClockService._runMarketSweep(now: number, bucket: number)
 	}, "marketsweep:" .. bucket)
 end
 
+-- Hourly percentile blob refresh (§21/E4): recomputes leaderboard rank-checkpoint thresholds so
+-- own-row rank estimates beyond the top 100 stay fresh.
+function ClockService._runPercentileJob(now: number, bucket: number)
+	local instance = _gjs.getInstance()
+	if not instance then
+		return
+	end
+	instance:runJob({
+		name = "PercentileBlob",
+		steps = {
+			{ name = "compute", fn = function()
+				_leaderboardService.computePercentileBlob(now)
+			end },
+		},
+	}, "percentile:" .. bucket)
+end
+
 -- One production tick: detect boundaries against the module state and dispatch any fired jobs.
 -- Each job is independently pcall-guarded by GlobalJobService.runJob; a failure in one never
 -- blocks another or the next tick.
@@ -218,6 +237,8 @@ function ClockService.tick(now: number?)
 	end
 	if signals.marketSweep then
 		ClockService._runMarketSweep(now :: number, signals.marketSweep)
+		-- Percentile blob shares the hourly bucket (E4 hourly refresh).
+		ClockService._runPercentileJob(now :: number, signals.marketSweep)
 	end
 	if signals.weekly then
 		ClockService._runWeeklyJob(now :: number, signals.weekly)

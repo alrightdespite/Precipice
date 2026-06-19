@@ -197,3 +197,39 @@ spec.describe("LeaderboardService — cache miss after TTL", function()
 		LeaderboardService._setRankService(mockRankService)
 	end)
 end)
+
+-- ── Test 6: percentile blob rank estimation ──────────────────────────────────
+
+spec.describe("LeaderboardService — _estimateRankFromBlob", function()
+	local blob = {
+		thresholds = {
+			{ rank = 1, score = 10000 },
+			{ rank = 50, score = 5000 },
+			{ rank = 100, score = 3000 },
+		},
+		readCount = 100,
+	}
+
+	spec.it("returns -1 for an empty or missing blob", function()
+		spec.expect(LeaderboardService._estimateRankFromBlob(nil, 100)).toBe(-1)
+		spec.expect(LeaderboardService._estimateRankFromBlob({ thresholds = {} }, 100)).toBe(-1)
+	end)
+
+	spec.it("score above the top checkpoint returns the top rank", function()
+		spec.expect(LeaderboardService._estimateRankFromBlob(blob, 12000)).toBe(1)
+	end)
+
+	spec.it("interpolates a rank between two checkpoints", function()
+		-- 4000 is halfway between rank-50 (5000) and rank-100 (3000) → ~75
+		spec.expect(LeaderboardService._estimateRankFromBlob(blob, 4000)).toBe(75)
+	end)
+
+	spec.it("a checkpoint score maps to that checkpoint's rank", function()
+		spec.expect(LeaderboardService._estimateRankFromBlob(blob, 5000)).toBe(50)
+		spec.expect(LeaderboardService._estimateRankFromBlob(blob, 3000)).toBe(100)
+	end)
+
+	spec.it("score below all checkpoints returns the readCount lower bound", function()
+		spec.expect(LeaderboardService._estimateRankFromBlob(blob, 2000)).toBe(100)
+	end)
+end)

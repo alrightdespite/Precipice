@@ -55,12 +55,10 @@ function StreakService.onLogin(player: any, data: any, now: number)
 		return
 	end
 
-	local streakContinues = false
-	if daysSinceLogin == 1 then
-		streakContinues = true
-	elseif daysSinceLogin == 2 and now < data.streak.lastLoginAt + EC.STREAK_WINDOW_HOURS * 3600 then
-		streakContinues = true
-	end
+	-- Streak continues on the next day, or two days out if still inside the
+	-- grace window (§20).
+	local streakContinues = daysSinceLogin == 1
+		or (daysSinceLogin == 2 and now < data.streak.lastLoginAt + EC.STREAK_WINDOW_HOURS * 3600)
 
 	if not streakContinues then
 		data.streak.day = 0

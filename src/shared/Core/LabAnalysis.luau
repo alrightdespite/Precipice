@@ -30,9 +30,7 @@ function LabAnalysis.getFee(minTier: number, prestigeLevel: number): number
 	local discounted: number
 	if minTier >= 4 then
 		standard, discounted = 200, 120
-	elseif minTier == 3 then
-		standard, discounted = 75, 45
-	elseif minTier == 2 then
+	elseif minTier >= 2 then -- T2 and T3 brackets share the same fee (§11)
 		standard, discounted = 75, 45
 	else -- minTier == 1
 		standard, discounted = 25, 15

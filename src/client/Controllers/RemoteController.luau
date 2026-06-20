@@ -24,6 +24,16 @@ function RemoteController.invoke(name: string, ...: any): ...any
 	return table.unpack(results, 2, results.n)
 end
 
+-- Fire a C2S RemoteEvent (fire-and-forget; no return).
+function RemoteController.fire(name: string, ...: any)
+	local remote = _remotes[name] :: RemoteEvent
+	if not remote then
+		warn("[RemoteController] fire: unknown remote:", name)
+		return
+	end
+	remote:FireServer(...)
+end
+
 -- Connect a callback to an S2C RemoteEvent.
 function RemoteController.connect(name: string, callback: (...any) -> ()): RBXScriptConnection
 	local remote = _remotes[name] :: RemoteEvent

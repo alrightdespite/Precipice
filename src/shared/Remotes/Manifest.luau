@@ -433,6 +433,14 @@ local Manifest: { RemoteEntry } = {
 		payloadDesc = "() — all initial state sent; client may show Home",
 	},
 
+	-- ── Admin (relay for TextChatService slash-commands; server re-checks isAdmin) ──
+	{
+		name = "AdminCommand",
+		kind = "Event",
+		direction = "C2S",
+		payloadDesc = "message: string — full chat command text; ignored unless sender is admin",
+	},
+
 	-- ── Debug (Studio-only; skipped by RemoteService in production) ────────────
 	{
 		name = "DebugCommand",

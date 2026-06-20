@@ -245,7 +245,9 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 		if bs == "ANALYZE" then
 			local i1, i2 = use(input1), use(input2)
 			if i1 and i2 then
-				local ok, fee = pcall(LabAnalysis.getFee, i1, i2)
+				-- getFee takes the lower input tier + prestige level (not compound IDs).
+				local minTier = math.min(getTier(i1), getTier(i2))
+				local ok, fee = pcall(LabAnalysis.getFee, minTier, 0)
 				if ok then
 					return string.format("Analyze — %d ◈", fee)
 				end
@@ -334,7 +336,10 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 	local function makePickerCard(pickerIdx: number, inputValue)
 		local label = scope:Computed(function(use)
 			local v = use(inputValue)
-			return v or "Select compound"
+			if v == nil then
+				return "Select compound"
+			end
+			return (Compounds[v] and Compounds[v].name) or v
 		end)
 		local hasValue = scope:Computed(function(use)
 			return use(inputValue) ~= nil

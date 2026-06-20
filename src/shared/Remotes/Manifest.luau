@@ -91,7 +91,7 @@ local Manifest: { RemoteEntry } = {
 		name = "SlotCapUpdate",
 		kind = "Event",
 		direction = "S2C",
-		payloadDesc = "slotCap: number",
+		payloadDesc = "slotCap: number, prestigeLevel: number",
 	},
 
 	-- ── Formula Lab ────────────────────────────────────────────────────────────

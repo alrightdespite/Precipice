@@ -601,7 +601,7 @@ end
 -- Pushes the player's current personal slot cap (§8) so the UI renders the
 -- correct number of slot cards. Re-fired on gamepass/prestige changes.
 function SlotService.fireSlotCap(player: Player, data: any)
-	RemoteService.getEvent("SlotCapUpdate"):FireClient(player, getSlotCap(data))
+	RemoteService.getEvent("SlotCapUpdate"):FireClient(player, getSlotCap(data), data.prestige and data.prestige.level or 0)
 end
 
 -- Studio/debug only (called by DebugService): drains a running slot to natural

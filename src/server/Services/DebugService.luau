@@ -71,6 +71,15 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		end)
 		fireBalance(player, DataService.getProfile(userId))
 		return true, DataService.getProfile(userId).balances.catalysts
+	elseif cmd == "setPrestigeLevel" then
+		-- Sets prestige.level directly (skips the 250k-rank prestige) so the
+		-- §22 PrestigeScreen level display + SlotCapUpdate plumbing can be tested.
+		local level = math.max(0, math.floor(tonumber(arg1) or 0))
+		DataService.updateProfile(userId, function(data)
+			data.prestige.level = level
+		end)
+		SlotService.fireSlotCap(player, DataService.getProfile(userId))
+		return true, "prestige level set to " .. level
 	elseif cmd == "grantCompound" then
 		local compoundId = tostring(arg1)
 		local qty = math.max(1, math.floor(tonumber(arg2) or 1))

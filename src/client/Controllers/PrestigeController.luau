@@ -5,12 +5,25 @@ local StateController = require(script.Parent.StateController)
 
 local PrestigeController = {}
 
-function PrestigeController.request(): (boolean, { string }? | string)
-	return RemoteController.invoke("PrestigeRequest")
+-- Returns (ok, blockers). RemoteController.invoke returns the server's value(s)
+-- directly on success, or (false, errString) on transport/rate-limit failure. The
+-- server replies with a single { ok, blockers } table, so read .blockers off it.
+function PrestigeController.request(): (boolean, { string })
+	local res = RemoteController.invoke("PrestigeRequest")
+	if type(res) ~= "table" or type(res.blockers) ~= "table" then
+		return false, {}
+	end
+	return true, res.blockers
 end
 
+-- Returns (ok, err). Server replies with { ok, err }; ok must reflect the server's
+-- result, not the transport (else a blocked confirm would read as success).
 function PrestigeController.confirm(): (boolean, string?)
-	return RemoteController.invoke("PrestigeConfirm")
+	local res = RemoteController.invoke("PrestigeConfirm")
+	if type(res) ~= "table" then
+		return false, "request failed"
+	end
+	return res.ok == true, res.err
 end
 
 -- Pure eligibility check — no server call. Returns false if any slot is RUNNING/DONE/REVEALING.

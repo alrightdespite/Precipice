@@ -61,9 +61,9 @@ local function wireS2C()
 		StateController.set({ offlineIncome = { amount = amount, breakdown = breakdown } })
 	end)
 
-	-- SlotCapUpdate: personal slot count (§8)
-	_remotes["SlotCapUpdate"].OnClientEvent:Connect(function(slotCap: number)
-		StateController.set({ slotCap = slotCap })
+	-- SlotCapUpdate: personal slot count (§8) + current prestige level (§22)
+	_remotes["SlotCapUpdate"].OnClientEvent:Connect(function(slotCap: number, prestigeLevel: number?)
+		StateController.set({ slotCap = slotCap, prestige = { level = prestigeLevel or 0 } })
 	end)
 
 	-- LabDiscovery: append entry to formulaLog

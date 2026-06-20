@@ -51,16 +51,16 @@ function PrestigeScreen.open(uiController)
 	local st = StateController.get()
 
 	local rankValue = scope:Value(st.rank)
-	local prestigeLevel = scope:Computed(function(use)
-		-- Prestige level not yet in state schema (Phase 12C); stub to 0
-		return 0
-	end)
+	local prestigeLevel = scope:Value(st.prestige and st.prestige.level or 0)
 
 	table.insert(
 		scope,
 		StateController.Changed:Connect(function(patch)
 			if patch.rank ~= nil then
 				rankValue:set(patch.rank)
+			end
+			if patch.prestige ~= nil then
+				prestigeLevel:set(patch.prestige.level or 0)
 			end
 		end)
 	)

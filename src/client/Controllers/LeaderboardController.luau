@@ -7,16 +7,20 @@ type LeaderboardEntry = Types.LeaderboardEntry
 local LeaderboardController = {}
 
 function LeaderboardController.request(board: string): (boolean, { LeaderboardEntry } | string)
-	local ok, entries, ownRow = RemoteController.invoke("LeaderboardRequest", board)
-	if ok then
-		-- Cache results in state
-		local lb = table.clone(StateController.get().leaderboard)
-		local ownRows = table.clone(StateController.get().ownRows)
-		lb[board] = entries or {}
-		ownRows[board] = ownRow
-		StateController.set({ leaderboard = lb, ownRows = ownRows })
+	-- The server returns two values (entries, ownRow); RemoteController.invoke passes
+	-- them through directly (no leading pcallOk on success). On transport/rate-limit
+	-- failure the first value is false/nil, so guard on entries being a table.
+	local entries, ownRow = RemoteController.invoke("LeaderboardRequest", board)
+	if type(entries) ~= "table" then
+		return false, "request failed"
 	end
-	return ok, entries or ""
+	-- Cache results in state
+	local lb = table.clone(StateController.get().leaderboard)
+	local ownRows = table.clone(StateController.get().ownRows)
+	lb[board] = entries
+	ownRows[board] = ownRow
+	StateController.set({ leaderboard = lb, ownRows = ownRows })
+	return true, entries
 end
 
 function LeaderboardController.getCached(board: string): { LeaderboardEntry }

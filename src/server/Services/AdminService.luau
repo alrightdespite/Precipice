@@ -21,6 +21,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local DataService = require(ServerScriptService.Server.Services.DataService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
+local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 
 local AdminService = {}
 
@@ -101,6 +102,15 @@ local function handleCommand(admin: Player, message: string)
 		DataService.updateProfile(admin.UserId, function(data)
 			data.balances.pellets = math.max(0, math.floor(amount))
 		end)
+		-- Push the new balance to the client HUD (otherwise the change is invisible).
+		local data = DataService.getProfile(admin.UserId)
+		RemoteService.getEvent("BalanceUpdate"):FireClient(
+			admin,
+			data.balances.pellets,
+			data.balances.catalysts,
+			data.monetization.rushUses,
+			data.monetization.timerSkipUses or 0
+		)
 	elseif cmd == "/kick" then
 		local target = args[2] and findPlayer(args[2])
 		if target then
@@ -162,23 +172,6 @@ function AdminService.init()
 			end
 		end)
 		cmd.Parent = TextChatService
-	end
-
-	-- Fallback: Player.Chatted still catches non-"/" / legacy / programmatic messages.
-	local function wire(player: Player)
-		player.Chatted:Connect(function(message)
-			if AdminService.isAdmin(player.UserId) then
-				local ok, err = pcall(handleCommand, player, message)
-				if not ok then
-					warn("[Admin] command error:", err)
-				end
-			end
-		end)
-	end
-
-	Players.PlayerAdded:Connect(wire)
-	for _, player in ipairs(Players:GetPlayers()) do
-		wire(player)
 	end
 end
 

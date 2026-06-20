@@ -136,6 +136,7 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 			discovered = data.formulaLog.discovered,
 			prestige = data.prestige,
 			championships = data.championships,
+			cosmetics = data.cosmetics,
 		}
 	end
 

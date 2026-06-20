@@ -15,11 +15,12 @@ local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local TextChatService = game:GetService("TextChatService")
+
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local DataService = require(ServerScriptService.Server.Services.DataService)
 local VaultService = require(ServerScriptService.Server.Services.VaultService)
-local RemoteService = require(ServerScriptService.Server.Services.RemoteService)
 
 local AdminService = {}
 
@@ -140,20 +141,30 @@ end
 -- ── Init ───────────────────────────────────────────────────────────────────
 
 function AdminService.init()
-	-- Primary path: TextChatService routes typed "/" commands to client-side TextChatCommands
-	-- (AdminController), which relay the full text here. Re-check isAdmin server-side.
-	RemoteService.getEvent("AdminCommand").OnServerEvent:Connect(function(player: Player, message: any)
-		if type(message) ~= "string" or not AdminService.isAdmin(player.UserId) then
-			return
-		end
-		local ok, err = pcall(handleCommand, player, message)
-		if not ok then
-			warn("[Admin] command error:", err)
-		end
-	end)
+	-- Primary path: register server-side TextChatCommands. TextChatService routes a typed "/"
+	-- message to the matching command and fires Triggered ON THE SERVER (textSource = sender).
+	-- This is the reliable way to catch "/" commands under TextChatService — Player.Chatted does
+	-- not fire for "/" messages there, and client-created commands trigger unreliably.
+	local ALIASES = { "/give", "/setbalance", "/kick", "/inspect", "/tp" }
+	for _, alias in ipairs(ALIASES) do
+		local cmd = Instance.new("TextChatCommand")
+		cmd.Name = "Admin_" .. string.sub(alias, 2)
+		cmd.PrimaryAlias = alias
+		cmd.AutocompleteVisible = false
+		cmd.Triggered:Connect(function(textSource: TextSource, unfilteredText: string)
+			local player = Players:GetPlayerByUserId(textSource.UserId)
+			if not player or not AdminService.isAdmin(player.UserId) then
+				return
+			end
+			local ok, err = pcall(handleCommand, player, unfilteredText)
+			if not ok then
+				warn("[Admin] command error:", err)
+			end
+		end)
+		cmd.Parent = TextChatService
+	end
 
-	-- Fallback: Player.Chatted still fires for non-"/" messages and legacy chat; harmless under
-	-- TextChatService (typed "/" never reaches it, which is why the relay above exists).
+	-- Fallback: Player.Chatted still catches non-"/" / legacy / programmatic messages.
 	local function wire(player: Player)
 		player.Chatted:Connect(function(message)
 			if AdminService.isAdmin(player.UserId) then

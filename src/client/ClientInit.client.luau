@@ -18,7 +18,6 @@ local PrestigeController = require(script.Parent.Controllers.PrestigeController)
 local EventController = require(script.Parent.Controllers.EventController)
 local HintController = require(script.Parent.Controllers.HintController)
 local RevealController = require(script.Parent.Controllers.RevealController)
-local AdminController = require(script.Parent.Controllers.AdminController)
 local UIController = require(script.Parent.Controllers.UIController)
 
 -- Dependency-ordered init
@@ -39,7 +38,6 @@ PrestigeController.init()
 EventController.init()
 HintController.init()
 RevealController.init()
-AdminController.init()
 UIController.init()
 
 -- Wait for server to confirm all initial state has been sent before showing Home.

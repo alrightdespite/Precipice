@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local SeedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
+local Sha256 = require(ReplicatedStorage.Shared.Core.Sha256)
 
 local CONFIG_STORE = "Config"
 
@@ -34,6 +35,8 @@ function SeedService.init()
 	end
 
 	SeedResolver.setSalt(salt :: string)
+	-- Inject the real HMAC-SHA256 so the weekly seed is HMAC(salt, "week:N") (E3 hardening).
+	SeedResolver.setHasher(Sha256.hmac)
 end
 
 function SeedService.getCurrentWeekSeed(): number

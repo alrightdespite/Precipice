@@ -14,6 +14,9 @@
 local SeedResolver = {}
 
 local _salt: string? = nil
+-- HMAC-SHA256 function injected at boot (SeedService injects Core/Sha256.hmac). Kept as
+-- an injected dependency so this module stays pure / Lune-testable (no script/game require).
+local _hmac: ((key: string, message: string) -> string)? = nil
 
 function SeedResolver.setSalt(salt: string)
 	assert(not _salt, "SeedResolver: salt already set")
@@ -21,13 +24,22 @@ function SeedResolver.setSalt(salt: string)
 	_salt = salt
 end
 
+function SeedResolver.setHasher(fn: (key: string, message: string) -> string)
+	_hmac = fn
+end
+
 function SeedResolver.hasSalt(): boolean
 	return _salt ~= nil
 end
 
--- Simple deterministic hash combining week number and salt.
--- In production this is replaced with a proper HMAC-SHA256 approach.
+-- Deterministic weekly seed. With the HMAC injected (production), this is the top 32 bits
+-- of HMAC-SHA256(salt, "week:N") — unpredictable to clients without the secret salt.
+-- The FNV-1a fallback (no hasher injected) keeps the function usable but is non-cryptographic.
 local function hashWeek(week: number, salt: string): number
+	if _hmac then
+		local hex = _hmac(salt, "week:" .. tostring(week))
+		return tonumber(string.sub(hex, 1, 8), 16) :: number
+	end
 	local combined = tostring(week) .. ":" .. salt
 	local h = 2166136261
 	for i = 1, #combined do

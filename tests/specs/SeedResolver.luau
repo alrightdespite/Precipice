@@ -3,6 +3,7 @@
 
 local spec = require("../spec")
 local SeedResolver = require("../../src/shared/Core/SeedResolver")
+local Sha256 = require("../../src/shared/Core/Sha256")
 
 spec.describe("SeedResolver — ISO week boundary", function()
 	-- 2024-12-30 (Monday): ISO week 1 of 2025 — Thursday (Jan 2) is in 2025
@@ -38,5 +39,25 @@ spec.describe("SeedResolver — salt guard", function()
 		-- hasSalt() must return false or true without erroring.
 		local ok = pcall(SeedResolver.hasSalt)
 		spec.expect(ok).toBeTrue()
+	end)
+end)
+
+spec.describe("SeedResolver — HMAC weekly seed", function()
+	-- Mirror the production wiring (SeedService injects salt + Sha256.hmac).
+	SeedResolver.setHasher(Sha256.hmac)
+	SeedResolver.setSalt("test-salt-123")
+
+	spec.it("seed is the top 32 bits of HMAC-SHA256(salt, 'week:N')", function()
+		local hex = Sha256.hmac("test-salt-123", "week:2600")
+		local expected = tonumber(string.sub(hex, 1, 8), 16)
+		spec.expect(SeedResolver.getWeekSeed(2600)).toBe(expected)
+	end)
+
+	spec.it("is deterministic for the same week", function()
+		spec.expect(SeedResolver.getWeekSeed(2600)).toBe(SeedResolver.getWeekSeed(2600))
+	end)
+
+	spec.it("differs across weeks", function()
+		spec.expect(SeedResolver.getWeekSeed(2600) ~= SeedResolver.getWeekSeed(2601)).toBeTrue()
 	end)
 end)

@@ -61,6 +61,26 @@ function LabController.getFormulaLog()
 	return StateController.get().formulaLog
 end
 
+-- Hydrates the full formula log from the server (called at login). The incremental
+-- LabDiscovery S2C only appends new discoveries this session, so without this a
+-- returning player's StateController.formulaLog is empty — breaking the Formula Log
+-- screen AND getButtonState (every known recipe would read as undiscovered).
+-- Server FormulaLogRequest returns data.formulaLog ({ discovered = {[id]=true}, ... });
+-- convert the discovered map into the { compoundId, ... } array the UI expects.
+function LabController.hydrateFormulaLog()
+	local log = RemoteController.invoke("FormulaLogRequest")
+	if type(log) ~= "table" or type(log.discovered) ~= "table" then
+		return
+	end
+	local entries = {}
+	for resultId, isDiscovered in pairs(log.discovered) do
+		if isDiscovered then
+			table.insert(entries, { compoundId = resultId, recipeId = nil, discoveredAt = 0 })
+		end
+	end
+	StateController.set({ formulaLog = entries })
+end
+
 function LabController.init(): typeof(LabController)
 	return LabController
 end

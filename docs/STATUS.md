@@ -35,7 +35,13 @@ Goal: take the game from "backend ~85%, loop verified" to feature-complete + lau
   - ~~**Settings**~~ — Music/SFX toggles hold; gamepass rows render "Not owned" (IDs are 0).
   - **Exotic Registry** — renders empty, which is CORRECT (only shows T7 `EX_xxx` exotics; discovering a compound doesn't populate it).
   - ⚠️ **Contract / Streak — NO client UI exists** (not registered in UIController, not in HomeScreen). Backend is built + Lune-green but there's nothing to click. New build gap.
-  - Not yet swept: Event/Flux UI, FormulaLog detail.
+  - ⚠️ **Event / Flux — NO purchase/display UI** (EventController + FluxUpdate state exist, but no screen calls purchaseBlueprint and no flux counter is rendered). Same build gap as Contract/Streak.
+  - Not yet swept: FormulaLog detail.
+
+**Sweep follow-up fixes (2026-06-20, sweep pass 2 cont.)** — three return-shape/UX bugs found during the sweep, all fixed + tests green:
+  - **CosmeticController** invoke misread (`local pcallOk, ok, err` → returned wrong values; buy/equip status text was wrong, success could read as failure). Now `local ok, err = invoke(...)`.
+  - **SynthesizeScreen analyze** always said "Analysis complete." regardless of outcome (and "nil" on hard errors). Now maps `result.status` (discovery/failure/already_discovered/refused/cached_failure) to an accurate message; handles the `(nil, err)` hard-error case.
+  - **CosmeticsScreen** unowned prestige5/event items showed an enabled Equip (server rejected). Now Equip is disabled until owned. **Live-verified**: Void / Industrial Hazmat / Void Particles show disabled Equip; owned (Carbon Black/Oxidized Copper/Blue-White) show enabled Equip; equipped shows disabled ✓.
 
 ### C. Server features half-built (TODOs in shipped code)
 - [x] ~~🔴 **PatentService weekly dividend payout**~~ — DONE: `payDividends(weekKey, now)` pays each held patent its §15 tier dividend (T2 800 → T6 100k) — online to balance + BalanceUpdate, offline to PendingCredits; idempotent via `dividendPaidThruWeek` stamp (F1 resume-safe). Driven by ClockService Monday job. Live-verified: held patents paid (+90,800), same-week re-run paid nothing. `PatentResolved`/release marquee = AnnouncementService transfer (T4+) wired; per-party PatentResolved S2C still a follow-up.

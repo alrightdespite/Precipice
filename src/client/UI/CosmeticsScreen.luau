@@ -109,7 +109,9 @@ function CosmeticsScreen.open(uiController)
 			if use(isBuyable) then
 				return not use(canAfford)
 			end
-			return false
+			-- Equip path: only enabled when actually owned. Locked prestige5/event
+			-- items (not owned, not buyable) keep a disabled Equip until unlocked.
+			return not use(isExplicitlyOwned)
 		end)
 
 		return scope:New("Frame")({

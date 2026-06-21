@@ -7,10 +7,10 @@ local RemoteController = require(script.Parent.RemoteController)
 local CosmeticController = {}
 
 local function call(remoteName: string, id: string): (boolean, string?)
-	local pcallOk, ok, err = RemoteController.invoke(remoteName, id)
-	if not pcallOk then
-		return false, "request failed"
-	end
+	-- RemoteController.invoke returns the server's (ok, err) directly on success,
+	-- or (false, errString) on transport failure / (nil, "rate_limited") when
+	-- throttled. `ok == true` correctly handles all three; err passes through.
+	local ok, err = RemoteController.invoke(remoteName, id)
 	return ok == true, err
 end
 

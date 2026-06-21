@@ -890,9 +890,28 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 									if bs == "ANALYZE" then
 										isLoading:set(true)
 										statusMsg:set("")
-										local ok, result = LabController.analyze(i1, i2)
+										-- LabController.analyze returns (resultTable, err): server replies
+										-- with a single { status, ... } table on any non-hard outcome, or
+										-- (nil, errString) on a hard error. Surface a per-status message.
+										local result, err = LabController.analyze(i1, i2)
 										isLoading:set(false)
-										statusMsg:set(ok and "Analysis complete." or tostring(result))
+										if type(result) ~= "table" then
+											statusMsg:set(tostring(err or "Analysis failed."))
+										elseif result.status == "discovery" then
+											local nm = (Compounds[result.resultId] and Compounds[result.resultId].name)
+												or result.resultId
+											statusMsg:set("Discovered " .. tostring(nm) .. "!")
+										elseif result.status == "failure" then
+											statusMsg:set("No reaction — residue awarded.")
+										elseif result.status == "already_discovered" then
+											statusMsg:set("Already discovered — synthesize it instead.")
+										elseif result.status == "refused" then
+											statusMsg:set("Analysis refused for this pair.")
+										elseif result.status == "cached_failure" then
+											statusMsg:set("Known dead-end — no charge.")
+										else
+											statusMsg:set("Analysis complete.")
+										end
 									elseif bs == "SYNTHESIZE" or bs == "SYNTHESIZE_VARIABLE" then
 										-- Open the synthesis config modal: slot routing + (variable pairs)
 										-- variant picker + Stabilized toggle (§7/§8). Prefer the slot the

@@ -39,10 +39,16 @@ end
 
 -- World translation for a grid slot, relative to the template's position.
 -- row is shifted by +1 so no player plot lands on top of PLOT_TEMPLATE itself.
+-- Stride comes from a dedicated "PlotBounds" part when present (sized to the real lot),
+-- so far-flung or oversized decorative parts can't inflate the spacing; falls back to the
+-- whole-model extents otherwise.
 local function offsetForSlot(template: Model, slot: number): Vector3
-	local extents = template:GetExtentsSize()
-	local strideX = extents.X + PLOT_GAP_STUDS
-	local strideZ = extents.Z + PLOT_GAP_STUDS
+	local boundsPart = template:FindFirstChild("PlotBounds")
+	local footprint = if boundsPart and boundsPart:IsA("BasePart")
+		then (boundsPart :: BasePart).Size
+		else template:GetExtentsSize()
+	local strideX = footprint.X + PLOT_GAP_STUDS
+	local strideZ = footprint.Z + PLOT_GAP_STUDS
 	local col = slot % GRID_COLS
 	local row = math.floor(slot / GRID_COLS)
 	return Vector3.new(col * strideX, 0, (row + 1) * strideZ)

@@ -41,16 +41,38 @@ end
 
 -- ── VFX helpers ────────────────────────────────────────────────────────────
 
-local function dimWingLights(chamberPart: BasePart, goalBrightness: number)
-	-- WingLight PointLights live in the Lab folder (grandparent of the chamber)
+-- Original brightness per ambient light, captured the first time we dim it so we can
+-- restore to the build's value (not a hardcoded 1). Weak keys: destroyed plot-clone
+-- lights are collected automatically.
+local _baseBrightness: { [PointLight]: number } = setmetatable({}, { __mode = "k" }) :: any
+
+-- Ambient lab lights = the PointLights under the Lab's "LightPanel" parts, plus any
+-- "WingLight" accent. (The historical WingLight was parented straight to the Lab folder,
+-- which has no transform, so it emitted no light and the reveal-dim was invisible — we
+-- now dim the panel lights that actually illuminate the lab.) `factor` scales each light's
+-- captured base brightness: 0.2 → dim to 20%, 1 → restore.
+local function isAmbientLabLight(inst: Instance): boolean
+	if not inst:IsA("PointLight") then
+		return false
+	end
+	return inst.Name == "WingLight" or (inst.Parent ~= nil and inst.Parent.Name == "LightPanel")
+end
+
+local function dimWingLights(chamberPart: BasePart, factor: number)
 	local chambers = chamberPart.Parent
 	local lab = chambers and chambers.Parent
 	if not lab then
 		return
 	end
-	for _, inst in ipairs(lab:GetChildren()) do
-		if inst:IsA("PointLight") and inst.Name == "WingLight" then
-			TweenService:Create(inst, TweenInfo.new(0.4), { Brightness = goalBrightness }):Play()
+	for _, inst in ipairs(lab:GetDescendants()) do
+		if isAmbientLabLight(inst) then
+			local light = inst :: PointLight
+			local base = _baseBrightness[light]
+			if base == nil then
+				base = light.Brightness
+				_baseBrightness[light] = base
+			end
+			TweenService:Create(light, TweenInfo.new(0.4), { Brightness = base * factor }):Play()
 		end
 	end
 end

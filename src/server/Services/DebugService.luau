@@ -17,6 +17,8 @@
 --   "percentileJob"                           → recomputes the leaderboard percentile blob
 --   "grantSprintPoints", amount               → adds Sprint ODS points (for archiveSprint tests)
 --   "archiveSprint"                           → archives this week's Sprint + awards champions
+--   "setPrestigeLevel", level                 → sets prestige.level (test PrestigeScreen)
+--   "startEvent",      fluxAmount?            → starts a debug seasonal event + grants Flux
 --   "dumpProfile"                             → returns a state snapshot
 
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -30,6 +32,7 @@ local SlotService = require(ServerScriptService.Server.Services.SlotService)
 local AnnouncementService = require(ServerScriptService.Server.Services.AnnouncementService)
 local PatentService = require(ServerScriptService.Server.Services.PatentService)
 local RankService = require(ServerScriptService.Server.Services.RankService)
+local EventService = require(ServerScriptService.Server.Services.EventService)
 local SeedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 
@@ -80,6 +83,26 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		end)
 		SlotService.fireSlotCap(player, DataService.getProfile(userId))
 		return true, "prestige level set to " .. level
+	elseif cmd == "startEvent" then
+		-- Starts a debug seasonal event + grants Flux so the §29 Event UI can be tested.
+		local amount = math.max(0, math.floor(tonumber(arg1) or 1000))
+		local now = os.time()
+		local seasonKey = "debug_season"
+		EventService.setActiveEvent({
+			isActive = true,
+			seasonKey = seasonKey,
+			startedAt = now,
+			endAt = now + 24 * 3600,
+			isFirstRun = true,
+			milestoneTarget = 1000000,
+			totalFluxEarned = 0,
+			milestoneReached = false,
+		})
+		DataService.updateProfile(userId, function(data)
+			data.eventState.fluxBySeason[seasonKey] = (data.eventState.fluxBySeason[seasonKey] or 0) + amount
+		end)
+		EventService.onLogin(player, DataService.getProfile(userId)) -- fires FluxUpdate
+		return true, "event started, flux=" .. amount
 	elseif cmd == "grantCompound" then
 		local compoundId = tostring(arg1)
 		local qty = math.max(1, math.floor(tonumber(arg2) or 1))

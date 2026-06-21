@@ -188,9 +188,9 @@ local function wireS2C()
 		StateController.set({ gamepasses = passes })
 	end)
 
-	-- FluxUpdate
-	_remotes["FluxUpdate"].OnClientEvent:Connect(function(seasonKey: string, total: number)
-		StateController.set({ flux = { seasonKey = seasonKey, total = total } })
+	-- FluxUpdate: server fires a single { seasonKey, total } table
+	_remotes["FluxUpdate"].OnClientEvent:Connect(function(flux: { seasonKey: string, total: number })
+		StateController.set({ flux = flux })
 	end)
 
 	-- ExoticRegistryUpdate

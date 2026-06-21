@@ -3,8 +3,14 @@ local StateController = require(script.Parent.StateController)
 
 local EventController = {}
 
+-- Server BlueprintPurchase returns a single { ok, err } table; RemoteController.invoke
+-- passes it through directly (no leading pcallOk). Normalize to (ok, err).
 function EventController.purchaseBlueprint(compoundId: string): (boolean, string?)
-	return RemoteController.invoke("BlueprintPurchase", compoundId)
+	local res = RemoteController.invoke("BlueprintPurchase", compoundId)
+	if type(res) ~= "table" then
+		return false, "request failed"
+	end
+	return res.ok == true, res.err
 end
 
 function EventController.getFlux(): { seasonKey: string, total: number }?

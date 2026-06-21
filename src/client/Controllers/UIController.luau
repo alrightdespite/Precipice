@@ -19,6 +19,7 @@ local PrestigeScreen = require(script.Parent.Parent.UI.PrestigeScreen)
 local SettingsScreen = require(script.Parent.Parent.UI.SettingsScreen)
 local CosmeticsScreen = require(script.Parent.Parent.UI.CosmeticsScreen)
 local ContractsScreen = require(script.Parent.Parent.UI.ContractsScreen)
+local EventScreen = require(script.Parent.Parent.UI.EventScreen)
 
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
@@ -37,6 +38,7 @@ local _screens = {
 	Settings = SettingsScreen,
 	Cosmetics = CosmeticsScreen,
 	Contracts = ContractsScreen,
+	Event = EventScreen,
 }
 
 local _current: string? = nil
@@ -63,6 +65,7 @@ function UIController.openDrawer()
 
 	local MORE_ITEMS = {
 		{ label = "Contracts", screen = "Contracts" },
+		{ label = "Event", screen = "Event" },
 		{ label = "Leaderboard", screen = "Leaderboard" },
 		{ label = "Syndicate", screen = "Syndicate" },
 		{ label = "Cosmetics", screen = "Cosmetics" },

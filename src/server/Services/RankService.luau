@@ -81,7 +81,7 @@ function RankService.addScore(player: any, data: any, amount: number, source: st
 	data.rank.currentRun += effective
 	data.rank.lifetime += effective
 
-	if _remoteService then
+	if _remoteService and player then
 		_remoteService.getEvent("RankUpdate"):FireClient(player, {
 			currentRun = data.rank.currentRun,
 			lifetime = data.rank.lifetime,

@@ -298,9 +298,11 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 			end
 		end)
 	else
+		-- Offline seller: pellet proceeds go to PendingCredits (drained at their next login).
+		-- The matching rank + contract credit is replayed at drain time by onCreditDrained,
+		-- giving offline sellers parity with the online path above (§15).
 		local creditId = "market:" .. listingId .. ":" .. tostring(sellerId)
 		writePendingCredit(sellerId, creditId, proceeds, "market_sale")
-		-- TODO Phase 8: rank from market sale via PendingCredits drain (offline seller path)
 	end
 
 	-- Step 6: award compounds to buyer
@@ -429,6 +431,24 @@ function MarketService.cancelAllForUser(player: any): number
 	return cancelled
 end
 
+-- Called by DataService.flushPendingCredits for each drained PendingCredit. For an offline
+-- market sale (source == "market_sale"), replays the rank + contract credit the online seller
+-- path awards — the pellet payout was already applied by DataService. Runs at the seller's
+-- next login (or logout), so _getPlayer resolves the live player for the RankUpdate fire.
+function MarketService.onCreditDrained(userId: number, data: any, credit: any)
+	if credit.source ~= "market_sale" then
+		return
+	end
+	local proceeds = credit.amount
+	local player = _getPlayer(userId)
+	if _rankService then
+		_rankService.scoreMarketSale(player, data, proceeds)
+	end
+	if _contractService then
+		_contractService.recordProgress(player, data, "market_sell_pellets", proceeds)
+	end
+end
+
 -- ── Production init ────────────────────────────────────────────────────────
 
 function MarketService.init()
@@ -450,6 +470,9 @@ function MarketService.init()
 	_analyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 	_getPlayer = function(userId: number) return Players:GetPlayerByUserId(userId) end
 	_clock = os.time
+
+	-- §15 offline-seller parity: award rank + contract credit when a market_sale credit drains.
+	_dataService.onCreditDrained(MarketService.onCreditDrained)
 
 	-- Wire C2S remotes
 	_remoteService.setInvoke("MarketCreateListing",

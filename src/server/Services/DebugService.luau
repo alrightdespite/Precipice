@@ -206,6 +206,8 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 			prestige = data.prestige,
 			championships = data.championships,
 			cosmetics = data.cosmetics,
+			rank = data.rank,
+			contracts = data.contracts,
 		}
 	end
 

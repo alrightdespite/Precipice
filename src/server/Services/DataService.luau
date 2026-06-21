@@ -57,6 +57,15 @@ local DataService = {}
 DataService.onProfileLoaded = Signal.new() -- (userId: number)
 DataService.onProfileReleased = Signal.new() -- (userId: number)
 
+-- Per-credit drain handlers. Invoked once for each PendingCredit applied in
+-- flushPendingCredits, with (userId, data, credit) where credit = {creditId, amount, source}.
+-- Lets a service (e.g. MarketService) replay side-effects beyond the pellet payout — the
+-- offline-seller rank/contract credit — without DataService depending on those services.
+local creditDrainHandlers: { (number, any, any) -> () } = {}
+function DataService.onCreditDrained(fn: (number, any, any) -> ())
+	table.insert(creditDrainHandlers, fn)
+end
+
 local function flushPendingCredits(userId: number, data: any)
 	local store = DataStoreService:GetDataStore(PENDING_CREDITS_STORE)
 	local key = "PendingCredits/" .. tostring(userId)
@@ -88,6 +97,13 @@ local function flushPendingCredits(userId: number, data: any)
 	for _, credit in ipairs(toApply) do
 		data.balances.pellets += credit.amount
 		table.insert(data.pendingCreditsApplied, credit.creditId)
+		for _, fn in ipairs(creditDrainHandlers) do
+			-- Never let a handler failure block the drain (secondary side-effect).
+			local hOk, hErr = pcall(fn, userId, data, credit)
+			if not hOk then
+				warn("DataService: credit-drain handler failed for", userId, "—", hErr)
+			end
+		end
 	end
 end
 

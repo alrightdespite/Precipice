@@ -124,7 +124,7 @@ end
 -- ── Remote push ────────────────────────────────────────────────────────────
 
 local function fireContractUpdate(player: any, data: any)
-	if _remoteService then
+	if _remoteService and player then
 		_remoteService.getEvent("ContractUpdate"):FireClient(player, data.contracts.slots)
 	end
 end

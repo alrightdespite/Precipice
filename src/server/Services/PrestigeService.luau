@@ -224,6 +224,20 @@ function PrestigeService.init()
 		local SlotService = require(ServerScriptService.Server.Services.SlotService)
 		SlotService.fireSlotCap(player, _dataService.getProfile(player.UserId))
 
+		-- Push the wiped balance + vault so the HUD and vault UI reflect the §22 reset
+		-- (pellets floored to 500, vault cleared). Without these the client shows stale
+		-- pre-prestige values until the next unrelated update.
+		local freshData = _dataService.getProfile(player.UserId)
+		_remoteService.getEvent("BalanceUpdate"):FireClient(
+			player,
+			freshData.balances.pellets,
+			freshData.balances.catalysts,
+			freshData.monetization.rushUses,
+			freshData.monetization.timerSkipUses or 0
+		)
+		local VaultService = require(ServerScriptService.Server.Services.VaultService)
+		VaultService.fireVaultUpdate(player, freshData)
+
 		_analyticsService.track(_analyticsService.Events.PRESTIGE or "prestige", {
 			userId = player.UserId,
 			level = _dataService.getProfile(player.UserId).prestige.level,

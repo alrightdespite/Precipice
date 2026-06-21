@@ -592,7 +592,7 @@ function SyndicateScreen.open(uiController)
 				Size = UDim2.new(1, 0, 0, 44),
 				BackgroundTransparency = 1,
 				[Children] = {
-					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8) }),
+					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8) }),
 					scope:New("TextBox")({
 						Size = UDim2.new(0.6, -4, 1, 0),
 						BackgroundColor3 = Theme.Colors.SurfaceRaised,
@@ -680,7 +680,7 @@ function SyndicateScreen.open(uiController)
 										PaddingRight = UDim.new(0, 10),
 										PaddingTop = UDim.new(0, 4),
 									}),
-									scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 2) }),
+									scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Vertical, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2) }),
 									scope:New("TextLabel")({
 										LayoutOrder = 1,
 										Size = UDim2.new(1, 0, 0, 18),
@@ -776,7 +776,7 @@ function SyndicateScreen.open(uiController)
 				Size = UDim2.new(1, 0, 0, 44),
 				BackgroundTransparency = 1,
 				[Children] = {
-					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8) }),
+					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8) }),
 					scope:New("Frame")({
 						Size = UDim2.new(0.5, -4, 1, 0),
 						BackgroundTransparency = 1,

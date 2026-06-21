@@ -292,6 +292,51 @@ function SyndicateService.acceptInvite(player: any, syndicateId: any): (boolean,
 	return true, nil
 end
 
+-- Studio-only test helper: join the caller into another online player's syndicate without
+-- the invite flow. Studio's local multiplayer test assigns players negative userIds, which
+-- the production invite validation (correctly) rejects — so this is the only way to form a
+-- 2-member syndicate in a local test. Finds the first online player who is a Founder with
+-- room and adds the caller as a Member. Mirrors acceptInvite's member-add.
+function SyndicateService.debugForceJoinAnySyndicate(player: any): (boolean, string?)
+	local userId = player.UserId
+	local data = _dataService.getProfile(userId)
+	if data == nil then return false, "no profile" end
+	if data.syndicate ~= nil then return false, "already in a syndicate" end
+
+	for _, other in ipairs(_players:GetPlayers()) do
+		if other.UserId == userId then continue end
+		local ok, otherData = pcall(_dataService.getProfile, other.UserId)
+		if not ok or otherData == nil or otherData.syndicate == nil then continue end
+		local syndicateId = otherData.syndicate.id
+
+		local failed: string? = nil
+		updateRecord(syndicateId, function(record)
+			if record == nil then
+				failed = "syndicate not found"
+				return nil
+			end
+			if countMembers(record) >= getMemberCap(record) then
+				failed = "syndicate is full"
+				return nil
+			end
+			record.members[userId] = "Member"
+			return record
+		end)
+		if failed then return false, failed end
+
+		_dataService.updateProfile(userId, function(d)
+			d.syndicate = { id = syndicateId, role = "Member" }
+		end)
+		local updatedRecord = getRecord(syndicateId)
+		if updatedRecord then
+			SyndicateService.fireUpdateToAllMembers(updatedRecord)
+		end
+		return true, nil
+	end
+
+	return false, "no other online player has a syndicate (have P1 create one first)"
+end
+
 function SyndicateService.declineInvite(player: any): (boolean, string?)
 	local userId = player.UserId
 	_pendingInviteDs:RemoveAsync("pendingInvite:" .. tostring(userId))

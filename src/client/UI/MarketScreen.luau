@@ -5,6 +5,7 @@ local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 local MarketController = require(script.Parent.Parent.Controllers.MarketController)
+local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
@@ -46,6 +47,23 @@ function MarketScreen.open(uiController)
 	local modalCompound = scope:Value("")
 	local modalQty = scope:Value("")
 	local modalPrice = scope:Value("")
+
+	-- Vault drives the sell picker (so players pick an owned compound by name instead of
+	-- typing a raw id). Kept reactive so a fresh VaultUpdate refreshes the list live.
+	local vaultValue = scope:Value(StateController.get().vault)
+	table.insert(
+		scope,
+		StateController.Changed:Connect(function(patch)
+			if patch.vault ~= nil then
+				vaultValue:set(patch.vault)
+			end
+		end)
+	)
+
+	local function compoundName(id: string): string
+		local c = Compounds[id]
+		return (c and c.name) or id
+	end
 
 	local feePreview = scope:Computed(function(use)
 		local price = tonumber(use(modalPrice)) or 0
@@ -256,27 +274,96 @@ function MarketScreen.open(uiController)
 				TextXAlignment = Enum.TextXAlignment.Left,
 				Text = "Create Listing",
 			}),
-			scope:New("TextBox")({
+			-- Compound picker: select an owned compound by name (no raw id typing).
+			scope:New("TextLabel")({
 				LayoutOrder = 2,
-				Size = UDim2.new(1, 0, 0, 40),
+				Size = UDim2.new(1, 0, 0, 18),
+				BackgroundTransparency = 1,
+				TextColor3 = Theme.Colors.TextSecondary,
+				FontFace = Theme.Font.Body,
+				TextSize = 12,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Text = scope:Computed(function(use)
+					local id = use(modalCompound)
+					if id == "" then
+						return "Select a compound to sell:"
+					end
+					return "Selling: " .. compoundName(id)
+				end),
+			}),
+			scope:New("ScrollingFrame")({
+				LayoutOrder = 3,
+				Size = UDim2.new(1, 0, 0, 120),
 				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
-				TextColor3 = Theme.Colors.TextPrimary,
-				FontFace = Theme.Font.Body,
-				TextSize = 13,
-				PlaceholderText = "Compound ID",
-				Text = modalCompound,
-				ClearTextOnFocus = false,
-				[Fusion.OnChange("Text")] = function(val)
-					modalCompound:set(val)
-				end,
+				ScrollBarThickness = 4,
+				CanvasSize = UDim2.new(0, 0, 0, 0),
+				AutomaticCanvasSize = Enum.AutomaticSize.Y,
 				[Children] = {
 					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-					scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 8) }),
+					scope:New("UIListLayout")({
+						FillDirection = Enum.FillDirection.Vertical,
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, 2),
+					}),
+					scope:New("UIPadding")({
+						PaddingLeft = UDim.new(0, 4),
+						PaddingRight = UDim.new(0, 4),
+						PaddingTop = UDim.new(0, 4),
+						PaddingBottom = UDim.new(0, 4),
+					}),
+					scope:Computed(function(use)
+						local vault = use(vaultValue) or {}
+						-- Sort owned compounds by id for a stable list.
+						local ids = {}
+						for id, qty in pairs(vault) do
+							if (qty or 0) > 0 then
+								table.insert(ids, id)
+							end
+						end
+						table.sort(ids)
+						if #ids == 0 then
+							return {
+								scope:New("TextLabel")({
+									Size = UDim2.new(1, 0, 0, 28),
+									BackgroundTransparency = 1,
+									TextColor3 = Theme.Colors.TextSecondary,
+									FontFace = Theme.Font.Body,
+									TextSize = 12,
+									Text = "No compounds in your vault yet.",
+								}),
+							}
+						end
+						local rows = {}
+						for i, id in ipairs(ids) do
+							local qty = vault[id]
+							rows[i] = scope:New("TextButton")({
+								Size = UDim2.new(1, 0, 0, 28),
+								BackgroundColor3 = scope:Computed(function(u)
+									return u(modalCompound) == id and Theme.Colors.Accent
+										or Theme.Colors.Surface
+								end),
+								BorderSizePixel = 0,
+								AutoButtonColor = true,
+								TextColor3 = Theme.Colors.TextPrimary,
+								FontFace = Theme.Font.Body,
+								TextSize = 13,
+								TextXAlignment = Enum.TextXAlignment.Left,
+								Text = "  " .. compoundName(id) .. "  ×" .. tostring(qty),
+								[OnEvent("Activated")] = function()
+									modalCompound:set(id)
+								end,
+								[Children] = {
+									scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+								},
+							})
+						end
+						return rows
+					end),
 				},
 			}),
 			scope:New("TextBox")({
-				LayoutOrder = 3,
+				LayoutOrder = 4,
 				Size = UDim2.new(1, 0, 0, 40),
 				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
@@ -295,7 +382,7 @@ function MarketScreen.open(uiController)
 				},
 			}),
 			scope:New("TextBox")({
-				LayoutOrder = 4,
+				LayoutOrder = 5,
 				Size = UDim2.new(1, 0, 0, 40),
 				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
@@ -314,7 +401,7 @@ function MarketScreen.open(uiController)
 				},
 			}),
 			scope:New("TextLabel")({
-				LayoutOrder = 5,
+				LayoutOrder = 6,
 				Size = UDim2.new(1, 0, 0, 20),
 				BackgroundTransparency = 1,
 				TextColor3 = Theme.Colors.TextSecondary,
@@ -323,7 +410,7 @@ function MarketScreen.open(uiController)
 				Text = feePreview,
 			}),
 			scope:New("Frame")({
-				LayoutOrder = 6,
+				LayoutOrder = 7,
 				Size = UDim2.new(1, 0, 0, 44),
 				BackgroundTransparency = 1,
 				[Children] = {

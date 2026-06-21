@@ -22,6 +22,9 @@
 --   "grantRank",       amount                 → adds current-run rank points (Prestige gate test)
 --   "qualifyJoint"                            → grants §17 T4 joint-synth qualification
 --   "claimPatent",     compoundId             → simulates a natural patent claim (contest test)
+--   "joinSyndicate"                           → joins another online player's syndicate (local
+--                                               2-player test; bypasses invite, which rejects
+--                                               Studio's negative test userIds)
 --   "simulateOffline", hours?                 → backdates lastSeenAt + re-runs offline settle
 --   "dumpProfile"                             → returns a state snapshot
 
@@ -37,6 +40,7 @@ local AnnouncementService = require(ServerScriptService.Server.Services.Announce
 local PatentService = require(ServerScriptService.Server.Services.PatentService)
 local RankService = require(ServerScriptService.Server.Services.RankService)
 local EventService = require(ServerScriptService.Server.Services.EventService)
+local SyndicateService = require(ServerScriptService.Server.Services.SyndicateService)
 local SeedResolver = require(ReplicatedStorage.Shared.Core.SeedResolver)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 
@@ -195,6 +199,10 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		local week = SeedResolver.getCurrentWeekNumber(os.time())
 		RankService.archiveSprint(week)
 		return true, "archived sprint week " .. week
+	elseif cmd == "joinSyndicate" then
+		-- Force the caller into another online player's syndicate (skips invite; for the
+		-- local 2-player test where invite rejects the negative test userId).
+		return SyndicateService.debugForceJoinAnySyndicate(player)
 	elseif cmd == "dumpProfile" then
 		local data = DataService.getProfile(userId)
 		return true, {

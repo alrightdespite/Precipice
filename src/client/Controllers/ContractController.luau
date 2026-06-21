@@ -6,8 +6,14 @@ type ContractRecord = Types.ContractRecord
 
 local ContractController = {}
 
+-- Server ContractClaim returns a single { ok, err } table; RemoteController.invoke
+-- passes it through directly (no leading pcallOk). Normalize to (ok, err).
 function ContractController.claim(slotIndex: number): (boolean, string?)
-	return RemoteController.invoke("ContractClaim", slotIndex)
+	local res = RemoteController.invoke("ContractClaim", slotIndex)
+	if type(res) ~= "table" then
+		return false, "request failed"
+	end
+	return res.ok == true, res.err
 end
 
 function ContractController.getContracts(): { ContractRecord }

@@ -163,9 +163,9 @@ local function wireS2C()
 		StateController.set({ contracts = contracts })
 	end)
 
-	-- StreakUpdate
-	_remotes["StreakUpdate"].OnClientEvent:Connect(function(day: number, safeUntil: number)
-		StateController.set({ streak = { day = day, safeUntil = safeUntil } })
+	-- StreakUpdate: server fires a single { day, safeUntil } table
+	_remotes["StreakUpdate"].OnClientEvent:Connect(function(streak: { day: number, safeUntil: number })
+		StateController.set({ streak = streak })
 	end)
 
 	-- CosmeticUpdate: replace owned + equipped maps (§24)

@@ -791,17 +791,29 @@ function SyndicateScreen.open(uiController)
 								end),
 								OnClick = function()
 									if peek(disbandConfirm) then
+										disbandConfirm:set(false)
 										task.spawn(function()
 											local ok, err = SyndicateController.disbandConfirm()
 											if not ok then
 												setStatus(tostring(err))
 											end
 										end)
-										disbandConfirm:set(false)
 									else
-										disbandConfirm:set(true)
-										task.delay(4, function()
-											disbandConfirm:set(false)
+										-- Step 1: arm the server-side pending disband (sets _pendingDisbands);
+										-- without this, disbandConfirm fails with "no pending disband".
+										task.spawn(function()
+											local ok, vaultBalance, err = SyndicateController.disband()
+											if ok then
+												disbandConfirm:set(true)
+												setStatus(
+													string.format("Confirm — %s ◈ vault will be lost.", formatNum(vaultBalance))
+												)
+												task.delay(5, function()
+													disbandConfirm:set(false)
+												end)
+											else
+												setStatus(tostring(err))
+											end
 										end)
 									end
 								end,

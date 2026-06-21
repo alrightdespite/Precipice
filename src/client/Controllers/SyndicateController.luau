@@ -46,12 +46,21 @@ function SyndicateController.expandCap(): (boolean, string?)
 	return RemoteController.invoke("SyndicateExpandCap")
 end
 
-function SyndicateController.disband(): (boolean, string?)
-	return RemoteController.invoke("SyndicateDisband")
+-- Step 1: arms the server-side pending disband and returns (ok, vaultBalance, err).
+-- The server returns (vaultBalance, ok, err) directly (invoke passes values through);
+-- on transport failure invoke returns (false, errString).
+function SyndicateController.disband(): (boolean, number, string?)
+	local vaultBalance, ok, err = RemoteController.invoke("SyndicateDisband")
+	if type(vaultBalance) == "number" and ok == true then
+		return true, vaultBalance, nil
+	end
+	return false, 0, tostring(err or ok or "request failed")
 end
 
+-- Step 2: executes the disband. Server returns (ok, err).
 function SyndicateController.disbandConfirm(): (boolean, string?)
-	return RemoteController.invoke("SyndicateDisbandConfirm")
+	local ok, err = RemoteController.invoke("SyndicateDisbandConfirm")
+	return ok == true, err
 end
 
 function SyndicateController.getSyndicate(): SyndicateData?

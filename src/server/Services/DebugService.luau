@@ -20,6 +20,8 @@
 --   "setPrestigeLevel", level                 → sets prestige.level (test PrestigeScreen)
 --   "startEvent",      fluxAmount?            → starts a debug seasonal event + grants Flux
 --   "grantRank",       amount                 → adds current-run rank points (Prestige gate test)
+--   "qualifyJoint"                            → grants §17 T4 joint-synth qualification
+--   "claimPatent",     compoundId             → simulates a natural patent claim (contest test)
 --   "simulateOffline", hours?                 → backdates lastSeenAt + re-runs offline settle
 --   "dumpProfile"                             → returns a state snapshot
 
@@ -113,6 +115,22 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 			RankService.addScore(player, data, n, "synthesis")
 		end)
 		return true, "granted rank " .. n .. " (currentRun=" .. DataService.getProfile(userId).rank.currentRun .. ")"
+	elseif cmd == "qualifyJoint" then
+		-- Grants the §17 T4 joint-synthesis qualification so Joint Synthesis is testable
+		-- without grinding a natural T4 completion.
+		DataService.updateProfile(userId, function(data)
+			data.prestige.jointQualLifetime = true
+		end)
+		return true, "joint qualification granted"
+	elseif cmd == "claimPatent" then
+		-- Simulates a natural-synthesis patent claim (world-first / contest / queue) so the
+		-- multi-player patent flow is testable without the full synth+reveal sequence.
+		local cid = tostring(arg1)
+		if not Compounds[cid] then
+			return false, "unknown compound: " .. cid
+		end
+		local didClaim = PatentService.recordNaturalSynthesis(player, cid, DataService.getProfile(userId), os.time())
+		return true, "claimPatent " .. cid .. " didClaim=" .. tostring(didClaim)
 	elseif cmd == "simulateOffline" then
 		-- Backdates lastSeenAt then re-runs the login offline settle, so the offline-income
 		-- time-gap path (running slots → passive income + offline completions) is testable.

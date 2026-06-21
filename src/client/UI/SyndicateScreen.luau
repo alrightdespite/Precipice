@@ -669,7 +669,7 @@ function SyndicateScreen.open(uiController)
 						table.insert(
 							items,
 							scope:New("Frame")({
-								LayoutOrder = i,
+								LayoutOrder = i, AutomaticSize = Enum.AutomaticSize.Y,
 								Size = UDim2.new(1, 0, 0, 44),
 								BackgroundColor3 = Theme.Colors.SurfaceRaised,
 								BorderSizePixel = 0,
@@ -677,7 +677,7 @@ function SyndicateScreen.open(uiController)
 									scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
 									scope:New("UIPadding")({
 										PaddingLeft = UDim.new(0, 12),
-										PaddingRight = UDim.new(0, 96),
+										PaddingRight = UDim.new(0, 10),
 										PaddingTop = UDim.new(0, 4),
 									}),
 									scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 2) }),
@@ -705,7 +705,7 @@ function SyndicateScreen.open(uiController)
 									}),
 									scope:New("Frame")({
 										Size = UDim2.fromOffset(80, 32),
-										Position = UDim2.new(1, -88, 0.5, -16),
+										LayoutOrder = 3,
 										BackgroundTransparency = 1,
 										[Children] = {
 											Components.Button(scope, {

@@ -19,6 +19,7 @@
 --   "archiveSprint"                           → archives this week's Sprint + awards champions
 --   "setPrestigeLevel", level                 → sets prestige.level (test PrestigeScreen)
 --   "startEvent",      fluxAmount?            → starts a debug seasonal event + grants Flux
+--   "grantRank",       amount                 → adds current-run rank points (Prestige gate test)
 --   "simulateOffline", hours?                 → backdates lastSeenAt + re-runs offline settle
 --   "dumpProfile"                             → returns a state snapshot
 
@@ -104,6 +105,14 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		end)
 		EventService.onLogin(player, DataService.getProfile(userId)) -- fires FluxUpdate
 		return true, "event started, flux=" .. amount
+	elseif cmd == "grantRank" then
+		-- Adds current-run rank points (uncapped "synthesis" source) so the Prestige
+		-- reset (250k rank gate) is testable. Fires RankUpdate.
+		local n = math.max(0, math.floor(tonumber(arg1) or 0))
+		DataService.updateProfile(userId, function(data)
+			RankService.addScore(player, data, n, "synthesis")
+		end)
+		return true, "granted rank " .. n .. " (currentRun=" .. DataService.getProfile(userId).rank.currentRun .. ")"
 	elseif cmd == "simulateOffline" then
 		-- Backdates lastSeenAt then re-runs the login offline settle, so the offline-income
 		-- time-gap path (running slots → passive income + offline completions) is testable.

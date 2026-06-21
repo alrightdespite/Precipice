@@ -115,7 +115,7 @@ function MarketScreen.open(uiController)
 					FontFace = Theme.Font.Body,
 					TextSize = 11,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = formatNum(entry.pricePerUnit or 0) .. " ◈ each · " .. tostring(entry.sellerUserId or "?"),
+					Text = formatNum(entry.price or 0) .. " ◈ each · " .. tostring(entry.sellerId or "?"),
 				}),
 				scope:New("Frame")({
 					Name = "ActionWrap",

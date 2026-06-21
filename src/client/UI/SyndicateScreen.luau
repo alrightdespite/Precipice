@@ -23,10 +23,13 @@ local function formatNum(n: number): string
 	return tostring(math.floor(n))
 end
 
+-- Keys/costs must match SyndicateService.purchaseUpgrade's validUpgrades + the
+-- §17 crest progression (animated requires crest, broadcast requires animated).
 local SYNDICATE_UPGRADES = {
-	{ key = "extraSlot", label = "Extra Joint Slot", cost = 50000 },
-	{ key = "vaultBonus", label = "Vault Bonus", cost = 25000 },
-	{ key = "speedBoost", label = "Speed Boost", cost = 100000 },
+	{ key = "thirdSlot", label = "Third Joint Slot", cost = EconomyConstants.SYNDICATE_THIRD_SLOT_COST },
+	{ key = "crest", label = "Syndicate Crest", cost = EconomyConstants.SYNDICATE_CREST_COST },
+	{ key = "animatedCrest", label = "Animated Crest", cost = EconomyConstants.SYNDICATE_ANIMATED_CREST_COST },
+	{ key = "broadcastCrest", label = "Broadcast Crest", cost = EconomyConstants.SYNDICATE_BROADCAST_CREST_COST },
 }
 
 local SyndicateScreen = {}
@@ -470,7 +473,7 @@ function SyndicateScreen.open(uiController)
 							for _ in pairs(syn.members) do
 								count += 1
 							end
-							return count .. "/" .. (syn.memberCap or 10) .. " members · " .. formatNum(syn.vaultPellets) .. " ◈ vault"
+							return count .. "/" .. (syn.memberCap or 10) .. " members · " .. formatNum(syn.vaultBalance or 0) .. " ◈ vault"
 						end),
 					}),
 				},

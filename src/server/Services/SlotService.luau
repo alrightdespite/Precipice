@@ -78,6 +78,7 @@ end
 
 local function settleOfflineForPlayer(userId: number)
 	local offlineResult = nil
+	local completedIndices = {}
 
 	DataService.updateProfile(userId, function(data)
 		local now = os.time()
@@ -131,6 +132,7 @@ local function settleOfflineForPlayer(userId: number)
 				local newWork = math.max(0, slot.workRemaining - workDone)
 				if newWork <= 0 then
 					VaultService.applyAward(data, slot.compoundId, 1)
+					table.insert(completedIndices, slot.index)
 				else
 					table.insert(newSlots, {
 						index = slot.index,
@@ -166,9 +168,24 @@ local function settleOfflineForPlayer(userId: number)
 		local data = DataService.getProfile(userId)
 		-- Push vault state (may include compounds awarded offline)
 		VaultService.fireVaultUpdate(player, data)
-		-- Push current slot state to client
+		-- Clear slots that completed offline (removed from data.slots → the client would
+		-- otherwise keep showing them as running).
+		for _, index in ipairs(completedIndices) do
+			fireSlotCleared(player, index)
+		end
+		-- Push remaining (still-running) slot state to client
 		for _, slot in ipairs(data.slots) do
 			fireSlotUpdate(player, slot)
+		end
+		-- Push the new balance so the HUD reflects offline pellet income.
+		if offlineResult then
+			RemoteService.getEvent("BalanceUpdate"):FireClient(
+				player,
+				data.balances.pellets,
+				data.balances.catalysts,
+				data.monetization.rushUses,
+				data.monetization.timerSkipUses or 0
+			)
 		end
 	end
 end
@@ -629,6 +646,12 @@ function SlotService.forceCompleteSlot(player: Player, slotIndex: number): boole
 		return true
 	end
 	return false
+end
+
+-- Studio/debug only (DebugService backdates data.lastSeenAt first): re-runs the same
+-- offline settle that fires automatically at login, so the time-gap path is testable.
+function SlotService.settleOfflineNow(userId: number)
+	settleOfflineForPlayer(userId)
 end
 
 function SlotService.init()

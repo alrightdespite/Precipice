@@ -73,7 +73,8 @@ Market full loop · Syndicate lifecycle · Joint Synthesis T6/T7 · Exotics (dec
 - [x] **Exotic id scheme** — confirmed `EX_001..EX_120` (120 exotics); **no `T7_xx` compounds exist** (`T7_01`=nil, Compounds T6=15/T7=0); `resolveExotic(T6_01+T6_01)=EX_001`. Matches the handoff flag. ✓
 - [x] **Events gate** — `BlueprintPurchase` rejects "no active event" when none active. ✓
 - ⏭️ **Needs 2 clients:** cross-player Market buy + seller PendingCredits, patent contests/challenges, Joint Synthesis (syndicate + T4 qual + partner), plot tiling.
-- ⏭️ **Needs special setup:** Monetization receipts (real Robux dev-product purchase), Offline income (logout/login time gap), Prestige full reset (needs 250k rank + 500k pellets — blockers verified, reset table is Lune-covered).
+- [x] **Offline income** — DONE 2026-06-20 (debug `simulateOffline <hours>` backdates lastSeenAt + re-runs the login settle). 🐛 **FOUND + FIXED**: the offline settle only pushed slot state for *surviving* slots and never fired a BalanceUpdate — so slots that **completed offline stayed shown as running** on the client and the HUD pellet income was stale until another event fired. Now it `fireSlotCleared`s each offline-completed slot and fires BalanceUpdate. Live-verified: started a T1_01 extraction → `simulateOffline 4` → +743 pellets (passive), slot drained + compound awarded to vault, **client slot card cleared to "Slot idle" and HUD updated to 11.6K**.
+- ⏭️ **Needs special setup (still):** Monetization receipts (real Robux dev-product purchase), Prestige full reset (needs 250k rank + 500k pellets — blockers verified, reset table is Lune-covered).
 
 ### F. Map / world (Studio `.rbxl`, gitignored — manual save required)
 - 🔴 **SAVE chambers 7–10** (B4) — currently unsaved, lost on Studio close.

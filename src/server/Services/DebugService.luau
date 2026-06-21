@@ -19,6 +19,7 @@
 --   "archiveSprint"                           → archives this week's Sprint + awards champions
 --   "setPrestigeLevel", level                 → sets prestige.level (test PrestigeScreen)
 --   "startEvent",      fluxAmount?            → starts a debug seasonal event + grants Flux
+--   "simulateOffline", hours?                 → backdates lastSeenAt + re-runs offline settle
 --   "dumpProfile"                             → returns a state snapshot
 
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -103,6 +104,15 @@ local function handle(player: Player, cmd: any, arg1: any, arg2: any): (boolean,
 		end)
 		EventService.onLogin(player, DataService.getProfile(userId)) -- fires FluxUpdate
 		return true, "event started, flux=" .. amount
+	elseif cmd == "simulateOffline" then
+		-- Backdates lastSeenAt then re-runs the login offline settle, so the offline-income
+		-- time-gap path (running slots → passive income + offline completions) is testable.
+		local hours = tonumber(arg1) or 4
+		DataService.updateProfile(userId, function(data)
+			data.lastSeenAt = os.time() - math.floor(hours * 3600)
+		end)
+		SlotService.settleOfflineNow(userId)
+		return true, "simulated " .. hours .. "h offline"
 	elseif cmd == "grantCompound" then
 		local compoundId = tostring(arg1)
 		local qty = math.max(1, math.floor(tonumber(arg2) or 1))

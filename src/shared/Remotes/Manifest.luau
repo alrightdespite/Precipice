@@ -345,14 +345,19 @@ local Manifest: { RemoteEntry } = {
 		name = "PrestigeRequest",
 		kind = "Function",
 		direction = "C2S",
-		rateLimit = 0.1,
+		-- Read-only eligibility check, fired on every PrestigeScreen open. 0.1/s (1 per
+		-- 10s) made reopening within 10s silently fail; 2/s keeps the on-open check
+		-- reliable while still throttling spam (no mutation, so cheap).
+		rateLimit = 2,
 		payloadDesc = "() → blockers: string[]?, ok: boolean",
 	},
 	{
 		name = "PrestigeConfirm",
 		kind = "Function",
 		direction = "C2S",
-		rateLimit = 0.1,
+		-- Mutating + irreversible, but the 2-step UI means one call per attempt; 0.5/s
+		-- (1 per 2s) avoids the long "nothing happened, then it worked" delay.
+		rateLimit = 0.5,
 		payloadDesc = "() → ok: boolean, err: string?",
 	},
 

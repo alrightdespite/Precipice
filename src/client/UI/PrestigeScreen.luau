@@ -69,21 +69,29 @@ function PrestigeScreen.open(uiController)
 	local isLoading = scope:Value(false)
 	local confirmStep = scope:Value(false) -- two-step confirm
 	local statusMsg = scope:Value("")
+	-- True until the on-open eligibility check resolves. Keeps the Prestige button
+	-- disabled (not misleadingly enabled) while blockers are still unknown — otherwise
+	-- a rate-limited/in-flight check would show an enabled button that fails on click.
+	local checking = scope:Value(true)
 
 	local hasBlockers = scope:Computed(function(use)
 		return #use(blockers) > 0
 	end)
 
-	-- Check blockers on open
+	-- Check blockers on open. Retry a couple times if the request fails (transport /
+	-- rate-limit), so the button never gets stuck disabled on a transient miss.
 	task.spawn(function()
-		local ok, result = PrestigeController.request()
-		if ok then
-			if type(result) == "table" then
-				blockers:set(result)
-			else
-				blockers:set({})
+		for attempt = 1, 3 do
+			local ok, result = PrestigeController.request()
+			if ok then
+				blockers:set(type(result) == "table" and result or {})
+				break
+			end
+			if attempt < 3 then
+				task.wait(0.6)
 			end
 		end
+		checking:set(false)
 	end)
 
 	local function buildListItem(text: string, color: Color3, icon: string)
@@ -373,12 +381,17 @@ function PrestigeScreen.open(uiController)
 								[Children] = {
 									Components.Button(scope, {
 										Text = scope:Computed(function(use)
+											if use(checking) then
+												return "Checking…"
+											end
 											return use(confirmStep) and "Confirm — cannot be undone" or "Prestige"
 										end),
 										Style = scope:Computed(function(use)
 											return use(confirmStep) and "danger" or "primary"
 										end) :: any,
-										Disabled = hasBlockers,
+										Disabled = scope:Computed(function(use)
+											return use(checking) or use(hasBlockers)
+										end),
 										OnClick = function()
 											if peek(confirmStep) then
 												isLoading:set(true)

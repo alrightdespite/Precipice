@@ -355,9 +355,10 @@ local Manifest: { RemoteEntry } = {
 		name = "PrestigeConfirm",
 		kind = "Function",
 		direction = "C2S",
-		-- Mutating + irreversible, but the 2-step UI means one call per attempt; 0.5/s
-		-- (1 per 2s) avoids the long "nothing happened, then it worked" delay.
-		rateLimit = 0.5,
+		-- Mutating + irreversible, but the 2-step UI + isLoading guard mean one call per
+		-- attempt; 2/s avoids throttling a legitimate (re)confirm tap. Server re-checks
+		-- blockers and the reset self-blocks (rank→0) so repeated calls are harmless.
+		rateLimit = 2,
 		payloadDesc = "() → ok: boolean, err: string?",
 	},
 

@@ -384,28 +384,36 @@ function PrestigeScreen.open(uiController)
 											if use(checking) then
 												return "Checking…"
 											end
+											if use(isLoading) then
+												return "Working…"
+											end
 											return use(confirmStep) and "Confirm — cannot be undone" or "Prestige"
 										end),
 										Style = scope:Computed(function(use)
 											return use(confirmStep) and "danger" or "primary"
 										end) :: any,
 										Disabled = scope:Computed(function(use)
-											return use(checking) or use(hasBlockers)
+											return use(checking) or use(hasBlockers) or use(isLoading)
 										end),
 										OnClick = function()
+											if peek(isLoading) then
+												return -- a confirm is already in flight; ignore extra clicks
+											end
 											if peek(confirmStep) then
 												isLoading:set(true)
 												task.spawn(function()
 													local ok, err = PrestigeController.confirm()
 													isLoading:set(false)
 													if ok then
+														confirmStep:set(false)
 														if uiController then
 															uiController.openScreen("Home")
 														end
 													else
-														statusMsg:set(tostring(err))
+														-- Keep the confirm armed so a transient failure (e.g. a
+														-- rate-limit hiccup) is one more click, not the full two-step.
+														statusMsg:set(tostring(err) .. " — tap Confirm again")
 													end
-													confirmStep:set(false)
 												end)
 											else
 												confirmStep:set(true)

@@ -225,18 +225,24 @@ function PrestigeService.init()
 		SlotService.fireSlotCap(player, _dataService.getProfile(player.UserId))
 
 		-- Push the wiped balance + vault so the HUD and vault UI reflect the §22 reset
-		-- (pellets floored to 500, vault cleared). Without these the client shows stale
-		-- pre-prestige values until the next unrelated update.
-		local freshData = _dataService.getProfile(player.UserId)
-		_remoteService.getEvent("BalanceUpdate"):FireClient(
-			player,
-			freshData.balances.pellets,
-			freshData.balances.catalysts,
-			freshData.monetization.rushUses,
-			freshData.monetization.timerSkipUses or 0
-		)
-		local VaultService = require(ServerScriptService.Server.Services.VaultService)
-		VaultService.fireVaultUpdate(player, freshData)
+		-- (pellets floored to 500, vault cleared). Wrapped in pcall: this is a cosmetic
+		-- client refresh and must NEVER abort the (already-committed) prestige if a push
+		-- errors — the warn surfaces the cause without failing the confirm.
+		local pushOk, pushErr = pcall(function()
+			local fresh = _dataService.getProfile(player.UserId)
+			_remoteService.getEvent("BalanceUpdate"):FireClient(
+				player,
+				fresh.balances.pellets,
+				fresh.balances.catalysts,
+				fresh.monetization and fresh.monetization.rushUses or 0,
+				fresh.monetization and fresh.monetization.timerSkipUses or 0
+			)
+			local VaultService = require(ServerScriptService.Server.Services.VaultService)
+			VaultService.fireVaultUpdate(player, fresh)
+		end)
+		if not pushOk then
+			warn("PrestigeService: post-reset client push failed —", pushErr)
+		end
 
 		_analyticsService.track(_analyticsService.Events.PRESTIGE or "prestige", {
 			userId = player.UserId,

@@ -1,8 +1,29 @@
 # Status
 
-## Current phase: Phase 14 — Finish-line build (planned). Phase 13 (Studio debug pass) complete.
+## Current phase: Phase A (in-world stations) DONE → Phase B (full UI restyle) NEXT. Phase 14 backend complete.
 
-**Last updated:** 2026-06-21 (Session 4: offline-seller rank fix + map polish)
+**Last updated:** 2026-06-22 (Session 4 — see `docs/SESSION4_HANDOFF.md` for the full onboarding)
+
+> **Session 4 summary (HEAD `6fe3652`, all pushed; 525 tests green, selene 0/0):** finished the last
+> Phase-14 items + hardening, then built Phase A. Done this session:
+> offline-seller market rank credit (2-player verified) · map polish (WingLight dim + plot stride via
+> PlotBounds + resized Grass) · joint-synth full 2-player e2e · Market sell picker (pick by name) ·
+> `joinSyndicate` studioOnly debug · 4 sweep follow-ups (Hall-of-Fame UI/`ChampionshipsUpdate`,
+> leaderboard display names, Event blueprint persistence, per-party `PatentResolved`) · **boot-race
+> fix** (`RemoteController` WaitForChild + RemoteService parents folder last — killed the intermittent
+> `missing remote` boot error) · patent-release announcements · +7 Lune tests · selene 155→0 warnings ·
+> **Phase A: 5 in-world station terminals** (Vault/Market/Syndicate/Leaderboard/Prestige) + new
+> `VaultScreen` + `StationController` (verified live via the E-prompt path).
+>
+> **⚠️ Map unsaved:** `Lab.Stations`, chambers 7–10, `PlotBounds`, resized `Grass` are in the gitignored
+> `.rbxl` — **Ctrl+S in Studio** to persist or they're lost on close.
+>
+> **NEXT — Phase B (approved, not started):** full UI overhaul to a Modern rounded "sim-game" look
+> (rounded cards, gradient backdrops, 3D pill buttons, bold rounded headers, shadows + hover/press
+> motion). Functions unchanged, frontend only. Foundation first (`Theme.luau` + `Components.luau`),
+> then per-screen migration (~14 screens), verify + commit in batches. Details in SESSION4_HANDOFF.md.
+>
+> **Still gated on the user:** Robux monetization IDs · analytics vendor pick · economy workbooks.
 
 ## Phase 14 — Finish-line build (planned)
 

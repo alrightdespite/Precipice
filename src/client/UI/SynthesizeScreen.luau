@@ -283,41 +283,73 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 	local function buildLogRow(entry: { compoundId: string, recipeId: string?, discoveredAt: number })
 		local tier = getTier(entry.compoundId)
 		return scope:New("Frame")({
-			Size = UDim2.new(1, 0, 0, 40),
+			Size = UDim2.new(1, 0, 0, 44),
 			BackgroundColor3 = Theme.Colors.SurfaceRaised,
 			BorderSizePixel = 0,
 			[Children] = {
-				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-				scope:New("UIPadding")({
-					PaddingLeft = UDim.new(0, 10),
-					PaddingRight = UDim.new(0, 80),
-					PaddingTop = UDim.new(0, 6),
-					PaddingBottom = UDim.new(0, 6),
+				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+				scope:New("UIStroke")({
+					Color = Theme.Colors.Stroke,
+					Thickness = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 				}),
+				-- tier badge (left)
+				scope:New("Frame")({
+					Size = UDim2.fromOffset(36, 24),
+					AnchorPoint = Vector2.new(0, 0.5),
+					Position = UDim2.new(0, 10, 0.5, 0),
+					BackgroundColor3 = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary,
+					BorderSizePixel = 0,
+					[Children] = {
+						scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
+						scope:New("TextLabel")({
+							Size = UDim2.fromScale(1, 1),
+							BackgroundTransparency = 1,
+							TextColor3 = Color3.new(1, 1, 1),
+							FontFace = Theme.Font.Value,
+							TextSize = 12,
+							TextXAlignment = Enum.TextXAlignment.Center,
+							Text = "T" .. tier,
+						}),
+					},
+				}),
+				-- name (middle)
 				scope:New("TextLabel")({
-					Size = UDim2.new(1, 0, 1, 0),
+					Size = UDim2.new(1, -150, 1, 0),
+					Position = UDim2.fromOffset(56, 0),
 					BackgroundTransparency = 1,
 					TextColor3 = Theme.Colors.TextPrimary,
-					FontFace = Theme.Font.Label,
-					TextSize = 13,
+					FontFace = Theme.Font.Value,
+					TextSize = 14,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = entry.compoundId,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Text = (Compounds[entry.compoundId] and Compounds[entry.compoundId].name) or entry.compoundId,
 				}),
-				Components.TierBadge(scope, { Tier = tier }),
-				Components.Button(scope, {
-					Text = "Synth →",
-					Size = UDim2.fromOffset(72, 30),
-					Style = "secondary",
-					OnClick = function()
-						-- Pre-fill inputs if a valid recipe is known
-						if entry.recipeId then
-							local parts = entry.recipeId:split("+")
-							if parts[1] and parts[2] then
-								input1:set(parts[1])
-								input2:set(parts[2])
-							end
-						end
-					end,
+				-- synth button (right)
+				scope:New("Frame")({
+					Size = UDim2.fromOffset(78, 32),
+					AnchorPoint = Vector2.new(1, 0.5),
+					Position = UDim2.new(1, -8, 0.5, 0),
+					BackgroundTransparency = 1,
+					[Children] = {
+						Components.Button(scope, {
+							Text = "Synth →",
+							Size = UDim2.fromScale(1, 1),
+							Corner = Theme.Layout.CornerRadiusSmall,
+							TextSize = 13,
+							Style = "secondary",
+							OnClick = function()
+								-- Pre-fill inputs if a valid recipe is known
+								if entry.recipeId then
+									local parts = entry.recipeId:split("+")
+									if parts[1] and parts[2] then
+										input1:set(parts[1])
+										input2:set(parts[2])
+									end
+								end
+							end,
+						}),
+					},
 				}),
 			},
 		})
@@ -358,7 +390,7 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 			[Children] = {
 				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
 				scope:New("UIStroke")({
-					Color = Theme.Colors.SurfaceRaised,
+					Color = Theme.Colors.Stroke,
 					Thickness = 1,
 					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 				}),
@@ -801,17 +833,39 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
+			-- Backdrop gradient wash
+			scope:New("Frame")({
+				Name = "Bg",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundColor3 = Theme.Colors.Background,
+				BorderSizePixel = 0,
+				ZIndex = 0,
+				[Children] = {
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.Backdrop,
+						Rotation = Theme.Gradient.BackdropRotation,
+					}),
+				},
+			}),
 			scope:New("TextButton")({
 				Name = "CloseBtn",
 				Size = UDim2.fromOffset(36, 36),
 				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
+				Position = UDim2.new(1, -10, 0, 10),
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				Text = "✕",
 				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
+				FontFace = Theme.Font.Value,
+				TextSize = 18,
 				ZIndex = 20,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.Stroke,
+						Thickness = 1,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					}),
+				},
 				[OnEvent("Activated")] = function()
 					if uiController then
 						uiController.openScreen("Home")
@@ -822,15 +876,30 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 			scope:New("Frame")({
 				Name = "Header",
 				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 				[Children] = {
+					scope:New("UIGradient")({
+						Color = ColorSequence.new({
+							ColorSequenceKeypoint.new(0, Theme.Colors.SurfaceRaised),
+							ColorSequenceKeypoint.new(1, Theme.Colors.Surface),
+						}),
+						Rotation = 90,
+					}),
+					scope:New("Frame")({
+						Name = "Underline",
+						Size = UDim2.new(1, 0, 0, 2),
+						AnchorPoint = Vector2.new(0, 1),
+						Position = UDim2.new(0, 0, 1, 0),
+						BackgroundColor3 = Theme.Colors.Accent,
+						BorderSizePixel = 0,
+					}),
 					scope:New("TextLabel")({
 						Size = UDim2.fromScale(1, 1),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
+						FontFace = Theme.Font.Display,
+						TextSize = 22,
 						TextXAlignment = Enum.TextXAlignment.Center,
 						Text = "Lab",
 					}),
@@ -840,11 +909,20 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 			scope:New("Frame")({
 				Name = "InputPanel",
 				Size = UDim2.new(1, -24, 0, 180),
-				Position = UDim2.fromOffset(12, 64),
+				Position = UDim2.fromOffset(12, 72),
 				BackgroundColor3 = Theme.Colors.Surface,
 				BorderSizePixel = 0,
 				[Children] = {
 					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.SurfaceSheen,
+						Rotation = Theme.Gradient.SurfaceSheenRotation,
+					}),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.Stroke,
+						Thickness = 1,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					}),
 					scope:New("UIPadding")({
 						PaddingLeft = UDim.new(0, 12),
 						PaddingRight = UDim.new(0, 12),

@@ -74,6 +74,10 @@ function LoadingScreen.open()
 		BackgroundColor3 = Theme.Colors.Background,
 		BorderSizePixel = 0,
 		[Children] = {
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.Backdrop,
+						Rotation = Theme.Gradient.BackdropRotation,
+					}),
 					-- Centered column
 					scope:New("Frame")({
 						Name = "Center",
@@ -120,11 +124,13 @@ function LoadingScreen.open()
 					-- Progress bar (2px, full width at 20% from bottom)
 					scope:New("Frame")({
 						Name = "BarBg",
-						Size = UDim2.new(0.7, 0, 0, 2),
+						Size = UDim2.new(0.7, 0, 0, 6),
 						Position = UDim2.new(0.15, 0, 0.78, 0),
-						BackgroundColor3 = Theme.Colors.SurfaceRaised,
+						BackgroundColor3 = Theme.Colors.SurfaceWell,
 						BorderSizePixel = 0,
+						ClipsDescendants = true,
 						[Children] = {
+							scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
 							scope:New("Frame")({
 								Name = "Fill",
 								Size = scope:Computed(function(use)
@@ -132,6 +138,16 @@ function LoadingScreen.open()
 								end),
 								BackgroundColor3 = Theme.Colors.Accent,
 								BorderSizePixel = 0,
+								[Children] = {
+									scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+									scope:New("UIGradient")({
+										Color = ColorSequence.new({
+											ColorSequenceKeypoint.new(0, Theme.Colors.Accent:Lerp(Color3.new(1, 1, 1), 0.2)),
+											ColorSequenceKeypoint.new(1, Theme.Colors.Accent),
+										}),
+										Rotation = 90,
+									}),
+								},
 							}),
 						},
 					}),

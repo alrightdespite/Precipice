@@ -9,13 +9,18 @@ local SyndicateController = require(script.Parent.Parent.Controllers.SyndicateCo
 local JointController = require(script.Parent.Parent.Controllers.JointController)
 
 local Children = Fusion.Children
-local OnEvent = Fusion.OnEvent
 local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
 local function formatNum(n: number): string
-	if n >= 1000000 then
-		return string.format("%.1fM", n / 1000000)
+	if n >= 1e12 then
+		return string.format("%.2fT", n / 1e12)
+	end
+	if n >= 1e9 then
+		return string.format("%.2fB", n / 1e9)
+	end
+	if n >= 1e6 then
+		return string.format("%.1fM", n / 1e6)
 	end
 	if n >= 1000 then
 		return string.format("%.1fK", n / 1000)
@@ -282,13 +287,19 @@ function SyndicateScreen.open(uiController)
 			scope:New("Frame")({
 				LayoutOrder = 1,
 				Size = UDim2.new(1, 0, 0, 68),
-				BackgroundColor3 = Theme.Colors.AccentDim,
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 				Visible = scope:Computed(function(use)
 					return use(pendingInviteValue) ~= nil
 				end),
 				[Children] = {
 					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.Accent,
+						Thickness = 1,
+						Transparency = 0.4,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					}),
 					scope:New("UIPadding")({
 						PaddingLeft = UDim.new(0, 12),
 						PaddingRight = UDim.new(0, 12),
@@ -830,39 +841,14 @@ function SyndicateScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			scope:New("TextButton")({
-				Name = "CloseBtn",
-				Size = UDim2.fromOffset(36, 36),
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
-				Text = "✕",
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
-				ZIndex = 20,
-				[OnEvent("Activated")] = function()
+			Components.Backdrop(scope, {}),
+			Components.ScreenHeader(scope, {
+				Title = "Syndicate",
+				OnClose = function()
 					if uiController then
 						uiController.openScreen("Home")
 					end
 				end,
-			}),
-			scope:New("Frame")({
-				Name = "Header",
-				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = "Syndicate",
-					}),
-				},
 			}),
 			scope:New("Frame")({
 				Name = "Content",

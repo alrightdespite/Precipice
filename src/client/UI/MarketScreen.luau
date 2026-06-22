@@ -13,8 +13,14 @@ local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
 local function formatNum(n: number): string
-	if n >= 1000000 then
-		return string.format("%.1fM", n / 1000000)
+	if n >= 1e12 then
+		return string.format("%.2fT", n / 1e12)
+	end
+	if n >= 1e9 then
+		return string.format("%.2fB", n / 1e9)
+	end
+	if n >= 1e6 then
+		return string.format("%.1fM", n / 1e6)
 	end
 	if n >= 1000 then
 		return string.format("%.1fK", n / 1000)
@@ -123,7 +129,7 @@ function MarketScreen.open(uiController)
 					FontFace = Theme.Font.Label,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = (entry.compoundId or "?") .. " ×" .. tostring(entry.quantity or 0),
+					Text = compoundName(entry.compoundId or "?") .. " ×" .. tostring(entry.quantity or 0),
 				}),
 				scope:New("TextLabel")({
 					LayoutOrder = 2,
@@ -170,43 +176,6 @@ function MarketScreen.open(uiController)
 				}),
 			},
 		})
-	end
-
-	-- Tab bar
-	local tabFrames = {}
-	for _, tabName in ipairs({ TAB_BROWSE, TAB_MY }) do
-		local t = tabName
-		table.insert(
-			tabFrames,
-			scope:New("TextButton")({
-				Size = UDim2.new(0.5, 0, 1, 0),
-				BackgroundColor3 = scope:Computed(function(use)
-					return use(activeTab) == t and Theme.Colors.AccentDim or Theme.Colors.Surface
-				end),
-				BorderSizePixel = 0,
-				Text = "",
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = scope:Computed(function(use)
-							return use(activeTab) == t and Theme.Colors.Accent or Theme.Colors.TextSecondary
-						end),
-						FontFace = Theme.Font.Label,
-						TextSize = 13,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = t,
-					}),
-				},
-				[OnEvent("Activated")] = function()
-					activeTab:set(t)
-					if t == TAB_BROWSE then
-						currentPage:set(1)
-						loadBrowse()
-					end
-				end,
-			})
-		)
 	end
 
 	-- Tier filter
@@ -471,49 +440,28 @@ function MarketScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			scope:New("TextButton")({
-				Name = "CloseBtn",
-				Size = UDim2.fromOffset(36, 36),
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
-				Text = "✕",
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
-				ZIndex = 20,
-				[OnEvent("Activated")] = function()
+			Components.Backdrop(scope, {}),
+			Components.ScreenHeader(scope, {
+				Title = "Market",
+				OnClose = function()
 					if uiController then
 						uiController.openScreen("Home")
 					end
 				end,
 			}),
-			scope:New("Frame")({
-				Name = "Header",
-				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = "Market",
-					}),
-				},
-			}),
-			scope:New("Frame")({
-				Name = "Tabs",
-				Size = UDim2.new(1, 0, 0, 44),
+			Components.TabBar(scope, {
 				Position = UDim2.fromOffset(0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal }),
-					table.unpack(tabFrames),
+				Active = activeTab,
+				OnSelect = function(k)
+					activeTab:set(k)
+					if k == TAB_BROWSE then
+						currentPage:set(1)
+						loadBrowse()
+					end
+				end,
+				Items = {
+					{ key = TAB_BROWSE, label = TAB_BROWSE },
+					{ key = TAB_MY, label = TAB_MY },
 				},
 			}),
 			-- Browse panel

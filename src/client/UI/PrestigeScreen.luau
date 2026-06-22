@@ -189,20 +189,33 @@ function PrestigeScreen.open(uiController)
 				Name = "Bg",
 				Size = UDim2.fromScale(1, 1),
 				BackgroundColor3 = Theme.Colors.Background,
-				BackgroundTransparency = 0.1,
+				BackgroundTransparency = 0.04,
 				BorderSizePixel = 0,
 				[Children] = {
-					-- Close X
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.Backdrop,
+						Rotation = Theme.Gradient.BackdropRotation,
+					}),
+					-- Close X (circular chip)
 					scope:New("TextButton")({
 						Name = "Close",
-						Size = UDim2.fromOffset(44, 44),
-						Position = UDim2.new(1, -48, 0, 4),
-						BackgroundTransparency = 1,
+						Size = UDim2.fromOffset(36, 36),
+						AnchorPoint = Vector2.new(1, 0),
+						Position = UDim2.new(1, -10, 0, 10),
+						BackgroundColor3 = Theme.Colors.SurfaceRaised,
 						Text = "✕",
 						TextColor3 = Theme.Colors.TextSecondary,
-						FontFace = Theme.Font.Header,
-						TextSize = 20,
+						FontFace = Theme.Font.Value,
+						TextSize = 18,
 						ZIndex = 10,
+						[Children] = {
+							scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+							scope:New("UIStroke")({
+								Color = Theme.Colors.Stroke,
+								Thickness = 1,
+								ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+							}),
+						},
 						[OnEvent("Activated")] = function()
 							if uiController then
 								uiController.openScreen("Home")
@@ -252,10 +265,16 @@ function PrestigeScreen.open(uiController)
 							scope:New("Frame")({
 								LayoutOrder = 3,
 								Size = UDim2.new(1, 0, 0, 44),
-								BackgroundColor3 = Theme.Colors.AccentDim,
+								BackgroundColor3 = Theme.Colors.SurfaceRaised,
 								BorderSizePixel = 0,
 								[Children] = {
 									scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+									scope:New("UIStroke")({
+										Color = Theme.Colors.Accent,
+										Thickness = 1,
+										Transparency = 0.4,
+										ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+									}),
 									scope:New("UIPadding")({
 										PaddingLeft = UDim.new(0, 12),
 										PaddingRight = UDim.new(0, 12),

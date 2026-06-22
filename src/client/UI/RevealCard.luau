@@ -7,10 +7,10 @@ local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Theme = require(script.Parent.Theme)
+local Components = require(script.Parent.Components)
 local RemoteController = require(script.Parent.Parent.Controllers.RemoteController)
 
 local Children = Fusion.Children
-local OnEvent = Fusion.OnEvent
 local doCleanup = Fusion.doCleanup
 
 local TIER_NAMES: { [number]: string } = {
@@ -52,7 +52,7 @@ function RevealCard.show(props: RevealCardProps)
 	local baseValue: number = (compound :: any).baseValue or 0
 	local flavorText: string = (compound :: any).flavor or ""
 
-	local borderColor = if props.isWorldFirst then Color3.fromHex("F59E0B") else tierColor
+	local borderColor = if props.isWorldFirst then Theme.Colors.Accent else tierColor
 	local cardHeight = if props.isWorldFirst then 380 else 300
 
 	local function doKeep()
@@ -74,11 +74,16 @@ function RevealCard.show(props: RevealCardProps)
 		patentBanner = scope:New("Frame")({
 			Name = "PatentBanner",
 			Size = UDim2.new(1, 0, 0, 88),
-			BackgroundColor3 = Color3.fromHex("78350F"),
+			BackgroundColor3 = Theme.Colors.SurfaceRaised,
 			BorderSizePixel = 0,
 			LayoutOrder = 0,
 			[Children] = {
 				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+				scope:New("UIStroke")({
+					Color = Theme.Colors.Accent,
+					Thickness = 1.5,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				}),
 				scope:New("UIPadding")({
 					PaddingLeft = UDim.new(0, 12),
 					PaddingRight = UDim.new(0, 12),
@@ -106,7 +111,7 @@ function RevealCard.show(props: RevealCardProps)
 					Text = "FIRST IN THE WORLD",
 					Size = UDim2.new(1, 0, 0, 20),
 					BackgroundTransparency = 1,
-					TextColor3 = Color3.fromHex("F59E0B"),
+					TextColor3 = Theme.Colors.Accent,
 					FontFace = Theme.Font.Label,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Center,
@@ -152,45 +157,46 @@ function RevealCard.show(props: RevealCardProps)
 		},
 	})
 
-	-- Button row children
-	local keepBtn = scope:New("TextButton")({
+	-- Button row children (signature 3D pills)
+	local keepBtn = scope:New("Frame")({
 		Name = "Keep",
 		Size = UDim2.new(0.5, -4, 1, 0),
-		BackgroundColor3 = Theme.Colors.Surface,
-		BorderSizePixel = 0,
-		Text = "Keep",
-		TextColor3 = Theme.Colors.TextPrimary,
-		FontFace = Theme.Font.Label,
-		TextSize = 14,
+		BackgroundTransparency = 1,
 		LayoutOrder = 1,
 		[Children] = {
-			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-			scope:New("UIStroke")({
-				Color = Theme.Colors.Accent,
-				Thickness = 1,
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Components.Button(scope, {
+				Text = "Keep",
+				Style = "secondary",
+				Size = UDim2.fromScale(1, 1),
+				OnClick = doKeep,
 			}),
 		},
-		[OnEvent("Activated")] = doKeep,
 	})
 
-	local sellLabel = "Sell for " .. tostring(baseValue) .. " Pellets"
-	local sellBtn = scope:New("TextButton")({
+	local sellLabel = "Sell for " .. tostring(baseValue) .. " ◈"
+	local sellBtn = scope:New("Frame")({
 		Name = "Sell",
 		Size = UDim2.new(0.5, -4, 1, 0),
-		BackgroundColor3 = Theme.Colors.Success,
-		BorderSizePixel = 0,
-		Text = sellLabel,
-		TextColor3 = Color3.new(1, 1, 1),
-		FontFace = Theme.Font.Label,
-		TextSize = 12,
+		BackgroundTransparency = 1,
 		LayoutOrder = 2,
-		[Children] = { scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }) },
-		[OnEvent("Activated")] = doSell,
+		[Children] = {
+			Components.Button(scope, {
+				Text = sellLabel,
+				Style = "success",
+				Size = UDim2.fromScale(1, 1),
+				TextSize = 13,
+				OnClick = doSell,
+			}),
+		},
 	})
 
 	local cardChildren: { any } = {
-		scope:New("UICorner")({ CornerRadius = UDim.new(0, 16) }),
+		scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusLarge }),
+		Components.dropShadow(scope, { Transparency = 0.4, Spread = 28 }),
+		scope:New("UIGradient")({
+			Color = Theme.Gradient.SurfaceSheen,
+			Rotation = Theme.Gradient.SurfaceSheenRotation,
+		}),
 		scope:New("UIStroke")({
 			Color = borderColor,
 			Thickness = 2,
@@ -237,7 +243,7 @@ function RevealCard.show(props: RevealCardProps)
 			Text = "⬡ " .. tostring(baseValue) .. " Pellets",
 			Size = UDim2.new(1, 0, 0, 22),
 			BackgroundTransparency = 1,
-			TextColor3 = Color3.fromHex("F59E0B"),
+			TextColor3 = Theme.Colors.Accent,
 			FontFace = Theme.Font.Value,
 			TextSize = 13,
 			TextXAlignment = Enum.TextXAlignment.Center,

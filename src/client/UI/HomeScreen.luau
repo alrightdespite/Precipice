@@ -6,7 +6,6 @@ local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local TimerMath = require(ReplicatedStorage.Shared.Core.TimerMath)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local Theme = require(script.Parent.Theme)
-local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 local SlotController = require(script.Parent.Parent.Controllers.SlotController)
 local HintController = require(script.Parent.Parent.Controllers.HintController)
@@ -69,11 +68,8 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, 
 		if slot.state == "EMPTY" then
 			return Theme.Colors.Surface
 		end
+		-- Tier-based accent could derive from Compounds[slot.compoundId].tier later; default for now.
 		local tier = 1
-		if slot.compoundId then
-			-- Tier lookup: derive from compound data if available (Phase 12C wires compounds)
-			-- For now approximate from mode
-		end
 		return Theme.Colors.Tier[tier] or Theme.Colors.Accent
 	end)
 

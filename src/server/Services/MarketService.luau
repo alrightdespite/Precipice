@@ -199,8 +199,7 @@ function MarketService.cancelListing(player: any, listingId: string): (boolean, 
 			return nil
 		end
 		cancelled = true
-		local updated = {}
-		for k, v in pairs(current) do updated[k] = v end
+		local updated = table.clone(current)
 		updated.status = "CANCELLED"
 		return updated
 	end)
@@ -268,8 +267,7 @@ function MarketService.buyListing(player: any, listingId: string): (boolean, str
 			return nil
 		end
 		purchased = true
-		local updated = {}
-		for k, v in pairs(current) do updated[k] = v end
+		local updated = table.clone(current)
 		updated.status = "SOLD"
 		return updated
 	end)
@@ -384,8 +382,7 @@ function MarketService.runExpirySweep(sweepNow: number?)
 					return nil
 				end
 				expired = true
-				local updated = {}
-				for k, v in pairs(current) do updated[k] = v end
+				local updated = table.clone(current)
 				updated.status = "EXPIRED"
 				return updated
 			end)

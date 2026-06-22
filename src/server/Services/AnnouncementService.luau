@@ -94,6 +94,24 @@ function AnnouncementService.announcePatentTransfer(compoundId: string, fromUser
 	end)
 end
 
+-- Patent released — the holder prestiged (§22) and a T4+ patent is unclaimed again, free for the
+-- next natural synthesiser. Global only at T4+ (mirrors transfer tiering, §15). Name may be
+-- offline, so resolve it off the caller's thread.
+function AnnouncementService.announcePatentReleased(compoundId: string, fromUserId: number, tier: number)
+	if tier < 4 then
+		return -- T2–T3 releases are not globally announced (§15)
+	end
+	_spawnFn(function()
+		local fromName = resolveName(fromUserId)
+		AnnouncementService.broadcast(
+			"patent_released",
+			string.format("⬡ PATENT RELEASED — the T%d patent on %s is unclaimed again after %s prestiged.", tier, compoundName(compoundId), fromName),
+			tier,
+			"released:" .. compoundId .. ":" .. tostring(fromUserId)
+		)
+	end)
+end
+
 -- World-first Exotic synthesis (§13/§15).
 function AnnouncementService.announceWorldFirstExotic(exoticId: string, claimantName: string)
 	AnnouncementService.broadcast(

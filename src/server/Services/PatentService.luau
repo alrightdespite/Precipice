@@ -316,6 +316,7 @@ end
 function PatentService.releaseAllForUser(userId: number, now: number?): number
 	now = now or os.time()
 	local released = 0
+	local announceT4Plus: { { compoundId: string, tier: number } } = {}
 
 	for compoundId, _ in pairs(_compounds) do
 		_ds:UpdateAsync("patent:" .. compoundId, function(record)
@@ -327,11 +328,21 @@ function PatentService.releaseAllForUser(userId: number, now: number?): number
 			newRecord.challengeQueue = {}
 			newRecord.immunityUntil = nil
 			released += 1
+			if (record.tier or 0) >= 4 then
+				table.insert(announceT4Plus, { compoundId = compoundId, tier = record.tier })
+			end
 			return newRecord
 		end)
 	end
 
-	-- TODO Phase 10: announce patent releases as transfers for T4+
+	-- §15/§22: a released T4+ patent is now claimable again — announce the vacancy globally
+	-- (cosmetic marquee; same tier policy as transfers). Done after the writes commit.
+	if _announcementService then
+		for _, p in ipairs(announceT4Plus) do
+			_announcementService.announcePatentReleased(p.compoundId, userId, p.tier)
+		end
+	end
+
 	return released
 end
 

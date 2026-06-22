@@ -4,3 +4,9 @@ std = "roblox"
 global_usage = "allow"
 unscoped_variables = "warn"
 shadowing = "warn"
+# House style — the codebase deliberately writes one-line injection helpers
+# (`function S._setX(x) _x = x end`) and explicit UDim2.new(scale, 0, ...) calls.
+# These are consistent conventions, not defects, so silence the stylistic lints and
+# keep the substantive ones (unused vars, manual table-clone, empty blocks) active.
+multiple_statements = "allow"
+roblox_manual_fromscale_or_fromoffset = "allow"

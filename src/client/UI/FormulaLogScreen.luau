@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local Theme = require(script.Parent.Theme)
-local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 local PatentController = require(script.Parent.Parent.Controllers.PatentController)
 
@@ -63,7 +62,6 @@ function FormulaLogScreen.open(uiController)
 	local function buildLogEntry(entry: { compoundId: string, recipeId: string?, discoveredAt: number })
 		local cid = entry.compoundId
 		local tier = getTier(cid)
-		local patent = patentsValue -- will be read below
 		local patentState = (StateController.get().patents[cid] or {}).state or "UNCLAIMED"
 		local patentColor = Theme.Colors.TextSecondary
 		if patentState == "HELD" or patentState == "IMMUNE" then

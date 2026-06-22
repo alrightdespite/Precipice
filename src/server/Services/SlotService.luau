@@ -19,7 +19,6 @@ local OfflineIncome = require(ReplicatedStorage.Shared.Core.OfflineIncome)
 local RecipeResolver = require(ReplicatedStorage.Shared.Core.RecipeResolver)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local EventCompounds = require(ReplicatedStorage.Shared.Data.EventCompounds)
-local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local AnalyticsService = require(ServerScriptService.Server.Services.AnalyticsService)
 
 local OFFLINE_RATE = 0.8 -- E1: offline work rate

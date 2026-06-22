@@ -80,6 +80,13 @@ local function setup()
 		GetPlayerByUserId = function(_self: any, userId: number)
 			return onlinePlayers[userId]
 		end,
+		GetPlayers = function(_self: any)
+			local list = {}
+			for _, p in pairs(onlinePlayers) do
+				table.insert(list, p)
+			end
+			return list
+		end,
 	}
 
 	local mockDataService = {
@@ -627,6 +634,38 @@ describe("SyndicateService — getJointSlotCount", function()
 			return rec
 		end)
 		expect(SyndicateService.getJointSlotCount(synId)).toBe(3)
+	end)
+end)
+
+-- ── debugForceJoinAnySyndicate (studio-only 2-player test helper) ────────────
+
+describe("SyndicateService — debugForceJoinAnySyndicate", function()
+	it("caller with no syndicate joins another online player's syndicate as Member", function()
+		local ctx = setup()
+		local synId = createSyndicate() -- player1 is Founder; player2 has none
+		local ok, err = SyndicateService.debugForceJoinAnySyndicate(player2)
+		expect(ok).toBeTrue()
+		expect(err).toBeNil()
+		local record = ctx.syndicateDs:GetAsync("syndicate:" .. synId)
+		expect(record.members[2]).toBe("Member")
+		expect(ctx.data2.syndicate ~= nil).toBeTrue()
+		expect(ctx.data2.syndicate.id).toBe(synId)
+		expect(ctx.data2.syndicate.role).toBe("Member")
+	end)
+
+	it("caller already in a syndicate: fails (idempotent guard)", function()
+		local _ = setup()
+		createSyndicate() -- player1 founds one
+		local ok, err = SyndicateService.debugForceJoinAnySyndicate(player1)
+		expect(ok).toBeFalse()
+		expect(err ~= nil).toBeTrue()
+	end)
+
+	it("no other online player has a syndicate: fails gracefully", function()
+		local _ = setup() -- neither player is in a syndicate
+		local ok, err = SyndicateService.debugForceJoinAnySyndicate(player2)
+		expect(ok).toBeFalse()
+		expect(err ~= nil).toBeTrue()
 	end)
 end)
 

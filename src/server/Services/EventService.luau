@@ -154,10 +154,7 @@ function EventService.awardFlux(player: any, data: any, source: string, tier: nu
 				if record == nil or not record.isActive then
 					return nil
 				end
-				local newRecord = {}
-				for k, v in pairs(record) do
-					newRecord[k] = v
-				end
+				local newRecord = table.clone(record)
 				newRecord.totalFluxEarned = (newRecord.totalFluxEarned or 0) + earned
 				if not newRecord.milestoneReached
 					and newRecord.totalFluxEarned >= newRecord.milestoneTarget

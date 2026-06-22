@@ -540,3 +540,52 @@ describe("MarketService — buyListing self-trade rejection", function()
 		expect(afterRecord.status).toBe("ACTIVE")
 	end)
 end)
+
+-- ── onCreditDrained (offline-seller rank/contract parity) ───────────────────
+
+describe("MarketService — onCreditDrained", function()
+	-- Inject recording rank/contract mocks over a fresh setup.
+	local function setupWithScoring()
+		local sellerData = defaultData()
+		setup({ [9001] = sellerData }, { [9001] = { UserId = 9001 } })
+
+		local rankCalls: { number } = {}
+		local contractCalls: { { progressType: string, amount: number } } = {}
+		MarketService._setRankService({
+			scoreMarketSale = function(_player: any, _data: any, proceeds: number)
+				table.insert(rankCalls, proceeds)
+			end,
+		})
+		MarketService._setContractService({
+			recordProgress = function(_player: any, _data: any, progressType: string, amount: number)
+				table.insert(contractCalls, { progressType = progressType, amount = amount })
+			end,
+		})
+		return sellerData, rankCalls, contractCalls
+	end
+
+	it("market_sale credit awards rank + contract progress equal to proceeds", function()
+		local sellerData, rankCalls, contractCalls = setupWithScoring()
+		MarketService.onCreditDrained(9001, sellerData, {
+			creditId = "market:x:9001",
+			amount = 4750,
+			source = "market_sale",
+		})
+		expect(#rankCalls).toBe(1)
+		expect(rankCalls[1]).toBe(4750)
+		expect(#contractCalls).toBe(1)
+		expect(contractCalls[1].progressType).toBe("market_sell_pellets")
+		expect(contractCalls[1].amount).toBe(4750)
+	end)
+
+	it("non-market_sale credit (e.g. patent dividend) is ignored", function()
+		local sellerData, rankCalls, contractCalls = setupWithScoring()
+		MarketService.onCreditDrained(9001, sellerData, {
+			creditId = "dividend:wk25:9001",
+			amount = 90800,
+			source = "patent_dividend",
+		})
+		expect(#rankCalls).toBe(0)
+		expect(#contractCalls).toBe(0)
+	end)
+end)

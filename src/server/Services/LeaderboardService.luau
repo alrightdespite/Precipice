@@ -98,12 +98,10 @@ local function handleLeaderboardRequest(player: any, board: any)
 		ods = _rankService.getChiefBoardOds()
 	end
 
-	-- Cache check
+	-- Cache check — refresh only on a miss; a hit falls through with cached entries.
 	local cacheEntry = _cache[board]
-	if cacheEntry.fetchedAt > 0 and now - cacheEntry.fetchedAt < CACHE_TTL then
-		-- cache hit — fall through with cached entries
-	else
-		-- Cache miss: fetch from ODS and update cache
+	local cacheHit = cacheEntry.fetchedAt > 0 and now - cacheEntry.fetchedAt < CACHE_TTL
+	if not cacheHit then
 		local fetched = fetchOdsEntries(ods)
 		cacheEntry.entries = fetched
 		cacheEntry.fetchedAt = now

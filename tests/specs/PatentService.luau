@@ -327,3 +327,49 @@ describe("PatentService — queue processing", function()
 		expect(record.challenge).toBeNil() -- immunity blocked the challenge
 	end)
 end)
+
+-- ── releaseAllForUser — prestige release + T4+ vacancy announcement (§22/§15) ─
+
+describe("PatentService — releaseAllForUser", function()
+	it("releases the user's patents and announces only T4+ vacancies", function()
+		setup()
+		local announced: { { compoundId: string, fromUserId: number, tier: number } } = {}
+		PatentService._setAnnouncementService({
+			announcePatentReleased = function(compoundId: string, fromUserId: number, tier: number)
+				table.insert(announced, { compoundId = compoundId, fromUserId = fromUserId, tier = tier })
+			end,
+		})
+
+		local H = { UserId = 501 }
+		local now = 8_000_000
+		-- Claim a T4 and a T2 patent as the same holder.
+		PatentService.recordNaturalSynthesis(H, "T4_01", {}, now)
+		PatentService.recordNaturalSynthesis(H, "T2_01", {}, now)
+		expect(PatentService.getRecord("T4_01").holderId).toBe(H.UserId)
+		expect(PatentService.getRecord("T2_01").holderId).toBe(H.UserId)
+
+		local released = PatentService.releaseAllForUser(H.UserId, now)
+		expect(released).toBe(2)
+
+		-- Both patents now unheld
+		expect(PatentService.getRecord("T4_01").holderId).toBeNil()
+		expect(PatentService.getRecord("T2_01").holderId).toBeNil()
+
+		-- Only the T4 vacancy is announced (T2–T3 are not globally announced, §15)
+		expect(#announced).toBe(1)
+		expect(announced[1].compoundId).toBe("T4_01")
+		expect(announced[1].tier).toBe(4)
+		expect(announced[1].fromUserId).toBe(501)
+	end)
+
+	it("releases nothing and announces nothing when the user holds no patents", function()
+		setup()
+		local announced = 0
+		PatentService._setAnnouncementService({
+			announcePatentReleased = function() announced += 1 end,
+		})
+		local released = PatentService.releaseAllForUser(999, 8_000_000)
+		expect(released).toBe(0)
+		expect(announced).toBe(0)
+	end)
+end)

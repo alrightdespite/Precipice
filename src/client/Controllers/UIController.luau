@@ -66,38 +66,72 @@ function UIController.openDrawer()
 	local scope = _drawerScope
 
 	local MORE_ITEMS = {
-		{ label = "Vault", screen = "Vault" },
-		{ label = "Contracts", screen = "Contracts" },
-		{ label = "Event", screen = "Event" },
-		{ label = "Leaderboard", screen = "Leaderboard" },
-		{ label = "Syndicate", screen = "Syndicate" },
-		{ label = "Cosmetics", screen = "Cosmetics" },
-		{ label = "Prestige", screen = "Prestige" },
-		{ label = "Settings", screen = "Settings" },
+		{ label = "Vault", screen = "Vault", icon = "🔒" },
+		{ label = "Contracts", screen = "Contracts", icon = "📋" },
+		{ label = "Event", screen = "Event", icon = "◇" },
+		{ label = "Leaderboard", screen = "Leaderboard", icon = "🏆" },
+		{ label = "Syndicate", screen = "Syndicate", icon = "🤝" },
+		{ label = "Cosmetics", screen = "Cosmetics", icon = "🎨" },
+		{ label = "Prestige", screen = "Prestige", icon = "⭐" },
+		{ label = "Settings", screen = "Settings", icon = "⚙" },
 	}
 
 	local drawerItems = {}
-	for _, item in ipairs(MORE_ITEMS) do
+	for idx, item in ipairs(MORE_ITEMS) do
 		local i = item
+		local hovered = scope:Value(false)
+		local bgGoal = scope:Computed(function(use)
+			return use(hovered) and Theme.Colors.SurfaceRaised:Lerp(Theme.Colors.Accent, 0.12)
+				or Theme.Colors.Surface
+		end)
+		local bgSpring = scope:Spring(bgGoal, 28, 1)
 		table.insert(
 			drawerItems,
 			scope:New("TextButton")({
-				Size = UDim2.new(1, 0, 0, 52),
-				BackgroundColor3 = Theme.Colors.Surface,
+				LayoutOrder = idx,
+				BackgroundColor3 = bgSpring,
 				BorderSizePixel = 0,
 				Text = "",
+				AutoButtonColor = false,
 				[Children] = {
-					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.Stroke,
+						Thickness = 1,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					}),
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.SurfaceSheen,
+						Rotation = Theme.Gradient.SurfaceSheenRotation,
+					}),
 					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
+						Name = "Icon",
+						Size = UDim2.fromOffset(30, 30),
+						Position = UDim2.new(0, 12, 0.5, -15),
+						BackgroundTransparency = 1,
+						Text = i.icon,
+						TextSize = 20,
+						TextColor3 = Theme.Colors.Accent,
+						FontFace = Theme.Font.Value,
+						TextXAlignment = Enum.TextXAlignment.Center,
+					}),
+					scope:New("TextLabel")({
+						Size = UDim2.new(1, -52, 1, 0),
+						Position = UDim2.fromOffset(50, 0),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Label,
-						TextSize = 15,
-						TextXAlignment = Enum.TextXAlignment.Center,
+						FontFace = Theme.Font.Display,
+						TextSize = 16,
+						TextXAlignment = Enum.TextXAlignment.Left,
 						Text = i.label,
 					}),
 				},
+				[OnEvent("MouseEnter")] = function()
+					hovered:set(true)
+				end,
+				[OnEvent("MouseLeave")] = function()
+					hovered:set(false)
+				end,
 				[OnEvent("Activated")] = function()
 					closeDrawer()
 					UIController.openScreen(i.screen)
@@ -117,7 +151,7 @@ function UIController.openDrawer()
 			scope:New("TextButton")({
 				Size = UDim2.fromScale(1, 1),
 				BackgroundColor3 = Color3.new(0, 0, 0),
-				BackgroundTransparency = 0.5,
+				BackgroundTransparency = 0.45,
 				BorderSizePixel = 0,
 				Text = "",
 				ZIndex = 1,
@@ -126,25 +160,64 @@ function UIController.openDrawer()
 			-- Drawer panel (slides up from bottom)
 			scope:New("Frame")({
 				Name = "Panel",
-				Size = UDim2.new(1, 0, 0, 340),
-				Position = UDim2.new(0, 0, 1, -340),
+				Size = UDim2.new(1, 0, 0, 372),
+				Position = UDim2.new(0, 0, 1, -372),
 				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 				ZIndex = 2,
 				[Children] = {
-					scope:New("UICorner")({ CornerRadius = UDim.new(0, 12) }),
-					scope:New("UIPadding")({
-						PaddingLeft = UDim.new(0, 12),
-						PaddingRight = UDim.new(0, 12),
-						PaddingTop = UDim.new(0, 16),
-						PaddingBottom = UDim.new(0, 16),
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusLarge }),
+					scope:New("UIGradient")({
+						Color = ColorSequence.new({
+							ColorSequenceKeypoint.new(0, Theme.Colors.SurfaceRaised),
+							ColorSequenceKeypoint.new(1, Theme.Colors.Surface),
+						}),
+						Rotation = 90,
 					}),
-					scope:New("UIListLayout")({
-						FillDirection = Enum.FillDirection.Vertical,
-						SortOrder = Enum.SortOrder.LayoutOrder,
-						Padding = UDim.new(0, 8),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.Stroke,
+						Thickness = 1,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 					}),
-					table.unpack(drawerItems),
+					-- grab handle
+					scope:New("Frame")({
+						Name = "Handle",
+						Size = UDim2.fromOffset(44, 5),
+						Position = UDim2.new(0.5, -22, 0, 10),
+						BackgroundColor3 = Theme.Colors.TextMuted,
+						BorderSizePixel = 0,
+						[Children] = {
+							scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+						},
+					}),
+					-- header
+					scope:New("TextLabel")({
+						Name = "Title",
+						Size = UDim2.new(1, -36, 0, 30),
+						Position = UDim2.fromOffset(20, 24),
+						BackgroundTransparency = 1,
+						Text = "MORE",
+						TextColor3 = Theme.Colors.TextPrimary,
+						FontFace = Theme.Font.Display,
+						TextSize = 22,
+						TextXAlignment = Enum.TextXAlignment.Left,
+					}),
+					-- 2-column grid of items
+					scope:New("Frame")({
+						Name = "Grid",
+						Size = UDim2.new(1, -32, 1, -84),
+						Position = UDim2.fromOffset(16, 64),
+						BackgroundTransparency = 1,
+						[Children] = {
+							scope:New("UIGridLayout")({
+								CellSize = UDim2.new(0.5, -7, 0, 64),
+								CellPadding = UDim2.fromOffset(14, 12),
+								SortOrder = Enum.SortOrder.LayoutOrder,
+								FillDirectionMaxCells = 2,
+							}),
+							table.unpack(drawerItems),
+						},
+					}),
 				},
 			}),
 		},

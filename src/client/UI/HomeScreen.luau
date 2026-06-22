@@ -15,12 +15,89 @@ local OnEvent = Fusion.OnEvent
 local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
+local WHITE = Color3.new(1, 1, 1)
 local NAV_TABS = { "Home", "Lab", "Market", "Log", "More" }
-local SLOT_HEIGHT = 68
+local SLOT_HEIGHT = 72
+
+-- Small signature 3D pill used for the per-slot action button. faceColor is a state
+-- (reactive to slot state); the face springs down 2px on press onto a darker lip.
+local function makeActionPill(scope, props)
+	local pressed = scope:Value(false)
+	local lift = 2
+	local faceY = scope:Computed(function(use)
+		return use(pressed) and UDim2.fromOffset(0, lift) or UDim2.fromOffset(0, 0)
+	end)
+	local faceSpring = scope:Spring(faceY, 45, 0.8)
+	local lipColor = scope:Computed(function(use)
+		return use(props.FaceColor):Lerp(Color3.new(0, 0, 0), 0.4)
+	end)
+	return scope:New("TextButton")({
+		Name = "ActionBtn",
+		Size = props.Size,
+		AnchorPoint = props.AnchorPoint,
+		Position = props.Position,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Text = "",
+		Visible = props.Visible,
+		[Children] = {
+			scope:New("Frame")({
+				Name = "Lip",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundColor3 = lipColor,
+				BorderSizePixel = 0,
+				ZIndex = 1,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+				},
+			}),
+			scope:New("Frame")({
+				Name = "Face",
+				Size = UDim2.new(1, 0, 1, -lift),
+				Position = faceSpring,
+				BackgroundColor3 = props.FaceColor,
+				BorderSizePixel = 0,
+				ZIndex = 2,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.AccentGloss,
+						Transparency = Theme.Gradient.AccentGlossTransparency,
+						Rotation = 90,
+					}),
+					scope:New("TextLabel")({
+						Text = props.Label,
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = WHITE,
+						FontFace = Theme.Font.Value,
+						TextSize = 12,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						ZIndex = 3,
+					}),
+				},
+			}),
+		},
+		[OnEvent("MouseButton1Down")] = function()
+			pressed:set(true)
+		end,
+		[OnEvent("MouseButton1Up")] = function()
+			pressed:set(false)
+		end,
+		[OnEvent("MouseLeave")] = function()
+			pressed:set(false)
+		end,
+		[OnEvent("Activated")] = props.OnClick,
+	})
+end
 
 local function formatNum(n: number): string
-	if n >= 1000000 then
-		return string.format("%.1fM", n / 1000000)
+	if n >= 1e12 then
+		return string.format("%.2fT", n / 1e12)
+	elseif n >= 1e9 then
+		return string.format("%.2fB", n / 1e9)
+	elseif n >= 1e6 then
+		return string.format("%.1fM", n / 1e6)
 	elseif n >= 1000 then
 		return string.format("%.1fK", n / 1000)
 	end
@@ -66,10 +143,10 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, 
 	local accentColor = scope:Computed(function(use)
 		local slot = use(slotComputed)
 		if slot.state == "EMPTY" then
-			return Theme.Colors.Surface
+			return Theme.Colors.Stroke
 		end
-		-- Tier-based accent could derive from Compounds[slot.compoundId].tier later; default for now.
-		local tier = 1
+		local cid = slot.compoundId
+		local tier = (cid and Compounds[cid] and Compounds[cid].tier) or 1
 		return Theme.Colors.Tier[tier] or Theme.Colors.Accent
 	end)
 
@@ -156,7 +233,16 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, 
 		end),
 		ClipsDescendants = false,
 		[Children] = {
-			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
+			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+			scope:New("UIGradient")({
+				Color = Theme.Gradient.SurfaceSheen,
+				Rotation = Theme.Gradient.SurfaceSheenRotation,
+			}),
+			scope:New("UIStroke")({
+				Color = Theme.Colors.Stroke,
+				Thickness = 1,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}),
 			-- Left accent bar (pill, vertically centered with 12px margin)
 			scope:New("Frame")({
 				Name = "Accent",
@@ -225,13 +311,13 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, 
 				TextXAlignment = Enum.TextXAlignment.Left,
 				Visible = showDone,
 			}),
-			-- Action button (bottom-right)
-			scope:New("TextButton")({
-				Name = "ActionBtn",
-				Size = UDim2.fromOffset(48, 24),
+			-- Action button (bottom-right) — signature 3D mini pill
+			makeActionPill(scope, {
+				Size = UDim2.fromOffset(54, 26),
 				AnchorPoint = Vector2.new(1, 1),
-				Position = UDim2.new(1, -6, 1, -6),
-				BackgroundColor3 = scope:Computed(function(use)
+				Position = UDim2.new(1, -6, 1, -7),
+				Label = actionLabel,
+				FaceColor = scope:Computed(function(use)
 					local st = use(slotState)
 					if st == "DONE" or st == "REVEALING" then
 						return Theme.Colors.Success
@@ -241,8 +327,6 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, 
 					end
 					return Theme.Colors.Accent
 				end),
-				BorderSizePixel = 0,
-				Text = "",
 				Visible = scope:Computed(function(use)
 					local st = use(slotState)
 					if st == "RUNNING" then
@@ -250,67 +334,77 @@ local function makeSlotCard(scope, slotIndex: number, slotsValue, slotCapValue, 
 					end
 					return true
 				end),
-				[Children] = {
-					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
-					scope:New("TextLabel")({
-						Text = actionLabel,
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = Color3.new(1, 1, 1),
-						FontFace = Theme.Font.Label,
-						TextSize = 11,
-						TextXAlignment = Enum.TextXAlignment.Center,
-					}),
-				},
-				[OnEvent("Activated")] = onAction,
+				OnClick = onAction,
 			}),
 		},
 	})
 end
 
--- HUD bar (Zone A, 52px)
+-- HUD bar (Zone A, 52px) — raised header w/ gradient, honey underline, pellet chip
 local function makeHUD(scope, balanceValue, rankValue, uiVisible)
 	return scope:New("Frame")({
 		Name = "HUD",
 		Size = UDim2.new(1, 0, 0, 52),
-		BackgroundColor3 = Theme.Colors.Surface,
+		BackgroundColor3 = Theme.Colors.SurfaceRaised,
 		BorderSizePixel = 0,
 		ZIndex = 10,
 		[Children] = {
+			scope:New("UIGradient")({
+				Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Theme.Colors.SurfaceRaised),
+					ColorSequenceKeypoint.new(1, Theme.Colors.Surface),
+				}),
+				Rotation = 90,
+			}),
+			-- signature honey underline
 			scope:New("Frame")({
-				Name = "BottomBorder",
-				Size = UDim2.new(1, 0, 0, 1),
+				Name = "Underline",
+				Size = UDim2.new(1, 0, 0, 2),
 				AnchorPoint = Vector2.new(0, 1),
 				Position = UDim2.new(0, 0, 1, 0),
-				BackgroundColor3 = Theme.Colors.SurfaceRaised,
+				BackgroundColor3 = Theme.Colors.Accent,
 				BorderSizePixel = 0,
+				ZIndex = 11,
 			}),
-			-- Pellets (left)
+			-- Pellets chip (left)
 			scope:New("Frame")({
-				Name = "Pellets",
-				Size = UDim2.fromOffset(130, 40),
-				Position = UDim2.new(0, 12, 0.5, -20),
-				BackgroundTransparency = 1,
+				Name = "PelletChip",
+				Size = UDim2.fromOffset(132, 34),
+				Position = UDim2.new(0, 12, 0.5, -17),
+				BackgroundColor3 = Theme.Colors.SurfaceWell,
+				BorderSizePixel = 0,
 				[Children] = {
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
+					scope:New("UIStroke")({
+						Color = Theme.Colors.Stroke,
+						Thickness = 1,
+						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+					}),
 					scope:New("UIListLayout")({
 						FillDirection = Enum.FillDirection.Horizontal,
 						VerticalAlignment = Enum.VerticalAlignment.Center,
-						Padding = UDim.new(0, 6),
+						Padding = UDim.new(0, 7),
 					}),
+					scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 10) }),
 					scope:New("Frame")({
 						Size = UDim2.fromOffset(16, 16),
-						BackgroundColor3 = Color3.fromHex("F59E0B"),
+						BackgroundColor3 = Theme.Colors.Accent,
 						BorderSizePixel = 0,
 						[Children] = {
 							scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+							scope:New("UIStroke")({
+								Color = Theme.Colors.AccentShadow,
+								Thickness = 1.5,
+								ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+							}),
 						},
 					}),
 					scope:New("TextLabel")({
-						Size = UDim2.fromOffset(106, 24),
+						Size = UDim2.fromOffset(92, 24),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Value,
-						TextSize = 15,
+						FontFace = Theme.Font.ValueHeavy,
+						TextSize = 17,
 						TextXAlignment = Enum.TextXAlignment.Left,
 						Text = scope:Computed(function(use)
 							return formatNum(use(balanceValue).pellets)
@@ -318,15 +412,15 @@ local function makeHUD(scope, balanceValue, rankValue, uiVisible)
 					}),
 				},
 			}),
-			-- Rank (center)
+			-- Rank (center, display font)
 			scope:New("TextLabel")({
 				Name = "Rank",
 				Size = UDim2.new(0.4, 0, 1, 0),
 				Position = UDim2.new(0.3, 0, 0, 0),
 				BackgroundTransparency = 1,
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Label,
-				TextSize = 12,
+				TextColor3 = Theme.Colors.TextPrimary,
+				FontFace = Theme.Font.Display,
+				TextSize = 18,
 				TextXAlignment = Enum.TextXAlignment.Center,
 				Text = scope:Computed(function(use)
 					local r = use(rankValue)
@@ -338,13 +432,13 @@ local function makeHUD(scope, balanceValue, rankValue, uiVisible)
 				Name = "MinimizeBtn",
 				Size = UDim2.fromOffset(36, 36),
 				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -8, 0.5, 0),
+				Position = UDim2.new(1, -10, 0.5, 0),
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Text = "—",
 				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Label,
-				TextSize = 18,
+				FontFace = Theme.Font.Value,
+				TextSize = 20,
 				ZIndex = 11,
 				[OnEvent("Activated")] = function()
 					uiVisible:set(false)
@@ -364,12 +458,30 @@ local function makeBottomNav(scope, uiController, activeTabValue)
 		local btn = scope:New("TextButton")({
 			Name = name,
 			Size = UDim2.new(1 / #NAV_TABS, 0, 1, 0),
-			BackgroundColor3 = scope:Computed(function(use)
-				return use(isActive) and Theme.Colors.AccentDim or Theme.Colors.Surface
-			end),
+			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
 			Text = "",
 			[Children] = {
+				-- active highlight pill behind the label (subtle honey glow)
+				scope:New("Frame")({
+					Name = "Highlight",
+					Size = UDim2.new(1, -14, 1, -12),
+					AnchorPoint = Vector2.new(0.5, 0.5),
+					Position = UDim2.new(0.5, 0, 0.5, 0),
+					BackgroundColor3 = Theme.Colors.Accent,
+					BackgroundTransparency = 0.84,
+					BorderSizePixel = 0,
+					Visible = isActive,
+					[Children] = {
+						scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+						scope:New("UIStroke")({
+							Color = Theme.Colors.Accent,
+							Thickness = 1,
+							Transparency = 0.6,
+							ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+						}),
+					},
+				}),
 				scope:New("TextLabel")({
 					Text = name,
 					Size = UDim2.fromScale(1, 1),
@@ -377,15 +489,15 @@ local function makeBottomNav(scope, uiController, activeTabValue)
 					TextColor3 = scope:Computed(function(use)
 						return use(isActive) and Theme.Colors.Accent or Theme.Colors.TextSecondary
 					end),
-					FontFace = Theme.Font.Label,
-					TextSize = 12,
+					FontFace = Theme.Font.Display,
+					TextSize = 14,
 					TextXAlignment = Enum.TextXAlignment.Center,
 				}),
 				scope:New("Frame")({
 					Name = "ActiveIndicator",
-					Size = UDim2.new(0.6, 0, 0, 3),
+					Size = UDim2.new(0.5, 0, 0, 3),
 					AnchorPoint = Vector2.new(0.5, 1),
-					Position = UDim2.new(0.5, 0, 1, 0),
+					Position = UDim2.new(0.5, 0, 1, -2),
 					BackgroundColor3 = Theme.Colors.Accent,
 					BorderSizePixel = 0,
 					Visible = isActive,
@@ -424,11 +536,18 @@ local function makeBottomNav(scope, uiController, activeTabValue)
 		BorderSizePixel = 0,
 		ZIndex = 10,
 		[Children] = {
+			scope:New("UIGradient")({
+				Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Theme.Colors.SurfaceRaised),
+					ColorSequenceKeypoint.new(1, Theme.Colors.Surface),
+				}),
+				Rotation = 90,
+			}),
 			scope:New("Frame")({
 				Name = "TopBorder",
 				Size = UDim2.new(1, 0, 0, 1),
 				Position = UDim2.fromOffset(0, 0),
-				BackgroundColor3 = Theme.Colors.SurfaceRaised,
+				BackgroundColor3 = Theme.Colors.Stroke,
 				BorderSizePixel = 0,
 			}),
 			scope:New("Frame")({
@@ -448,22 +567,40 @@ local function makeBottomNav(scope, uiController, activeTabValue)
 	})
 end
 
--- Hint bar
+-- Hint bar — floating rounded chip w/ honey left accent
 local function makeHintBar(scope, hintValue)
 	return scope:New("Frame")({
 		Name = "HintBar",
-		AnchorPoint = Vector2.new(0, 1),
-		Size = UDim2.new(1, 0, 0, 28),
-		Position = UDim2.new(0, 0, 1, -52),
-		BackgroundColor3 = Theme.Colors.AccentDim,
+		AnchorPoint = Vector2.new(0.5, 1),
+		Size = UDim2.new(1, -224, 0, 40),
+		Position = UDim2.new(0.5, 100, 1, -64),
+		BackgroundColor3 = Theme.Colors.SurfaceRaised,
 		BorderSizePixel = 0,
 		Visible = scope:Computed(function(use)
 			return use(hintValue) ~= nil
 		end),
 		ZIndex = 7,
 		[Children] = {
+			scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+			scope:New("UIStroke")({
+				Color = Theme.Colors.Stroke,
+				Thickness = 1,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}),
+			-- honey accent bar
+			scope:New("Frame")({
+				Name = "Accent",
+				Size = UDim2.new(0, 4, 1, -14),
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.new(0, 7, 0.5, 0),
+				BackgroundColor3 = Theme.Colors.Accent,
+				BorderSizePixel = 0,
+				[Children] = {
+					scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
+				},
+			}),
 			scope:New("UIPadding")({
-				PaddingLeft = UDim.new(0, 12),
+				PaddingLeft = UDim.new(0, 20),
 				PaddingRight = UDim.new(0, 44),
 			}),
 			scope:New("TextLabel")({
@@ -471,7 +608,7 @@ local function makeHintBar(scope, hintValue)
 				BackgroundTransparency = 1,
 				TextColor3 = Theme.Colors.TextPrimary,
 				FontFace = Theme.Font.Body,
-				TextSize = 12,
+				TextSize = 13,
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextWrapped = true,
 				Text = scope:Computed(function(use)
@@ -482,7 +619,8 @@ local function makeHintBar(scope, hintValue)
 			scope:New("TextButton")({
 				Name = "Dismiss",
 				Size = UDim2.fromOffset(32, 32),
-				Position = UDim2.new(1, -36, 0.5, -16),
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -2, 0.5, 0),
 				BackgroundTransparency = 1,
 				Text = "✕",
 				TextColor3 = Theme.Colors.TextSecondary,
@@ -563,7 +701,7 @@ local function makeMarquee(scope, announcementsValue)
 		Name = "Marquee",
 		Size = UDim2.new(1, 0, 0, 32),
 		Position = UDim2.fromOffset(0, 52),
-		BackgroundColor3 = Theme.Colors.AccentDim,
+		BackgroundColor3 = Theme.Colors.SurfaceRaised,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
 		Visible = hasAnn,
@@ -856,13 +994,19 @@ function HomeScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			-- Background fill
+			-- Background fill (gradient backdrop wash)
 			scope:New("Frame")({
 				Name = "Bg",
 				Size = UDim2.fromScale(1, 1),
 				BackgroundColor3 = Theme.Colors.Background,
 				BorderSizePixel = 0,
 				ZIndex = 1,
+				[Children] = {
+					scope:New("UIGradient")({
+						Color = Theme.Gradient.Backdrop,
+						Rotation = Theme.Gradient.BackdropRotation,
+					}),
+				},
 			}),
 			-- HUD (Zone A)
 			makeHUD(scope, balanceValue, rankValue, uiVisible),
@@ -873,23 +1017,31 @@ function HomeScreen.open(uiController)
 				Name = "RevealBanner",
 				Size = UDim2.new(1, 0, 0, 26),
 				Position = UDim2.new(0, 0, 0, 52),
-				BackgroundColor3 = Theme.Colors.AccentDim,
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 				Visible = scope:Computed(function(use)
 					return use(revealQueueValue) > 0
 				end),
 				ZIndex = 8,
 				[Children] = {
+					scope:New("Frame")({
+						Name = "Underline",
+						Size = UDim2.new(1, 0, 0, 2),
+						AnchorPoint = Vector2.new(0, 1),
+						Position = UDim2.new(0, 0, 1, 0),
+						BackgroundColor3 = Theme.Colors.Accent,
+						BorderSizePixel = 0,
+					}),
 					scope:New("TextLabel")({
 						Size = UDim2.fromScale(1, 1),
 						BackgroundTransparency = 1,
 						TextColor3 = Theme.Colors.Accent,
-						FontFace = Theme.Font.Label,
-						TextSize = 12,
+						FontFace = Theme.Font.Value,
+						TextSize = 13,
 						TextXAlignment = Enum.TextXAlignment.Center,
 						Text = scope:Computed(function(use)
 							local n = use(revealQueueValue)
-							return tostring(n) .. (n == 1 and " reveal queued" or " reveals queued")
+							return "✦ " .. tostring(n) .. (n == 1 and " reveal queued" or " reveals queued")
 						end),
 					}),
 				},
@@ -899,7 +1051,7 @@ function HomeScreen.open(uiController)
 			-- Left slot panel (Zone B, 200px, visible on Home tab)
 			scope:New("Frame")({
 				Name = "SlotPanel",
-				Size = UDim2.new(0, 200, 1, -104),
+				Size = UDim2.new(0, 212, 1, -104),
 				Position = UDim2.new(0, 0, 0, 52),
 				BackgroundColor3 = Theme.Colors.Surface,
 				BorderSizePixel = 0,
@@ -908,44 +1060,51 @@ function HomeScreen.open(uiController)
 					return use(activeTabValue) == "Home"
 				end),
 				[Children] = {
+					scope:New("UIGradient")({
+						Color = ColorSequence.new({
+							ColorSequenceKeypoint.new(0, Theme.Colors.Surface),
+							ColorSequenceKeypoint.new(1, Theme.Colors.Background),
+						}),
+						Rotation = 90,
+					}),
 					scope:New("Frame")({
 						Name = "RightBorder",
 						Size = UDim2.new(0, 1, 1, 0),
 						AnchorPoint = Vector2.new(1, 0),
 						Position = UDim2.new(1, 0, 0, 0),
-						BackgroundColor3 = Theme.Colors.SurfaceRaised,
+						BackgroundColor3 = Theme.Colors.Stroke,
 						BorderSizePixel = 0,
 					}),
 					scope:New("Frame")({
 						Name = "Header",
-						Size = UDim2.new(1, 0, 0, 32),
+						Size = UDim2.new(1, 0, 0, 38),
 						BackgroundTransparency = 1,
 						BorderSizePixel = 0,
 						[Children] = {
 							scope:New("TextLabel")({
 								Text = "SLOTS",
-								Size = UDim2.new(1, -16, 1, 0),
-								Position = UDim2.fromOffset(8, 0),
+								Size = UDim2.new(1, -24, 1, 0),
+								Position = UDim2.fromOffset(12, 0),
 								BackgroundTransparency = 1,
-								TextColor3 = Theme.Colors.TextSecondary,
-								FontFace = Theme.Font.Label,
-								TextSize = 10,
+								TextColor3 = Theme.Colors.TextPrimary,
+								FontFace = Theme.Font.Display,
+								TextSize = 15,
 								TextXAlignment = Enum.TextXAlignment.Left,
 							}),
 							scope:New("Frame")({
 								Name = "BottomBorder",
-								Size = UDim2.new(1, 0, 0, 1),
-								AnchorPoint = Vector2.new(0, 1),
-								Position = UDim2.new(0, 0, 1, 0),
-								BackgroundColor3 = Theme.Colors.SurfaceRaised,
+								Size = UDim2.new(1, -24, 0, 1),
+								AnchorPoint = Vector2.new(0.5, 1),
+								Position = UDim2.new(0.5, 0, 1, 0),
+								BackgroundColor3 = Theme.Colors.Stroke,
 								BorderSizePixel = 0,
 							}),
 						},
 					}),
 					scope:New("ScrollingFrame")({
 						Name = "SlotScroll",
-						Size = UDim2.new(1, 0, 1, -33),
-						Position = UDim2.fromOffset(0, 33),
+						Size = UDim2.new(1, 0, 1, -39),
+						Position = UDim2.fromOffset(0, 39),
 						BackgroundTransparency = 1,
 						BorderSizePixel = 0,
 						ScrollBarThickness = 0,
@@ -955,13 +1114,13 @@ function HomeScreen.open(uiController)
 							scope:New("UIListLayout")({
 								SortOrder = Enum.SortOrder.LayoutOrder,
 								FillDirection = Enum.FillDirection.Vertical,
-								Padding = UDim.new(0, 1),
+								Padding = Theme.Layout.GapSmall,
 							}),
 							scope:New("UIPadding")({
-								PaddingTop = UDim.new(0, 4),
-								PaddingBottom = UDim.new(0, 4),
-								PaddingLeft = UDim.new(0, 6),
-								PaddingRight = UDim.new(0, 6),
+								PaddingTop = UDim.new(0, 8),
+								PaddingBottom = UDim.new(0, 8),
+								PaddingLeft = UDim.new(0, 10),
+								PaddingRight = UDim.new(0, 10),
 							}),
 							table.unpack(slotCards),
 						},

@@ -214,13 +214,17 @@ local function wireS2C()
 end
 
 function RemoteController.init(): typeof(RemoteController)
-	local folder = ReplicatedStorage:FindFirstChild("Remotes")
+	-- The server creates every remote from the Manifest before any client connects, but the
+	-- Remotes folder and its children still REPLICATE to the client asynchronously. Using
+	-- FindFirstChild here raced replication and intermittently threw "missing remote" at boot,
+	-- so wait (bounded) for each remote instead. This is a one-time init wait, not a hot loop.
+	local folder = ReplicatedStorage:WaitForChild("Remotes", 30)
 	assert(folder, "[RemoteController] Remotes folder missing — server may not have initialized")
 
 	for _, entry in ipairs(Manifest) do
-		local remote = folder:FindFirstChild(entry.name)
+		local remote = folder:WaitForChild(entry.name, 30)
 		if not remote then
-			error("[RemoteController] missing remote: " .. entry.name)
+			error("[RemoteController] missing remote after 30s: " .. entry.name)
 		end
 		_remotes[entry.name] = remote :: any
 	end

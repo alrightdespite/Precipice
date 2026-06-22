@@ -25,9 +25,12 @@ local _buckets: { [string]: { tokens: number, lastRefill: number } } = {}
 function RemoteService.init()
 	assert(not _remotesFolder, "RemoteService.init called twice")
 
+	-- Build the folder fully BEFORE parenting it into ReplicatedStorage, so the client never
+	-- observes a half-populated Remotes folder (the children replicate as one subtree). The
+	-- client still WaitForChilds each remote as the definitive guard against progressive
+	-- replication; this just makes the common case arrive complete.
 	_remotesFolder = Instance.new("Folder")
 	_remotesFolder.Name = REMOTES_FOLDER_NAME
-	_remotesFolder.Parent = ReplicatedStorage
 
 	local created = 0
 	for _, entry in ipairs(Manifest) do
@@ -52,6 +55,9 @@ function RemoteService.init()
 		_entryByName[entry.name] = entry
 		created += 1
 	end
+
+	-- Parent last: the folder enters ReplicatedStorage already holding all remotes.
+	_remotesFolder.Parent = ReplicatedStorage
 
 	-- Drop a leaving player's throttle buckets so the table never grows without bound.
 	Players.PlayerRemoving:Connect(function(player)

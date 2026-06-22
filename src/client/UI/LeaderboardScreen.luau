@@ -29,6 +29,7 @@ function LeaderboardScreen.open(uiController)
 	local isLoading = scope:Value(false)
 	local leaderboardValue = scope:Value(st.leaderboard)
 	local ownRowsValue = scope:Value(st.ownRows)
+	local championshipsValue = scope:Value(st.championships or {})
 
 	table.insert(
 		scope,
@@ -39,10 +40,36 @@ function LeaderboardScreen.open(uiController)
 			if patch.ownRows ~= nil then
 				ownRowsValue:set(patch.ownRows)
 			end
+			if patch.championships ~= nil then
+				championshipsValue:set(patch.championships)
+			end
 		end)
 	)
 
 	local localUserId = Players.LocalPlayer and Players.LocalPlayer.UserId or 0
+
+	-- Server sends entries with userId only (displayName nil); resolve names client-side and
+	-- cache them. A miss kicks off an async GetNameFromUserIdAsync and updates the reactive
+	-- cache so the rows re-render with the name in place of the raw id.
+	local nameCache = scope:Value({} :: { [number]: string })
+	local _resolving: { [number]: boolean } = {}
+	local function resolveName(userId: number)
+		if userId <= 0 or _resolving[userId] or peek(nameCache)[userId] then
+			return -- skip invalid/test ids and ones already resolved/in-flight
+		end
+		_resolving[userId] = true
+		task.spawn(function()
+			local ok, name = pcall(function()
+				return Players:GetNameFromUserIdAsync(userId)
+			end)
+			if ok and name then
+				local next = table.clone(peek(nameCache))
+				next[userId] = name
+				nameCache:set(next)
+			end
+			_resolving[userId] = nil
+		end)
+	end
 
 	local function loadBoard(board: string)
 		isLoading:set(true)
@@ -94,7 +121,14 @@ function LeaderboardScreen.open(uiController)
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
 					TextTruncate = Enum.TextTruncate.AtEnd,
-					Text = entry.displayName ~= "" and entry.displayName or tostring(entry.userId),
+					Text = scope:Computed(function(use)
+						-- Prefer a server-sent name, else the resolved cache, else the raw id.
+						if entry.displayName and entry.displayName ~= "" then
+							return entry.displayName
+						end
+						resolveName(entry.userId)
+						return use(nameCache)[entry.userId] or tostring(entry.userId)
+					end),
 				}),
 				-- Score
 				scope:New("TextLabel")({
@@ -291,10 +325,55 @@ function LeaderboardScreen.open(uiController)
 					table.unpack(tabBtns),
 				},
 			}),
+			-- §18 Hall of Fame banner — the player's Sprint championships (hidden if none).
+			scope:New("Frame")({
+				Name = "ChampionBanner",
+				Size = UDim2.new(1, 0, 0, 28),
+				Position = UDim2.fromOffset(0, 100),
+				BackgroundColor3 = Theme.Colors.AccentDim,
+				BorderSizePixel = 0,
+				Visible = scope:Computed(function(use)
+					return #use(championshipsValue) > 0
+				end),
+				[Children] = {
+					scope:New("TextLabel")({
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = Theme.Colors.Accent,
+						FontFace = Theme.Font.Label,
+						TextSize = 13,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						Text = scope:Computed(function(use)
+							local champs = use(championshipsValue)
+							local n = #champs
+							if n == 0 then
+								return ""
+							end
+							local bestRank, bestWeek = math.huge, 0
+							for _, c in ipairs(champs) do
+								if c.rank < bestRank then
+									bestRank = c.rank
+									bestWeek = c.weekEpoch
+								end
+							end
+							return string.format(
+								"🏆 %d-time Sprint Champion · best #%d (week %d)",
+								n, bestRank, bestWeek
+							)
+						end),
+					}),
+				},
+			}),
 			scope:New("Frame")({
 				Name = "Boards",
-				Size = UDim2.new(1, 0, 1, -100),
-				Position = UDim2.fromOffset(0, 100),
+				Size = scope:Computed(function(use)
+					return #use(championshipsValue) > 0 and UDim2.new(1, 0, 1, -128)
+						or UDim2.new(1, 0, 1, -100)
+				end),
+				Position = scope:Computed(function(use)
+					return #use(championshipsValue) > 0 and UDim2.fromOffset(0, 128)
+						or UDim2.fromOffset(0, 100)
+				end),
 				BackgroundTransparency = 1,
 				[Children] = {
 					buildBoardPanel(TAB_SPRINT),

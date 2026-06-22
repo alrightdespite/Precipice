@@ -14,6 +14,7 @@ local _chiefOds: any = nil
 local _champDs: any = nil -- DataStore("Championships") — §18 champion awards (offline-safe)
 local _hofDs: any = nil -- DataStore("SprintHallOfFame") — per-week top-3 snapshot
 local _dataService: any = nil -- DataService — reflect awards into online winners' profiles
+local _players: any = nil -- Players service — notify online championship winners
 local _sprintOdsFactory: ((number) -> any)? = nil -- injectable for Lune tests
 local _lastSprintWrite: { [number]: number } = {} -- debounce: userId → last written score
 -- task.spawn is a Roblox global unavailable in Lune. Default to synchronous
@@ -263,6 +264,11 @@ function RankService.archiveSprint(weekEpoch: number)
 				if not has then
 					table.insert(data.championships, { weekEpoch = weekEpoch, score = e.score, rank = e.rank, awardedAt = now })
 				end
+				-- Notify an online winner so the Hall of Fame banner updates without a relog.
+				local winner = _players and _players:GetPlayerByUserId(e.userId)
+				if winner then
+					RankService.fireChampionships(winner, data)
+				end
 			end
 		end
 	end
@@ -282,6 +288,14 @@ function RankService.loadChampionships(userId: number, data: any)
 	end
 end
 
+-- Push the player's championships to the client (§18 Hall of Fame). Called at login after
+-- loadChampionships. Fires the synced cache; the client renders it read-only.
+function RankService.fireChampionships(player: any, data: any)
+	if _remoteService then
+		_remoteService.getEvent("ChampionshipsUpdate"):FireClient(player, data.championships or {})
+	end
+end
+
 -- ── Init ───────────────────────────────────────────────────────────────────
 
 function RankService.init()
@@ -297,6 +311,7 @@ function RankService.init()
 	_champDs = _dataStoreService:GetDataStore("Championships")
 	_hofDs = _dataStoreService:GetDataStore("SprintHallOfFame")
 	_dataService = require(ServerScriptService.Server.Services.DataService)
+	_players = game:GetService("Players")
 	_spawnFn = task.spawn -- use Roblox's task.spawn in production
 	-- Sprint ODS instances created on demand via getSprintOds(weekEpoch)
 end

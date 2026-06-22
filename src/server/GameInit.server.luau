@@ -119,6 +119,7 @@ DataService.onProfileLoaded:Connect(function(userId)
 	StreakService.onLogin(player, data, os.time())
 	ContractService.refreshIfStale(player, data, os.time())
 	RankService.loadChampionships(userId, data)
+	RankService.fireChampionships(player, data)
 	CosmeticService.fireCosmeticUpdate(player, data)
 	MonetizationService.refreshGamepasses(player, data)
 	if MonetizationService.ownsGamepass(data, "compoundArchive") then

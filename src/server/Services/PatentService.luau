@@ -274,8 +274,20 @@ local function sweepPatent(compoundId: string, now: number)
 
 	-- §15: a patent transfer (holder actually changed) announces globally only at T4+.
 	-- Cosmetic marquee (F2) — a duplicate across servers is harmless (dedup + 30s gap).
-	if _announcementService and winnerId ~= peek.holderId and peek.tier >= 4 then
-		_announcementService.announcePatentTransfer(compoundId, peek.holderId, winnerId, peek.tier)
+	if winnerId ~= peek.holderId then
+		if _announcementService and peek.tier >= 4 then
+			_announcementService.announcePatentTransfer(compoundId, peek.holderId, winnerId, peek.tier)
+		end
+		-- Notify the two directly-involved parties (any tier): the deposed holder and the new
+		-- winner each get a PatentResolved so their UI reflects the change without the marquee.
+		if _rs then
+			for _, partyId in ipairs({ peek.holderId, winnerId }) do
+				local p = _players and _players:GetPlayerByUserId(partyId)
+				if p then
+					_rs.getEvent("PatentResolved"):FireClient(p, compoundId, winnerId)
+				end
+			end
+		end
 	end
 end
 

@@ -123,6 +123,11 @@ local function wireS2C()
 		StateController.set({ patents = patents })
 	end)
 
+	-- ChampionshipsUpdate: §18 Hall of Fame — the player's synced championship cache
+	_remotes["ChampionshipsUpdate"].OnClientEvent:Connect(function(championships: { any })
+		StateController.set({ championships = championships or {} })
+	end)
+
 	-- SyndicateUpdate
 	_remotes["SyndicateUpdate"].OnClientEvent:Connect(function(syndicateSnapshot: any)
 		StateController.set({ syndicate = syndicateSnapshot })
@@ -188,8 +193,8 @@ local function wireS2C()
 		StateController.set({ gamepasses = passes })
 	end)
 
-	-- FluxUpdate: server fires a single { seasonKey, total } table
-	_remotes["FluxUpdate"].OnClientEvent:Connect(function(flux: { seasonKey: string, total: number })
+	-- FluxUpdate: server fires a single { seasonKey, total, blueprintsOwned? } table
+	_remotes["FluxUpdate"].OnClientEvent:Connect(function(flux: { seasonKey: string, total: number, blueprintsOwned: { [string]: boolean }? })
 		StateController.set({ flux = flux })
 	end)
 

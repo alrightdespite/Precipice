@@ -236,6 +236,7 @@ function EventService.spendFlux(
 		_remoteService.getEvent("FluxUpdate"):FireClient(player, {
 			seasonKey = seasonKey,
 			total = data.eventState.fluxBySeason[seasonKey],
+			blueprintsOwned = data.eventState.blueprintsOwned,
 		})
 	end
 	return true
@@ -270,6 +271,7 @@ function EventService.onLogin(player: any, data: any)
 		_remoteService.getEvent("FluxUpdate"):FireClient(player, {
 			seasonKey = seasonKey,
 			total = data.eventState.fluxBySeason[seasonKey] or 0,
+			blueprintsOwned = data.eventState.blueprintsOwned,
 		})
 	end
 end

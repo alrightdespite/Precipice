@@ -318,6 +318,12 @@ local Manifest: { RemoteEntry } = {
 		rateLimit = 0.5,
 		payloadDesc = "board: 'sprint'|'chiefs' → entries: LeaderboardEntry[], ownRow: LeaderboardEntry?",
 	},
+	{
+		name = "ChampionshipsUpdate",
+		kind = "Event",
+		direction = "S2C",
+		payloadDesc = "championships: { weekEpoch: number, score: number, rank: number, awardedAt: number }[]",
+	},
 
 	-- ── Contracts / Streak ────────────────────────────────────────────────────
 	{

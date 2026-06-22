@@ -1,8 +1,9 @@
 -- EventScreen: §29 seasonal event — Flux balance + blueprint purchases. Visible in the
 -- More drawer. Flux balance comes from StateController.flux (set by FluxUpdate); the event
 -- is "active" iff flux ~= nil. Blueprints come from Data/EventCompounds (cost = blueprintFlux).
--- The client has no blueprintsOwned state, so ownership is tracked locally (optimistically
--- marked on a successful purchase); the server is authoritative and rejects double-buys.
+-- Ownership comes from the server (FluxUpdate.blueprintsOwned, sent at login + on purchase,
+-- so it survives reopen) merged with a local optimistic set (covers the instant between a
+-- buy and the server echo); the server is authoritative and rejects double-buys.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -64,7 +65,11 @@ function EventScreen.open(uiController)
 		local cost = bp.blueprintFlux or 0
 
 		local owned = scope:Computed(function(use)
-			return use(ownedLocal)[bp.id] == true
+			-- Server-persisted ownership (FluxUpdate.blueprintsOwned) survives reopen; the
+			-- local optimistic set covers the instant between a buy and the server echo.
+			local f = use(fluxValue)
+			local server = (f and (f :: any).blueprintsOwned) or {}
+			return server[bp.id] == true or use(ownedLocal)[bp.id] == true
 		end)
 		local canAfford = scope:Computed(function(use)
 			return use(fluxTotal) >= cost

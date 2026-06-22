@@ -1,8 +1,29 @@
 # Status
 
-## Current phase: Phase A (in-world stations) DONE → Phase B (full UI restyle) NEXT. Phase 14 backend complete.
+## Current phase: Phase B (full UI restyle) DONE. Phase A + Phase 14 backend complete.
 
-**Last updated:** 2026-06-22 (Session 4 — see `docs/SESSION4_HANDOFF.md` for the full onboarding)
+**Last updated:** 2026-06-22 (Session 5 — Phase B UI overhaul)
+
+> **Session 5 summary (Phase B — Modern sim-game UI overhaul, all pushed to `main`; 525 tests green,
+> selene 0/0):** restyled the entire frontend to a cohesive custom look — one honey/indigo palette,
+> a signature 3D pill button everywhere, soft drop-shadows, gradient backdrops, Fredoka display
+> headers + honey underlines, spring hover/press motion. **Functions unchanged — visual only.**
+> Foundation-first then per-screen, committed + live-verified in Studio in batches:
+> - **Foundation** (`a24143c`): reworked `Theme.luau` (palette, {fill,shadow,text} action triples,
+>   Fredoka font, shadow/backdrop/gloss tokens) + `Components.luau` (3D pill `Button`, `Card` w/ soft
+>   shadow, `dropShadow`/`Backdrop` helpers; later added `ScreenHeader`/`TabBar`/`SectionLabel`).
+> - **HomeScreen + bottom nav** (`c1cb6b2`), **More drawer** (`e345d6a`), **Synthesize/Lab** (`718dc5c`),
+>   **Vault/Settings/Log/Leaderboard** (`69409da`), **Contracts/Event/Cosmetics/Prestige/Market/
+>   Syndicate/Loading/RevealCard** (`63bc6f4`).
+> - Unified `formatNum` to K/M/B/T across HomeScreen/Market/Syndicate; fixed a pre-existing
+>   formula-log row layout bug (name/badge/button stacked at origin).
+> - Live-verified each batch via the real path (nav clicks / drawer). HEAD `63bc6f4`.
+>
+> **NEXT (open, code-doable):** Syndicate Founder-only rename UI (server `rename` exists, no UI);
+> optionally extend the K/M/B/T `formatNum` unification to the last few helper copies. Still gated on
+> the user: Robux monetization IDs · analytics vendor · economy workbooks (see below).
+
+## Phase A → B history
 
 > **Session 4 summary (HEAD `6fe3652`, all pushed; 525 tests green, selene 0/0):** finished the last
 > Phase-14 items + hardening, then built Phase A. Done this session:

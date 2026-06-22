@@ -18,6 +18,7 @@ local PrestigeController = require(script.Parent.Controllers.PrestigeController)
 local EventController = require(script.Parent.Controllers.EventController)
 local HintController = require(script.Parent.Controllers.HintController)
 local RevealController = require(script.Parent.Controllers.RevealController)
+local StationController = require(script.Parent.Controllers.StationController)
 local UIController = require(script.Parent.Controllers.UIController)
 
 -- Dependency-ordered init
@@ -38,6 +39,7 @@ PrestigeController.init()
 EventController.init()
 HintController.init()
 RevealController.init()
+StationController.init()
 UIController.init()
 
 -- Wait for server to confirm all initial state has been sent before showing Home.
@@ -45,6 +47,7 @@ RemoteController.connect("PlayerReady", function()
 	StateController.set({ loaded = true })
 	-- Plot/chambers exist by now; wire the in-world reveal prompts.
 	SlotController.bindRevealPrompts()
+	StationController.bindStations()
 	-- Pull the full formula log once (incremental LabDiscovery only appends this
 	-- session; returning players need the existing discoveries hydrated).
 	task.spawn(LabController.hydrateFormulaLog)

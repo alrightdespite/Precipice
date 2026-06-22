@@ -2,11 +2,11 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Theme = require(script.Parent.Theme)
+local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 local LeaderboardController = require(script.Parent.Parent.Controllers.LeaderboardController)
 
 local Children = Fusion.Children
-local OnEvent = Fusion.OnEvent
 local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
@@ -91,7 +91,8 @@ function LeaderboardScreen.open(uiController)
 
 		return scope:New("Frame")({
 			Size = UDim2.new(1, 0, 0, 44),
-			BackgroundColor3 = isOwn and Theme.Colors.AccentDim or Theme.Colors.SurfaceRaised,
+			BackgroundColor3 = isOwn and Theme.Colors.SurfaceRaised:Lerp(Theme.Colors.Accent, 0.16)
+				or Theme.Colors.SurfaceRaised,
 			BorderSizePixel = 0,
 			[Children] = {
 				scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadius }),
@@ -237,40 +238,6 @@ function LeaderboardScreen.open(uiController)
 		})
 	end
 
-	-- Tab buttons
-	local tabBtns = {}
-	for _, board in ipairs({ TAB_SPRINT, TAB_CHIEF }) do
-		local b = board
-		table.insert(
-			tabBtns,
-			scope:New("TextButton")({
-				Size = UDim2.new(0.5, 0, 1, 0),
-				BackgroundColor3 = scope:Computed(function(use)
-					return use(activeBoard) == b and Theme.Colors.AccentDim or Theme.Colors.Surface
-				end),
-				BorderSizePixel = 0,
-				Text = "",
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = scope:Computed(function(use)
-							return use(activeBoard) == b and Theme.Colors.Accent or Theme.Colors.TextSecondary
-						end),
-						FontFace = Theme.Font.Label,
-						TextSize = 13,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = TAB_LABELS[b],
-					}),
-				},
-				[OnEvent("Activated")] = function()
-					activeBoard:set(b)
-					loadBoard(b)
-				end,
-			})
-		)
-	end
-
 	loadBoard(TAB_SPRINT)
 
 	scope:New("ScreenGui")({
@@ -280,49 +247,25 @@ function LeaderboardScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			scope:New("TextButton")({
-				Name = "CloseBtn",
-				Size = UDim2.fromOffset(36, 36),
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
-				Text = "✕",
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
-				ZIndex = 20,
-				[OnEvent("Activated")] = function()
+			Components.Backdrop(scope, {}),
+			Components.ScreenHeader(scope, {
+				Title = "Leaderboard",
+				OnClose = function()
 					if uiController then
 						uiController.openScreen("Home")
 					end
 				end,
 			}),
-			scope:New("Frame")({
-				Name = "Header",
-				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = "Leaderboard",
-					}),
-				},
-			}),
-			scope:New("Frame")({
-				Name = "Tabs",
-				Size = UDim2.new(1, 0, 0, 44),
+			Components.TabBar(scope, {
 				Position = UDim2.fromOffset(0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal }),
-					table.unpack(tabBtns),
+				Active = activeBoard,
+				OnSelect = function(k)
+					activeBoard:set(k)
+					loadBoard(k)
+				end,
+				Items = {
+					{ key = TAB_SPRINT, label = TAB_LABELS[TAB_SPRINT] },
+					{ key = TAB_CHIEF, label = TAB_LABELS[TAB_CHIEF] },
 				},
 			}),
 			-- §18 Hall of Fame banner — the player's Sprint championships (hidden if none).
@@ -330,12 +273,20 @@ function LeaderboardScreen.open(uiController)
 				Name = "ChampionBanner",
 				Size = UDim2.new(1, 0, 0, 28),
 				Position = UDim2.fromOffset(0, 100),
-				BackgroundColor3 = Theme.Colors.AccentDim,
+				BackgroundColor3 = Theme.Colors.SurfaceRaised,
 				BorderSizePixel = 0,
 				Visible = scope:Computed(function(use)
 					return #use(championshipsValue) > 0
 				end),
 				[Children] = {
+					scope:New("Frame")({
+						Name = "Underline",
+						Size = UDim2.new(1, 0, 0, 2),
+						AnchorPoint = Vector2.new(0, 1),
+						Position = UDim2.new(0, 0, 1, 0),
+						BackgroundColor3 = Theme.Colors.Accent,
+						BorderSizePixel = 0,
+					}),
 					scope:New("TextLabel")({
 						Size = UDim2.fromScale(1, 1),
 						BackgroundTransparency = 1,

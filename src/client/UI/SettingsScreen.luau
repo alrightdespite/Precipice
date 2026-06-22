@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Theme = require(script.Parent.Theme)
+local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 
 local Children = Fusion.Children
@@ -148,39 +149,14 @@ function SettingsScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			scope:New("TextButton")({
-				Name = "CloseBtn",
-				Size = UDim2.fromOffset(36, 36),
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
-				Text = "✕",
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
-				ZIndex = 20,
-				[OnEvent("Activated")] = function()
+			Components.Backdrop(scope, {}),
+			Components.ScreenHeader(scope, {
+				Title = "Settings",
+				OnClose = function()
 					if uiController then
 						uiController.openScreen("Home")
 					end
 				end,
-			}),
-			scope:New("Frame")({
-				Name = "Header",
-				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = "Settings",
-					}),
-				},
 			}),
 			scope:New("ScrollingFrame")({
 				Size = UDim2.new(1, -24, 1, -72),

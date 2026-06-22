@@ -3,11 +3,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Compounds = require(ReplicatedStorage.Shared.Data.Compounds)
 local Theme = require(script.Parent.Theme)
+local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
 local PatentController = require(script.Parent.Parent.Controllers.PatentController)
 
 local Children = Fusion.Children
-local OnEvent = Fusion.OnEvent
 local doCleanup = Fusion.doCleanup
 
 local TAB_LOG = "Formula Log"
@@ -129,7 +129,7 @@ function FormulaLogScreen.open(uiController)
 					BackgroundColor3 = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary,
 					BorderSizePixel = 0,
 					[Children] = {
-						scope:New("UICorner")({ CornerRadius = UDim.new(0, 3) }),
+						scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
 						scope:New("TextLabel")({
 							Size = UDim2.fromScale(1, 1),
 							BackgroundTransparency = 1,
@@ -190,7 +190,7 @@ function FormulaLogScreen.open(uiController)
 					BackgroundColor3 = Theme.Colors.Tier[7],
 					BorderSizePixel = 0,
 					[Children] = {
-						scope:New("UICorner")({ CornerRadius = UDim.new(0, 3) }),
+						scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
 						scope:New("TextLabel")({
 							Size = UDim2.fromScale(1, 1),
 							BackgroundTransparency = 1,
@@ -206,39 +206,6 @@ function FormulaLogScreen.open(uiController)
 		})
 	end
 
-	-- Tab bar
-	local tabBtns = {}
-	for _, t in ipairs({ TAB_LOG, TAB_EXOTIC }) do
-		local tab = t
-		table.insert(
-			tabBtns,
-			scope:New("TextButton")({
-				Size = UDim2.new(0.5, 0, 1, 0),
-				BackgroundColor3 = scope:Computed(function(use)
-					return use(activeTab) == tab and Theme.Colors.AccentDim or Theme.Colors.Surface
-				end),
-				BorderSizePixel = 0,
-				Text = "",
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = scope:Computed(function(use)
-							return use(activeTab) == tab and Theme.Colors.Accent or Theme.Colors.TextSecondary
-						end),
-						FontFace = Theme.Font.Label,
-						TextSize = 13,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = tab,
-					}),
-				},
-				[OnEvent("Activated")] = function()
-					activeTab:set(tab)
-				end,
-			})
-		)
-	end
-
 	scope:New("ScreenGui")({
 		Name = "FormulaLogScreen",
 		Enabled = true,
@@ -246,49 +213,24 @@ function FormulaLogScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			scope:New("TextButton")({
-				Name = "CloseBtn",
-				Size = UDim2.fromOffset(36, 36),
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
-				Text = "✕",
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
-				ZIndex = 20,
-				[OnEvent("Activated")] = function()
+			Components.Backdrop(scope, {}),
+			Components.ScreenHeader(scope, {
+				Title = "Research Log",
+				OnClose = function()
 					if uiController then
 						uiController.openScreen("Home")
 					end
 				end,
 			}),
-			scope:New("Frame")({
-				Name = "Header",
-				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.fromScale(1, 1),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = "Research Log",
-					}),
-				},
-			}),
-			scope:New("Frame")({
-				Name = "Tabs",
-				Size = UDim2.new(1, 0, 0, 44),
+			Components.TabBar(scope, {
 				Position = UDim2.fromOffset(0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("UIListLayout")({ FillDirection = Enum.FillDirection.Horizontal }),
-					table.unpack(tabBtns),
+				Active = activeTab,
+				OnSelect = function(k)
+					activeTab:set(k)
+				end,
+				Items = {
+					{ key = TAB_LOG, label = TAB_LOG },
+					{ key = TAB_EXOTIC, label = TAB_EXOTIC },
 				},
 			}),
 			-- Formula Log tab

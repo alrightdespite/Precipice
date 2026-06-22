@@ -381,6 +381,192 @@ function Components.ProgressBar(scope, props)
 	})
 end
 
+-- ScreenHeader(scope, { Title, Subtitle?, OnClose, Height? }) → full-width header
+-- Gradient bar + Fredoka display title + signature honey underline + circular close
+-- button. Shared across every full-screen view for a cohesive top.
+function Components.ScreenHeader(scope, props)
+	local height = props.Height or 56
+	local kids: { [any]: any } = {
+		scope:New("UIGradient")({
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Theme.Colors.SurfaceRaised),
+				ColorSequenceKeypoint.new(1, Theme.Colors.Surface),
+			}),
+			Rotation = 90,
+		}),
+		scope:New("Frame")({
+			Name = "Underline",
+			Size = UDim2.new(1, 0, 0, 2),
+			AnchorPoint = Vector2.new(0, 1),
+			Position = UDim2.new(0, 0, 1, 0),
+			BackgroundColor3 = Theme.Colors.Accent,
+			BorderSizePixel = 0,
+		}),
+		scope:New("TextLabel")({
+			Name = "Title",
+			Size = UDim2.new(1, 0, 0, props.Subtitle and 28 or height),
+			Position = UDim2.fromOffset(0, props.Subtitle and 6 or 0),
+			BackgroundTransparency = 1,
+			TextColor3 = Theme.Colors.TextPrimary,
+			FontFace = Theme.Font.Display,
+			TextSize = 22,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			Text = props.Title or "",
+		}),
+		scope:New("TextButton")({
+			Name = "CloseBtn",
+			Size = UDim2.fromOffset(36, 36),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -10, 0.5, 0),
+			BackgroundColor3 = Theme.Colors.SurfaceRaised,
+			Text = "✕",
+			TextColor3 = Theme.Colors.TextSecondary,
+			FontFace = Theme.Font.Value,
+			TextSize = 18,
+			ZIndex = 5,
+			[Children] = {
+				scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+				scope:New("UIStroke")({
+					Color = Theme.Colors.Stroke,
+					Thickness = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				}),
+			},
+			[OnEvent("Activated")] = props.OnClose or function() end,
+		}),
+	}
+	if props.Subtitle then
+		table.insert(
+			kids,
+			scope:New("TextLabel")({
+				Name = "Subtitle",
+				Size = UDim2.new(1, 0, 0, 16),
+				Position = UDim2.fromOffset(0, 34),
+				BackgroundTransparency = 1,
+				TextColor3 = props.SubtitleColor or Theme.Colors.Accent,
+				FontFace = Theme.Font.Value,
+				TextSize = 12,
+				TextXAlignment = Enum.TextXAlignment.Center,
+				Text = props.Subtitle,
+			})
+		)
+	end
+	return scope:New("Frame")({
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, height),
+		BackgroundColor3 = Theme.Colors.SurfaceRaised,
+		BorderSizePixel = 0,
+		ZIndex = 4,
+		[Children] = kids,
+	})
+end
+
+-- TabBar(scope, { Items, Active, OnSelect, Position?, Height? }) → segmented tab row
+-- Items: { { key=string, label=string }, ... }. Active: a Value/Computed of the key.
+-- Active tab gets a translucent-honey highlight + honey underline (matches bottom nav).
+function Components.TabBar(scope, props)
+	local items = props.Items
+	local tabs: { [any]: any } = {
+		scope:New("UIListLayout")({
+			FillDirection = Enum.FillDirection.Horizontal,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	}
+	for idx, item in ipairs(items) do
+		local key = item.key
+		local isActive = scope:Computed(function(use)
+			return use(props.Active) == key
+		end)
+		table.insert(
+			tabs,
+			scope:New("TextButton")({
+				LayoutOrder = idx,
+				Size = UDim2.new(1 / #items, 0, 1, 0),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Text = "",
+				[Children] = {
+					scope:New("Frame")({
+						Name = "Highlight",
+						Size = UDim2.new(1, -12, 1, -10),
+						AnchorPoint = Vector2.new(0.5, 0.5),
+						Position = UDim2.new(0.5, 0, 0.5, 0),
+						BackgroundColor3 = Theme.Colors.Accent,
+						BackgroundTransparency = 0.86,
+						BorderSizePixel = 0,
+						Visible = isActive,
+						[Children] = {
+							scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+						},
+					}),
+					scope:New("TextLabel")({
+						Size = UDim2.fromScale(1, 1),
+						BackgroundTransparency = 1,
+						TextColor3 = scope:Computed(function(use)
+							return use(isActive) and Theme.Colors.Accent or Theme.Colors.TextSecondary
+						end),
+						FontFace = Theme.Font.Display,
+						TextSize = 14,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						Text = item.label,
+					}),
+					scope:New("Frame")({
+						Name = "Indicator",
+						Size = UDim2.new(0.5, 0, 0, 3),
+						AnchorPoint = Vector2.new(0.5, 1),
+						Position = UDim2.new(0.5, 0, 1, -3),
+						BackgroundColor3 = Theme.Colors.Accent,
+						BorderSizePixel = 0,
+						Visible = isActive,
+						[Children] = {
+							scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
+						},
+					}),
+				},
+				[OnEvent("Activated")] = function()
+					props.OnSelect(key)
+				end,
+			})
+		)
+	end
+	return scope:New("Frame")({
+		Name = "Tabs",
+		Size = UDim2.new(1, 0, 0, props.Height or 44),
+		Position = props.Position,
+		BackgroundColor3 = Theme.Colors.Surface,
+		BorderSizePixel = 0,
+		[Children] = {
+			scope:New("UIGradient")({
+				Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Theme.Colors.SurfaceRaised),
+					ColorSequenceKeypoint.new(1, Theme.Colors.Surface),
+				}),
+				Rotation = 90,
+			}),
+			scope:New("Frame")({
+				Name = "Inner",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				[Children] = tabs,
+			}),
+		},
+	})
+end
+
+-- SectionLabel(scope, { Text, LayoutOrder? }) → small Fredoka section heading
+function Components.SectionLabel(scope, props)
+	return scope:New("TextLabel")({
+		LayoutOrder = props.LayoutOrder,
+		Size = UDim2.new(1, 0, 0, 22),
+		BackgroundTransparency = 1,
+		TextColor3 = Theme.Colors.TextSecondary,
+		FontFace = Theme.Font.Display,
+		TextSize = 14,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Text = props.Text or "",
+	})
+end
+
 -- ScrollFrame(scope, { Children, Size? })
 function Components.ScrollFrame(scope, props)
 	local listLayout = scope:New("UIListLayout")({

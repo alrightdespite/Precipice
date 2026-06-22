@@ -13,7 +13,6 @@ local StateController = require(script.Parent.Parent.Controllers.StateController
 local VaultController = require(script.Parent.Parent.Controllers.VaultController)
 
 local Children = Fusion.Children
-local OnEvent = Fusion.OnEvent
 local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
@@ -108,7 +107,7 @@ function VaultScreen.open(uiController)
 					BackgroundColor3 = Theme.Colors.Tier[tier] or Theme.Colors.TextSecondary,
 					BorderSizePixel = 0,
 					[Children] = {
-						scope:New("UICorner")({ CornerRadius = UDim.new(0, 4) }),
+						scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusPill }),
 						scope:New("TextLabel")({
 							Size = UDim2.fromScale(1, 1),
 							BackgroundTransparency = 1,
@@ -175,53 +174,18 @@ function VaultScreen.open(uiController)
 		DisplayOrder = 10,
 		Parent = Players.LocalPlayer.PlayerGui,
 		[Children] = {
-			scope:New("TextButton")({
-				Name = "CloseBtn",
-				Size = UDim2.fromOffset(36, 36),
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -8, 0, 8),
-				BackgroundTransparency = 1,
-				Text = "✕",
-				TextColor3 = Theme.Colors.TextSecondary,
-				FontFace = Theme.Font.Header,
-				TextSize = 20,
-				ZIndex = 20,
-				[OnEvent("Activated")] = function()
+			Components.Backdrop(scope, {}),
+			Components.ScreenHeader(scope, {
+				Title = "Vault",
+				Subtitle = scope:Computed(function(use)
+					local bal = use(balanceValue) or {}
+					return formatNum(bal.pellets or 0) .. " ◈ Pellets"
+				end),
+				OnClose = function()
 					if uiController then
 						uiController.openScreen("Home")
 					end
 				end,
-			}),
-			scope:New("Frame")({
-				Name = "Header",
-				Size = UDim2.new(1, 0, 0, 56),
-				BackgroundColor3 = Theme.Colors.Surface,
-				BorderSizePixel = 0,
-				[Children] = {
-					scope:New("TextLabel")({
-						Size = UDim2.new(1, 0, 0, 30),
-						Position = UDim2.fromOffset(0, 6),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.TextPrimary,
-						FontFace = Theme.Font.Header,
-						TextSize = 18,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = "Vault",
-					}),
-					scope:New("TextLabel")({
-						Size = UDim2.new(1, 0, 0, 16),
-						Position = UDim2.fromOffset(0, 36),
-						BackgroundTransparency = 1,
-						TextColor3 = Theme.Colors.Accent,
-						FontFace = Theme.Font.Body,
-						TextSize = 12,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = scope:Computed(function(use)
-							local bal = use(balanceValue) or {}
-							return formatNum(bal.pellets or 0) .. " ◈ Pellets"
-						end),
-					}),
-				},
 			}),
 			-- Status line
 			scope:New("TextLabel")({

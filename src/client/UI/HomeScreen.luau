@@ -857,7 +857,7 @@ local function makeWorldHUD(scope, uiVisible, slotsValue)
 				[Children] = {
 					scope:New("UICorner")({ CornerRadius = UDim.new(0.5, 0) }),
 					scope:New("UIStroke")({
-						Color = Theme.Colors.AccentDim,
+						Color = Theme.Colors.AccentShadow,
 						Thickness = 2,
 						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 					}),

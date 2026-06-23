@@ -5,8 +5,8 @@
 -- coral danger, mint success. Every action color ships as a {fill, shadow, text}
 -- triple so the signature pill reads the same everywhere.
 --
--- NOTE: legacy keys (Accent/Surface/AccentDim/SurfaceSheen/...) are preserved so the
--- not-yet-migrated screens keep rendering during the migration. New tokens are additive.
+-- NOTE: a few legacy keys (Surface/SurfaceSheen/...) are preserved for compatibility.
+-- The muddy AccentDim/SecondaryDim tokens were pruned after the Phase B migration.
 
 local Theme = {}
 
@@ -23,12 +23,10 @@ Theme.Colors = {
 	Accent = Color3.fromHex("FFB23E"),
 	AccentShadow = Color3.fromHex("C2761A"),
 	AccentText = Color3.fromHex("3A2408"),
-	AccentDim = Color3.fromHex("5A3F12"), -- legacy: pressed/disabled-ish accent
 
 	-- secondary action: cool blue
 	Secondary = Color3.fromHex("5B8DEF"),
 	SecondaryShadow = Color3.fromHex("2F5BAE"),
-	SecondaryDim = Color3.fromHex("24365E"), -- legacy
 
 	-- status
 	Success = Color3.fromHex("46D08A"),

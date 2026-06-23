@@ -55,6 +55,7 @@ function SyndicateScreen.open(uiController)
 	local contributeInput = scope:Value("")
 	local createNameInput = scope:Value("")
 	local inviteInput = scope:Value("")
+	local renameInput = scope:Value("")
 
 	local localUserId = Players.LocalPlayer and Players.LocalPlayer.UserId or 0
 
@@ -89,16 +90,20 @@ function SyndicateScreen.open(uiController)
 		if not syn then
 			return nil
 		end
-		local member = syn.members[localUserId]
-		return member and member.role or nil
+		-- Server `members` maps userId -> role STRING (e.g. "Founder"), not a table.
+		-- Keys can be number (in-session) or string (after a DataStore round-trip).
+		return syn.members[localUserId] or syn.members[tostring(localUserId)]
 	end)
 	local canManage = scope:Computed(function(use)
 		local role = use(localRole)
 		return role == "Founder" or role == "Officer"
 	end)
+	local isFounder = scope:Computed(function(use)
+		return use(localRole) == "Founder"
+	end)
 
 	-- Build member row
-	local function buildMemberRow(userId: number, memberData: { role: string, displayName: string })
+	local function buildMemberRow(userId: number, role: string)
 		return scope:New("Frame")({
 			Size = UDim2.new(1, 0, 0, 44),
 			BackgroundColor3 = Theme.Colors.SurfaceRaised,
@@ -118,14 +123,14 @@ function SyndicateScreen.open(uiController)
 					FontFace = Theme.Font.Label,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
-					Text = memberData.displayName ~= "" and memberData.displayName or tostring(userId),
+					Text = "Player " .. tostring(userId),
 				}),
 				-- Role badge
 				scope:New("Frame")({
 					Size = UDim2.fromOffset(64, 24),
 					Position = UDim2.new(1, -140, 0.5, -12),
-					BackgroundColor3 = memberData.role == "Founder" and Theme.Colors.Accent
-						or memberData.role == "Officer" and Theme.Colors.AccentDim
+					BackgroundColor3 = role == "Founder" and Theme.Colors.Accent
+						or role == "Officer" and Theme.Colors.Secondary
 						or Theme.Colors.SurfaceRaised,
 					BorderSizePixel = 0,
 					[Children] = {
@@ -137,7 +142,7 @@ function SyndicateScreen.open(uiController)
 							FontFace = Theme.Font.Label,
 							TextSize = 10,
 							TextXAlignment = Enum.TextXAlignment.Center,
-							Text = memberData.role,
+							Text = role,
 						}),
 					},
 				}),
@@ -442,7 +447,8 @@ function SyndicateScreen.open(uiController)
 			-- Header info
 			scope:New("Frame")({
 				LayoutOrder = 1,
-				Size = UDim2.new(1, 0, 0, 56),
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
 				BackgroundColor3 = Theme.Colors.Surface,
 				BorderSizePixel = 0,
 				[Children] = {
@@ -484,6 +490,67 @@ function SyndicateScreen.open(uiController)
 							end
 							return count .. "/" .. (syn.memberCap or 10) .. " members · " .. formatNum(syn.vaultBalance or 0) .. " ◈ vault"
 						end),
+					}),
+					-- Founder-only rename
+					scope:New("Frame")({
+						Name = "zzRenameRow",
+						Size = UDim2.new(1, 0, 0, 36),
+						BackgroundTransparency = 1,
+						Visible = isFounder,
+						[Children] = {
+							scope:New("UIListLayout")({
+								FillDirection = Enum.FillDirection.Horizontal,
+								Padding = UDim.new(0, 8),
+							}),
+							scope:New("TextBox")({
+								Size = UDim2.new(0.62, -4, 1, 0),
+								BackgroundColor3 = Theme.Colors.SurfaceWell,
+								BorderSizePixel = 0,
+								TextColor3 = Theme.Colors.TextPrimary,
+								FontFace = Theme.Font.Body,
+								TextSize = 13,
+								PlaceholderText = "Rename syndicate",
+								Text = renameInput,
+								ClearTextOnFocus = false,
+								[Fusion.OnChange("Text")] = function(v)
+									renameInput:set(v)
+								end,
+								[Children] = {
+									scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusSmall }),
+									scope:New("UIStroke")({
+										Color = Theme.Colors.Stroke,
+										Thickness = 1,
+										ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+									}),
+									scope:New("UIPadding")({ PaddingLeft = UDim.new(0, 8) }),
+								},
+							}),
+							scope:New("Frame")({
+								Size = UDim2.new(0.38, -4, 1, 0),
+								BackgroundTransparency = 1,
+								[Children] = {
+									Components.Button(scope, {
+										Text = "Rename",
+										Style = "secondary",
+										OnClick = function()
+											local name = peek(renameInput)
+											if not name or name == "" then
+												return
+											end
+											task.spawn(function()
+												local ok, err = SyndicateController.rename(name)
+												if ok then
+													setStatus("Renamed.")
+													renameInput:set("")
+												else
+													setStatus(tostring(err))
+												end
+											end)
+										end,
+									}),
+								},
+							}),
+						},
 					}),
 				},
 			}),

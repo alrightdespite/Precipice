@@ -551,7 +551,8 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 				Size = UDim2.new(1, 0, 0, 36),
 				LayoutOrder = i,
 				BackgroundColor3 = scope:Computed(function(u)
-					return u(selectedVariant) == thisRid and Theme.Colors.AccentDim or Theme.Colors.SurfaceRaised
+					return u(selectedVariant) == thisRid and Theme.Colors.SurfaceRaised:Lerp(Theme.Colors.Accent, 0.2)
+					or Theme.Colors.SurfaceRaised
 				end),
 				BorderSizePixel = 0,
 				Text = "",
@@ -700,7 +701,8 @@ function SynthesizeScreen.open(uiController, slotMode, slotIndex)
 								LayoutOrder = 1,
 								Size = UDim2.new(1, 0, 0, 36),
 								BackgroundColor3 = scope:Computed(function(use)
-									return use(stabilized) and Theme.Colors.AccentDim or Theme.Colors.SurfaceRaised
+									return use(stabilized) and Theme.Colors.SurfaceRaised:Lerp(Theme.Colors.Accent, 0.2)
+										or Theme.Colors.SurfaceRaised
 								end),
 								BorderSizePixel = 0,
 								Text = "",

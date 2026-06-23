@@ -14,6 +14,22 @@ local TAB_SPRINT = "sprint"
 local TAB_CHIEF = "chief"
 local TAB_LABELS = { sprint = "Weekly Sprint", chief = "Chief's Board" }
 
+local function formatNum(n: number): string
+	if n >= 1e12 then
+		return string.format("%.2fT", n / 1e12)
+	end
+	if n >= 1e9 then
+		return string.format("%.2fB", n / 1e9)
+	end
+	if n >= 1e6 then
+		return string.format("%.1fM", n / 1e6)
+	end
+	if n >= 1000 then
+		return string.format("%.1fK", n / 1000)
+	end
+	return tostring(math.floor(n))
+end
+
 local LeaderboardScreen = {}
 local _scope = nil
 
@@ -140,7 +156,7 @@ function LeaderboardScreen.open(uiController)
 					FontFace = Theme.Font.Value,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Right,
-					Text = tostring(entry.score),
+					Text = formatNum(entry.score or 0),
 				}),
 			},
 		})

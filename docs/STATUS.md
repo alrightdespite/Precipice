@@ -19,9 +19,32 @@
 >   formula-log row layout bug (name/badge/button stacked at origin).
 > - Live-verified each batch via the real path (nav clicks / drawer). HEAD `63bc6f4`.
 >
-> **NEXT (open, code-doable):** Syndicate Founder-only rename UI (server `rename` exists, no UI);
-> optionally extend the K/M/B/T `formatNum` unification to the last few helper copies. Still gated on
-> the user: Robux monetization IDs · analytics vendor · economy workbooks (see below).
+> **Session 5b — full verification sweep + fixes (all pushed):** drove **every** screen live in
+> Studio (real click/type path), not just spot-checks. Found + fixed two real bugs and shipped the
+> rename feature:
+> - **RevealCard layout bug** (`04ca603`) — the Phase B `Components.dropShadow` was a child of the
+>   reveal Card, but the Card uses a `UIListLayout`, so the shadow ImageLabel got laid out in the flow
+>   and spread the card content down the whole screen. Removed it; verified the real reveal flow
+>   (start→force-complete→Reveal): card is contained, Keep advances the queue.
+> - **Syndicate member-role contract bug + Founder rename UI** (`34b6727`) — server `members` maps
+>   userId→role STRING, but the client read `members[uid].role`/`.displayName` as a table, so
+>   `localRole` was always nil → role badges blank, `canManage` always false, and the entire
+>   management UI (invite/kick/promote/rename/disband) was **dead after any rejoin**. Fixed to read the
+>   role string directly (number- or string-keyed). Built the Founder-only **Rename** control (wired to
+>   the existing remote); verified live (typed a name → renamed test→"Cascade Labs"). Officer badge
+>   recoloured blue; pruned the muddy `AccentDim`/`SecondaryDim` Theme tokens; Leaderboard score now
+>   K/M/B/T.
+> - Live-verified flows: Vault sell (row cleared), Event buy (−300 flux), Contracts progress tick,
+>   Settings, Cosmetics, Market, Prestige, Loading screen.
+>
+> **Could NOT do autonomously (needs the user):** a **mobile-viewport pass** — Studio device emulation
+> isn't scriptable via the MCP, so phone-layout verification needs a manual emulation toggle. One known
+> risk to check there: the HomeScreen slot panel is a fixed 212px (everything else is scale-based).
+>
+> **Still gated on the user:** Robux monetization IDs · analytics vendor · economy workbooks (below).
+> **Known pre-existing (not Phase B):** the Syndicate UPGRADES/Joint "Buy"/"Cancel" buttons sit
+> bottom-left of their rows (original vertical-list structure) — functional, looks rough; left as-is to
+> avoid a risky restructure. `Components.Card` is defined but unused (dead code).
 
 ## Phase A → B history
 

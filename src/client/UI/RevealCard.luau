@@ -192,7 +192,6 @@ function RevealCard.show(props: RevealCardProps)
 
 	local cardChildren: { any } = {
 		scope:New("UICorner")({ CornerRadius = Theme.Layout.CornerRadiusLarge }),
-		Components.dropShadow(scope, { Transparency = 0.4, Spread = 28 }),
 		scope:New("UIGradient")({
 			Color = Theme.Gradient.SurfaceSheen,
 			Rotation = Theme.Gradient.SurfaceSheenRotation,

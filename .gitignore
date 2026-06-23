@@ -5,3 +5,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Tooling sync caches + local reference assets (not source)
+weppy-project-sync/
+Pictures Of FIrst Prototype Plot/

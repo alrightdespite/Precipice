@@ -5,10 +5,16 @@
 local TEMPLATE_NAME = "PLOT_TEMPLATE"
 local PLOTS_FOLDER = "Plots"
 
--- Plots are tiled in a grid so concurrent players never overlap. Stride is
+-- Plots ring the Central Hub (IR-DIV-01): two facing rows of four, one north and
+-- one south of the hub, so the hub sits in the middle of every plot. Stride is
 -- derived from the template bounds plus a gap, so spacing adapts to the build.
-local GRID_COLS = 8
+local GRID_COLS = 4
 local PLOT_GAP_STUDS = 64
+-- World centre of the shared hub (matches workspace.Hub). The two plot rows
+-- straddle this point; keep in sync with the Studio-built hub geometry.
+local HUB_CENTER = Vector3.new(1145, 0, 40)
+-- Distance from the hub centre to each plot row.
+local ROW_GAP_STUDS = 560
 
 local _plots: { [number]: Model } = {}
 local _slotByUser: { [number]: number } = {}
@@ -37,21 +43,29 @@ local function claimSlot(): number
 	return i
 end
 
--- World translation for a grid slot, relative to the template's position.
--- row is shifted by +1 so no player plot lands on top of PLOT_TEMPLATE itself.
--- Stride comes from a dedicated "PlotBounds" part when present (sized to the real lot),
--- so far-flung or oversized decorative parts can't inflate the spacing; falls back to the
--- whole-model extents otherwise.
-local function offsetForSlot(template: Model, slot: number): Vector3
+-- Absolute world CFrame for a slot: four plots per row, two rows straddling the
+-- hub (row 0 north, row 1 south). The south row is flipped 180° so both rows
+-- face the hub. Placement is absolute (not relative to the unused template
+-- model), so the template can sit anywhere off-stage. Stride comes from the
+-- dedicated "PlotBounds" part when present (sized to the real lot), so far-flung
+-- decorative parts can't inflate spacing; falls back to whole-model extents.
+local function placementForSlot(template: Model, slot: number): CFrame
 	local boundsPart = template:FindFirstChild("PlotBounds")
 	local footprint = if boundsPart and boundsPart:IsA("BasePart")
 		then (boundsPart :: BasePart).Size
 		else template:GetExtentsSize()
 	local strideX = footprint.X + PLOT_GAP_STUDS
-	local strideZ = footprint.Z + PLOT_GAP_STUDS
 	local col = slot % GRID_COLS
 	local row = math.floor(slot / GRID_COLS)
-	return Vector3.new(col * strideX, 0, (row + 1) * strideZ)
+	local x = HUB_CENTER.X + (col - (GRID_COLS - 1) / 2) * strideX
+	local z = HUB_CENTER.Z + (if row == 0 then ROW_GAP_STUDS else -ROW_GAP_STUDS)
+	local y = template:GetPivot().Position.Y
+	local cf = CFrame.new(x, y, z)
+	if row ~= 0 then
+		-- South row faces north toward the hub.
+		cf = cf * CFrame.Angles(0, math.pi, 0)
+	end
+	return cf
 end
 
 function PlotService.spawnPlot(player: Player)
@@ -79,8 +93,8 @@ function PlotService.spawnPlot(player: Player)
 
 	local plot = (template :: Model):Clone()
 	plot.Name = tostring(userId)
-	-- Translate the whole model so plots never stack at the template origin.
-	plot:PivotTo(plot:GetPivot() + offsetForSlot(template :: Model, slot))
+	-- Place the whole model at its absolute ring slot around the hub.
+	plot:PivotTo(placementForSlot(template :: Model, slot))
 	plot.Parent = plotsFolder
 	_plots[userId] = plot
 

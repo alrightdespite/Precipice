@@ -56,9 +56,44 @@ function SlotController.getChamberPart(slotIndex: number): BasePart?
 	return nil
 end
 
--- Chambers physically exist for slots 1..6 in the current map; higher indices
--- resolve nil and are skipped (see STATUS B4).
+-- Chambers physically exist for slots 1..10 in the map; indices past the built
+-- count resolve nil and are skipped.
 local CHAMBER_COUNT = 10
+
+-- §31: "the room is built with all 10 chambers present; chambers for slots you
+-- have not unlocked stand dark and inactive — the slot cap is legible at a
+-- glance." Locked chambers kill their teal neon glow and read "LOCKED"; unlocked
+-- ones restore the Industrial Standard teal accent. Owner-only (driven off the
+-- local player's slotCap); a visitor sees the template default (active) per §24.
+local ACTIVE_RIB = Color3.fromRGB(0, 180, 200) -- teal accent (matches LightPanel/sign neon)
+local ACTIVE_RIM = Color3.fromRGB(0, 95, 105)
+local LOCKED_GREY = Color3.fromRGB(38, 38, 45)
+local LOCKED_TEXT = Color3.fromRGB(110, 110, 120)
+local STANDBY_TEXT = Color3.fromRGB(120, 200, 140)
+
+local function applyChamberLock(chamber: Instance, locked: boolean)
+	for _, d in chamber:GetChildren() do
+		if d:IsA("BasePart") and (d.Name == "Rib" or d.Name == "Rim") then
+			if locked then
+				d.Material = Enum.Material.SmoothPlastic
+				d.Color = LOCKED_GREY
+			else
+				d.Material = Enum.Material.Neon
+				d.Color = if d.Name == "Rib" then ACTIVE_RIB else ACTIVE_RIM
+			end
+		end
+	end
+	local labelPlate = chamber:FindFirstChild("LabelPlate")
+	local gui = labelPlate and labelPlate:FindFirstChildWhichIsA("SurfaceGui")
+	if gui then
+		for _, t in gui:GetDescendants() do
+			if t:IsA("TextLabel") and (string.find(t.Text, "STANDBY") or string.find(t.Text, "LOCKED")) then
+				t.Text = if locked then "🔒 LOCKED" else "● STANDBY"
+				t.TextColor3 = if locked then LOCKED_TEXT else STANDBY_TEXT
+			end
+		end
+	end
+end
 
 -- Wires each chamber's RevealPrompt to reveal that slot, but only while the slot
 -- is DONE. The prompt is enabled/disabled to match slot state so players can't
@@ -74,8 +109,12 @@ function SlotController.bindRevealPrompts()
 	end
 
 	local function refresh()
+		local slotCap = StateController.get().slotCap or CHAMBER_COUNT
 		for i = 1, CHAMBER_COUNT do
 			local chamber = SlotController.getChamberPart(i)
+			if chamber then
+				applyChamberLock(chamber, i > slotCap)
+			end
 			local prompt = chamber and chamber:FindFirstChild("RevealPrompt")
 			if prompt and prompt:IsA("ProximityPrompt") then
 				prompt.Enabled = isDone(i)
@@ -93,7 +132,7 @@ function SlotController.bindRevealPrompts()
 	end
 
 	StateController.Changed:Connect(function(patch)
-		if patch.slots ~= nil then
+		if patch.slots ~= nil or patch.slotCap ~= nil then
 			refresh()
 		end
 	end)

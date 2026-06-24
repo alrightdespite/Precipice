@@ -53,12 +53,19 @@ nothing that is theirs… Plots are the cheapest model in which the reveal momen
 world the player owns while other people visibly exist." §31 also rejects full private
 instancing (teleport plumbing for zero gain).
 
-**What was built instead:** a static **Central Operations hub** (`workspace.Hub`) + a shared
-`workspace.WorldGround`, placed south of and centered on the 8-plot tiling row (mid-X ≈ 1145,
-derived from `PlotService` stride 326×474). Contains a landmark beacon tower, an Ops-building
-backdrop, twin global-ranking boards (SurfaceGuis, **not yet wired** — future LeaderboardService
-surface), an entry arch, and ambient lighting/planting. It is **not** inside `workspace.Plots`,
-so `PlotService` does **not** clone it — one shared instance for the server.
+**What was built instead:** a static **Central Operations hub** (`workspace.Hub`, ~286 parts) on a
+shared **grass campus** (`workspace.WorldGround` — one 3000×1050 grass slab + `Landscape` folder of
+~63 trees / 14 rocks), placed south of and centered on the 8-plot tiling row (mid-X ≈ 1145, derived
+from `PlotService` stride 326×474). Contents: a 118-stud landmark **beacon tower** (teal energy
+bands), a two-storey **Ops-building** backdrop with roof detail (RTUs, vents, antenna mast + red
+beacon, railing, downpipes) and a `CENTRAL OPERATIONS` sign, **twin global-ranking boards**
+(`Leaderboard_W` = TOP RESEARCHERS, `Leaderboard_E` = TOP SYNDICATES — SurfaceGuis, **not yet
+wired**, a future LeaderboardService surface), an E-W **avenue** along the plot-row south edge, an
+**entry arch**, a flag-lined central **walkway** with a `PRECIPICE` ground emblem, hedges, lamp
+posts, bollards, **service vehicles** (box truck + forklift) on a marked service bay, and perimeter
+treeline. Reuses the world's teal/concrete/steel palette + the existing Lighting post-FX (Atmosphere
+/ Bloom). It is **not** inside `workspace.Plots`, so `PlotService` does **not** clone it — one shared
+instance per server, sitting under the tiled plots which keep their own grass lots on top.
 
 **Why the override is low-risk as built:** the hub does **not** change spawn routing, reveals,
 or any economic/social system — those stay per-plot and cross-server exactly as designed. The

@@ -53,19 +53,28 @@ nothing that is theirs… Plots are the cheapest model in which the reveal momen
 world the player owns while other people visibly exist." §31 also rejects full private
 instancing (teleport plumbing for zero gain).
 
-**What was built instead:** a static **Central Operations hub** (`workspace.Hub`, ~286 parts) on a
-shared **grass campus** (`workspace.WorldGround` — one 3000×1050 grass slab + `Landscape` folder of
-~63 trees / 14 rocks), placed south of and centered on the 8-plot tiling row (mid-X ≈ 1145, derived
-from `PlotService` stride 326×474). Contents: a 118-stud landmark **beacon tower** (teal energy
-bands), a two-storey **Ops-building** backdrop with roof detail (RTUs, vents, antenna mast + red
-beacon, railing, downpipes) and a `CENTRAL OPERATIONS` sign, **twin global-ranking boards**
-(`Leaderboard_W` = TOP RESEARCHERS, `Leaderboard_E` = TOP SYNDICATES — SurfaceGuis, **not yet
-wired**, a future LeaderboardService surface), an E-W **avenue** along the plot-row south edge, an
-**entry arch**, a flag-lined central **walkway** with a `PRECIPICE` ground emblem, hedges, lamp
-posts, bollards, **service vehicles** (box truck + forklift) on a marked service bay, and perimeter
-treeline. Reuses the world's teal/concrete/steel palette + the existing Lighting post-FX (Atmosphere
-/ Bloom). It is **not** inside `workspace.Plots`, so `PlotService` does **not** clone it — one shared
-instance per server, sitting under the tiled plots which keep their own grass lots on top.
+**Plots now ring the hub (source-controlled).** `PlotService` was changed (commit `0124d29`) from a
+single east-west row to **two facing rows of four** straddling the hub: row 0 north and row 1 south
+of `HUB_CENTER = (1145, 0, 40)`, `ROW_GAP_STUDS = 560` from centre, the south row flipped 180° so
+both rows face the hub. Placement is now **absolute** (`PivotTo` a computed CFrame) rather than
+template-relative, so the unused `PLOT_TEMPLATE` no longer anchors spacing and is parked off-stage
+(~(8000, 8000)) in the Studio place. `HUB_CENTER` in code **must stay in sync** with the Studio-built
+hub geometry — they are the contract between the committed layout and the gitignored map.
+
+**What was built (map):** a static **Central Operations hub** (`workspace.Hub`) at the centre of the
+ring on a shared **grass campus** (`workspace.WorldGround` — one 3600² grass slab + `Landscape` of
+~128 trees / 40 bushes / 22 rocks incl. a perimeter treeline). Contents: a 118-stud landmark **beacon
+tower** (teal energy bands); a two-storey **Ops-building** detailed on **both** N and S faces (signs,
+glazing, roof RTUs/vents/antenna mast/railing/downpipes) so both plot rows see a frontage; **twin
+global-ranking boards** (`Leaderboard_W` = TOP RESEARCHERS, `Leaderboard_E` = TOP SYNDICATES —
+SurfaceGuis, **not yet wired**, a future LeaderboardService surface); **north + south entry arches**;
+a flag-lined central **walkway** + `PRECIPICE` ground emblem; a **road network** (`Roads` — N-S
+boulevard + two E-W cross streets at each row, dashes, curbs) with **sidewalks, streetlights,
+crosswalks, district signs** (`RoadDetail`); a **parking lot** with cars + a **transit shelter**;
+hedges, lamp posts, bollards, benches, planters, **service vehicles**. Reuses the world's
+teal/concrete/steel palette; Atmosphere `Density` lowered to 0.16 for the larger outdoor scale.
+It is **not** inside `workspace.Plots`, so `PlotService` does **not** clone it — one shared instance
+per server, with the eight plot clones tiling on their own grass lots over the campus.
 
 **Why the override is low-risk as built:** the hub does **not** change spawn routing, reveals,
 or any economic/social system — those stay per-plot and cross-server exactly as designed. The
@@ -75,6 +84,9 @@ landmark/backdrop, not a walk-connected destination, so no inter-plot teleport/f
 added. If "visible and walkable" (§31) is later desired, opening each plot's south perimeter +
 aligning the avenue is the follow-up.
 
-**Map-only:** the hub lives in the Studio place (gitignored, Workspace is Studio-only by design,
-iron rule #5). It is **not** in `src/` and cannot be committed — it persists only via the user's
-Ctrl+S. This ruling is the source-controlled record that it exists.
+**What is / isn't source-controlled:** the **plot-ring placement logic** lives in
+`PlotService.luau` (committed). The **hub geometry + campus** live only in the Studio place
+(gitignored, Workspace is Studio-only by design, iron rule #5) and persist only via the user's
+Ctrl+S. The two are coupled through `HUB_CENTER` / `ROW_GAP_STUDS`: if the hub is moved in Studio,
+update those constants (and vice-versa). This ruling is the source-controlled record of the whole
+arrangement.

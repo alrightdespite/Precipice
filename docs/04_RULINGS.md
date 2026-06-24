@@ -40,6 +40,34 @@ See design doc Parts E and F. All 13 rulings are implemented verbatim. No confli
 
 ---
 
-## Conflicts with design doc (none in Phase 0)
+## Conflicts with design doc
 
-No design doc rule has been violated or overridden. All rulings above are engineering decisions below the design layer.
+### IR-DIV-01 — Central Hub added (diverges from §31 "no shared room")
+
+**Status:** Owner-directed override (2026-06-23). The owner explicitly chose to add a central
+hub against the design doc's recommendation; recorded here per the delta-log contract.
+
+**Design says (§31, *Why plots, and not the alternatives*):** the world is per-plot with **no
+shared room** — "A single shared room makes simultaneous reveals collide and gives the player
+nothing that is theirs… Plots are the cheapest model in which the reveal moment happens in a
+world the player owns while other people visibly exist." §31 also rejects full private
+instancing (teleport plumbing for zero gain).
+
+**What was built instead:** a static **Central Operations hub** (`workspace.Hub`) + a shared
+`workspace.WorldGround`, placed south of and centered on the 8-plot tiling row (mid-X ≈ 1145,
+derived from `PlotService` stride 326×474). Contains a landmark beacon tower, an Ops-building
+backdrop, twin global-ranking boards (SurfaceGuis, **not yet wired** — future LeaderboardService
+surface), an entry arch, and ambient lighting/planting. It is **not** inside `workspace.Plots`,
+so `PlotService` does **not** clone it — one shared instance for the server.
+
+**Why the override is low-risk as built:** the hub does **not** change spawn routing, reveals,
+or any economic/social system — those stay per-plot and cross-server exactly as designed. The
+reveal-collision concern in §31 does not apply because reveals still happen at each player's own
+chamber, never in the hub. Plots remain **sealed** (owner's call) — the hub is a visible
+landmark/backdrop, not a walk-connected destination, so no inter-plot teleport/fence plumbing was
+added. If "visible and walkable" (§31) is later desired, opening each plot's south perimeter +
+aligning the avenue is the follow-up.
+
+**Map-only:** the hub lives in the Studio place (gitignored, Workspace is Studio-only by design,
+iron rule #5). It is **not** in `src/` and cannot be committed — it persists only via the user's
+Ctrl+S. This ruling is the source-controlled record that it exists.

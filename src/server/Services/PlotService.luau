@@ -5,16 +5,17 @@
 local TEMPLATE_NAME = "PLOT_TEMPLATE"
 local PLOTS_FOLDER = "Plots"
 
--- Plots ring the Central Hub (IR-DIV-01): two facing rows of four, one north and
--- one south of the hub, so the hub sits in the middle of every plot. Stride is
--- derived from the template bounds plus a gap, so spacing adapts to the build.
-local GRID_COLS = 4
-local PLOT_GAP_STUDS = 64
--- World centre of the shared hub (matches workspace.Hub). The two plot rows
--- straddle this point; keep in sync with the Studio-built hub geometry.
+-- Plots ring the Central Hub (IR-DIV-01) in a regular octagon: eight plots evenly
+-- spaced on a circle around the hub, each rotated to face it, so every player is
+-- the SAME distance from the hub. This is the most uniform/efficient equal-distance
+-- formation for the 262×410 lot.
+-- World centre of the shared hub (matches workspace.Hub). Keep in sync with the
+-- Studio-built hub geometry.
 local HUB_CENTER = Vector3.new(1145, 0, 40)
--- Distance from the hub centre to each plot row.
-local ROW_GAP_STUDS = 560
+-- Radius from hub centre to each plot centre. ~620 keeps the inward-facing fronts
+-- (lot is 262 wide, front sits at radius-205) from overlapping: 8 fronts of 262 +
+-- ~64 gap fit the front circumference 2π(620-205). Larger = sparser, smaller = clip.
+local PLOT_RING_RADIUS = 620
 
 local _plots: { [number]: Model } = {}
 local _slotByUser: { [number]: number } = {}
@@ -43,29 +44,17 @@ local function claimSlot(): number
 	return i
 end
 
--- Absolute world CFrame for a slot: four plots per row, two rows straddling the
--- hub (row 0 north, row 1 south). The south row is flipped 180° so both rows
--- face the hub. Placement is absolute (not relative to the unused template
--- model), so the template can sit anywhere off-stage. Stride comes from the
--- dedicated "PlotBounds" part when present (sized to the real lot), so far-flung
--- decorative parts can't inflate spacing; falls back to whole-model extents.
-local function placementForSlot(template: Model, slot: number): CFrame
-	local boundsPart = template:FindFirstChild("PlotBounds")
-	local footprint = if boundsPart and boundsPart:IsA("BasePart")
-		then (boundsPart :: BasePart).Size
-		else template:GetExtentsSize()
-	local strideX = footprint.X + PLOT_GAP_STUDS
-	local col = slot % GRID_COLS
-	local row = math.floor(slot / GRID_COLS)
-	local x = HUB_CENTER.X + (col - (GRID_COLS - 1) / 2) * strideX
-	local z = HUB_CENTER.Z + (if row == 0 then ROW_GAP_STUDS else -ROW_GAP_STUDS)
-	local y = template:GetPivot().Position.Y
-	local cf = CFrame.new(x, y, z)
-	if row ~= 0 then
-		-- South row faces north toward the hub.
-		cf = cf * CFrame.Angles(0, math.pi, 0)
-	end
-	return cf
+-- Absolute world CFrame for a slot: eight plots evenly placed on a circle of
+-- radius PLOT_RING_RADIUS around the hub, each turned to face the hub (its front,
+-- the -Z entrance side, points at the centre). Placement is absolute, so the
+-- unused template can sit off-stage. Slots beyond 8 wrap (max 8 players/server).
+local function placementForSlot(_template: Model, slot: number): CFrame
+	local angle = (slot % 8) * (2 * math.pi / 8)
+	local x = HUB_CENTER.X + math.cos(angle) * PLOT_RING_RADIUS
+	local z = HUB_CENTER.Z + math.sin(angle) * PLOT_RING_RADIUS
+	local y = _template:GetPivot().Position.Y
+	-- lookAt: the CFrame's front (-Z / LookVector) points toward the hub centre.
+	return CFrame.lookAt(Vector3.new(x, y, z), Vector3.new(HUB_CENTER.X, y, HUB_CENTER.Z))
 end
 
 function PlotService.spawnPlot(player: Player)

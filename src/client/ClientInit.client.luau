@@ -48,6 +48,7 @@ RemoteController.connect("PlayerReady", function()
 	-- Plot/chambers exist by now; wire the in-world reveal prompts.
 	SlotController.bindRevealPrompts()
 	StationController.bindStations()
+	StationController.bindHubPavilions()
 	-- Pull the full formula log once (incremental LabDiscovery only appends this
 	-- session; returning players need the existing discoveries hydrated).
 	task.spawn(LabController.hydrateFormulaLog)

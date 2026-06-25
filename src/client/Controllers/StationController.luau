@@ -114,6 +114,41 @@ function StationController.bindStations()
 	end
 end
 
+-- Resolve the shared Civic-Plaza pavilions (workspace.Hub.Pavilions). Not per-plot — one instance.
+local function getHubPavilions(): Instance?
+	local ok, folder = pcall(function()
+		return workspace:FindFirstChild("Hub"):FindFirstChild("Pavilions")
+	end)
+	if ok and folder then
+		return folder
+	end
+	return nil
+end
+
+-- Wire the hub pavilion prompts (Leaderboards / Shop / Events) the same way as plot stations.
+-- The hub is built once in Studio and never cloned, so this binds a single shared set. Unknown
+-- screen names (e.g. "Shop" before its UI ships) warn-no-op in UIController, so this is safe to
+-- wire ahead of the screens existing. No-op when the hub is absent (headless / not built).
+function StationController.bindHubPavilions()
+	local UIController = require(script.Parent.UIController)
+	local pavilions = getHubPavilions()
+	if not pavilions then
+		return
+	end
+	for _, pav in ipairs(pavilions:GetChildren()) do
+		local screen = pav:GetAttribute("Screen")
+		if type(screen) == "string" and screen ~= "" then
+			local prompt = pav:FindFirstChild("Prompt", true)
+			if prompt and prompt:IsA("ProximityPrompt") then
+				prompt.Enabled = true
+				prompt.Triggered:Connect(function()
+					UIController.openScreen(screen)
+				end)
+			end
+		end
+	end
+end
+
 function StationController.init(): typeof(StationController)
 	return StationController
 end

@@ -53,13 +53,13 @@ nothing that is theirs… Plots are the cheapest model in which the reveal momen
 world the player owns while other people visibly exist." §31 also rejects full private
 instancing (teleport plumbing for zero gain).
 
-**Plots now ring the hub (source-controlled).** `PlotService` was changed (commit `0124d29`) from a
-single east-west row to **two facing rows of four** straddling the hub: row 0 north and row 1 south
-of `HUB_CENTER = (1145, 0, 40)`, `ROW_GAP_STUDS = 560` from centre, the south row flipped 180° so
-both rows face the hub. Placement is now **absolute** (`PivotTo` a computed CFrame) rather than
-template-relative, so the unused `PLOT_TEMPLATE` no longer anchors spacing and is parked off-stage
-(~(8000, 8000)) in the Studio place. `HUB_CENTER` in code **must stay in sync** with the Studio-built
-hub geometry — they are the contract between the committed layout and the gitignored map.
+**Plots ring the hub in a regular octagon (source-controlled).** `PlotService` (commits `0124d29` →
+`0193f3d`) places the eight plots evenly on a circle of `PLOT_RING_RADIUS = 620` around
+`HUB_CENTER = (1145, 0, 40)`, each turned via `CFrame.lookAt` so its −Z entrance faces the hub — so
+**every player is the same distance from the hub** (the most uniform equal-distance formation for the
+262×410 lot; 620 keeps the inward-facing 262-wide fronts from overlapping). Placement is **absolute**,
+so the unused `PLOT_TEMPLATE` no longer anchors spacing and is parked off-stage (~(8000, 8000)).
+`HUB_CENTER` / `PLOT_RING_RADIUS` in code **must stay in sync** with the Studio-built hub geometry.
 
 **What was built (map) — the Civic Plaza.** Rebuilt clean from scratch (2026-06): a circular
 **Civic Plaza** (`workspace.Hub`, ~2.3k parts) centred on the ring, themed as a real corporate
@@ -75,11 +75,18 @@ on the central molecule** sculpture. Layout (all symmetric about `HUB_CENTER`):
   `Prompt`, wired by `StationController.bindHubPavilions()` (commit `e152d62`).
 - **N/S gateways** over the boulevard carrying an **announcement marquee**; a continuous **seat-wall
   ring** with cardinal openings; **benches, lamp posts**; four manicured **garden parterres**.
-- **Roads** (`Roads/`) — a single symmetric network: N–S **boulevard** + an E–W **cross street** at
-  each plot row's front, with sidewalks, dashes, and formal **tree allées**; identical N and S so both
-  rows connect to the plaza the same way.
-- **Terrain** (`WorldGround/`) — one clean grass slab (default Baseplate removed) framed by a
-  deliberate rectangular **perimeter treeline**; ~180 trees total, placed in formal rows not scatter.
+- **Roads** (`Roads/`) — a **hub-and-spoke** network matching the **plot road style exactly**
+  (asphalt `(42,42,46)`, yellow dashes `(224,182,32)`, light curbs `(120,120,124)`): eight **spokes**
+  from the plaza out to an **octagon ring road** whose eight vertices sit at the plot fronts, so every
+  plot connects to the plaza identically. The plaza is **R230** (enlarged) with eight seat-wall
+  openings, one per spoke.
+- **Terrain + landscaping** (`WorldGround/`) — one clean grass slab (plot grass colour, Baseplate
+  removed); **detailed trees** (tapered trunk + branch stubs + 7-blob irregular crown, not balls) in
+  formal **spoke allées**, eight hedge-bordered **garden wedges** between the spokes, and a light
+  perimeter ring.
+
+Board text uses per-line rows (title + spaced body lines, capped `UITextSizeConstraint`) and the
+pavilions have an **open-front colonnade** so the boards read cleanly.
 
 It is **not** inside `workspace.Plots`, so `PlotService` does **not** clone it — one shared instance
 per server, with the eight plot clones tiling at the ends of the two cross streets.

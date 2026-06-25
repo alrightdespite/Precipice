@@ -61,20 +61,28 @@ template-relative, so the unused `PLOT_TEMPLATE` no longer anchors spacing and i
 (~(8000, 8000)) in the Studio place. `HUB_CENTER` in code **must stay in sync** with the Studio-built
 hub geometry — they are the contract between the committed layout and the gitignored map.
 
-**What was built (map):** a static **Central Operations hub** (`workspace.Hub`) at the centre of the
-ring on a shared **grass campus** (`workspace.WorldGround` — one 3600² grass slab + `Landscape` of
-~128 trees / 40 bushes / 22 rocks incl. a perimeter treeline). Contents: a 118-stud landmark **beacon
-tower** (teal energy bands); a two-storey **Ops-building** detailed on **both** N and S faces (signs,
-glazing, roof RTUs/vents/antenna mast/railing/downpipes) so both plot rows see a frontage; **twin
-global-ranking boards** (`Leaderboard_W` = TOP RESEARCHERS, `Leaderboard_E` = TOP SYNDICATES —
-SurfaceGuis, **not yet wired**, a future LeaderboardService surface); **north + south entry arches**;
-a flag-lined central **walkway** + `PRECIPICE` ground emblem; a **road network** (`Roads` — N-S
-boulevard + two E-W cross streets at each row, dashes, curbs) with **sidewalks, streetlights,
-crosswalks, district signs** (`RoadDetail`); a **parking lot** with cars + a **transit shelter**;
-hedges, lamp posts, bollards, benches, planters, **service vehicles**. Reuses the world's
-teal/concrete/steel palette; Atmosphere `Density` lowered to 0.16 for the larger outdoor scale.
+**What was built (map) — the Civic Plaza.** Rebuilt clean from scratch (2026-06): a circular
+**Civic Plaza** (`workspace.Hub`, ~2.3k parts) centred on the ring, themed as a real corporate
+research campus — warm stone / charcoal / bronze / glass / greenery, with the brand **teal used only
+on the central molecule** sculpture. Layout (all symmetric about `HUB_CENTER`):
+- **Central molecule monument** — tiered stone base + reflecting pool + bronze-banded pillar, crowned
+  by the game's icon, a glowing teal **molecule** (the single teal accent), with a bronze halo + warm
+  uplights.
+- **Four feature pavilions** (`Pavilions/`) facing centre — stone colonnade + roof + board, one each
+  for **Hall of Fame** (world-first patents, §15, display-only), **Leaderboards** (Researchers +
+  Syndicates), **Shop** (gamepass/cosmetics — its only in-world presence; the 5 plot stations don't
+  include Shop), and **Events** (Cascade Protocol). The latter three carry a `Screen` attribute + a
+  `Prompt`, wired by `StationController.bindHubPavilions()` (commit `e152d62`).
+- **N/S gateways** over the boulevard carrying an **announcement marquee**; a continuous **seat-wall
+  ring** with cardinal openings; **benches, lamp posts**; four manicured **garden parterres**.
+- **Roads** (`Roads/`) — a single symmetric network: N–S **boulevard** + an E–W **cross street** at
+  each plot row's front, with sidewalks, dashes, and formal **tree allées**; identical N and S so both
+  rows connect to the plaza the same way.
+- **Terrain** (`WorldGround/`) — one clean grass slab (default Baseplate removed) framed by a
+  deliberate rectangular **perimeter treeline**; ~180 trees total, placed in formal rows not scatter.
+
 It is **not** inside `workspace.Plots`, so `PlotService` does **not** clone it — one shared instance
-per server, with the eight plot clones tiling on their own grass lots over the campus.
+per server, with the eight plot clones tiling at the ends of the two cross streets.
 
 **Why the override is low-risk as built:** the hub does **not** change spawn routing, reveals,
 or any economic/social system — those stay per-plot and cross-server exactly as designed. The

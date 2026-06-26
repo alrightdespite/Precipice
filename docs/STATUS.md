@@ -2,7 +2,23 @@
 
 ## Current phase: Phase B (full UI restyle) DONE. Phase A + Phase 14 backend complete.
 
-**Last updated:** 2026-06-25 (Session 6 — World map: hub + plot formation)
+**Last updated:** 2026-06-26 (Session 7 — World map: campus build-out + plots pulled in)
+
+> **Session 7 summary (in-world MAP build-out; one CODE change pushed):** developed the plaza into a
+> coherent **"the plaza is an atom"** campus where every element has narrative meaning. Map is still
+> **gitignored / Studio-only** (persists only via Ctrl+S); `IR-DIV-01` is the source-controlled record.
+> - **CODE (committed):** `PlotService` `PLOT_RING_RADIUS` **620 → 580** — pulls plots in (front
+>   375, just outside the rebuilt ring road vertices at 370); plaza→plot walk ~22% shorter. 525 tests
+>   green, selene 0/0.
+> - **MAP:** atomic floor medallion (nucleus ring + 8 bond-lines + element district coins); the 8
+>   pylons/gardens branded as the 8 real Elements (C/S/Cl/Co/I/Li/Cu/Na); pavilion **forecourts +
+>   grandeur** (attic/crown/cartouche, Board/Prompt untouched); **element gardens** (plinth + specimen
+>   + bench/hedge); **lab gateways** ("LABORATORIES" wayfinding at spoke heads); **element avenues**
+>   (per-spoke element pennants); **commons** (topiary planters + PRECIPICE flags); **world-edge berm +
+>   tree-line**; ring road **rebuilt** to 580/370 with **junction node pads** (caps the old RingEdge
+>   corner seam). New floor plates audited → 0 coplanar.
+> - **Open:** wire leaderboard/Hall-of-Fame SurfaceGuis to live data; build the `Shop` HUD screen.
+
 
 > **Session 6 summary (in-world MAP build-out, all CODE pushed to `main`; 525 tests green, selene 0/0):**
 > built out the physical world around the gameplay. The map itself is **gitignored / Studio-only**

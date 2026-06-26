@@ -53,13 +53,16 @@ nothing that is theirs… Plots are the cheapest model in which the reveal momen
 world the player owns while other people visibly exist." §31 also rejects full private
 instancing (teleport plumbing for zero gain).
 
-**Plots ring the hub in a regular octagon (source-controlled).** `PlotService` (commits `0124d29` →
-`0193f3d`) places the eight plots evenly on a circle of `PLOT_RING_RADIUS = 620` around
-`HUB_CENTER = (1145, 0, 40)`, each turned via `CFrame.lookAt` so its −Z entrance faces the hub — so
-**every player is the same distance from the hub** (the most uniform equal-distance formation for the
-262×410 lot; 620 keeps the inward-facing 262-wide fronts from overlapping). Placement is **absolute**,
-so the unused `PLOT_TEMPLATE` no longer anchors spacing and is parked off-stage (~(8000, 8000)).
-`HUB_CENTER` / `PLOT_RING_RADIUS` in code **must stay in sync** with the Studio-built hub geometry.
+**Plots ring the hub in a regular octagon (source-controlled).** `PlotService` places the eight plots
+evenly on a circle of `PLOT_RING_RADIUS = 580` around `HUB_CENTER = (1145, 0, 40)`, each turned via
+`CFrame.lookAt` so its −Z entrance faces the hub — so **every player is the same distance from the
+hub** (the most uniform equal-distance formation for the 262×410 lot). The radius was **shortened
+620 → 580** (Session 7) to bring the plots in: front sits at radius−205 = **375**, just outside the
+hub's octagon **ring road (vertices at ~370)**, so the 262-wide fronts still clear (front
+circumference 2π·375 ≈ 2356, /8 = 294 > 262). Placement is **absolute**, so the unused `PLOT_TEMPLATE`
+no longer anchors spacing and is parked off-stage (~(8000, 8000)). `HUB_CENTER` / `PLOT_RING_RADIUS`
+in code **must stay in sync** with the Studio-built hub geometry — the ring road + lab gateways were
+rebuilt to the 580/370 layout.
 
 **What was built (map) — the Civic Plaza.** Rebuilt clean from scratch (2026-06): a circular
 **Civic Plaza** (`workspace.Hub`, ~4.7k parts) centred on the ring, themed as a real corporate
@@ -103,6 +106,30 @@ chamber, never in the hub. Plots remain **sealed** (owner's call) — the hub is
 landmark/backdrop, not a walk-connected destination, so no inter-plot teleport/fence plumbing was
 added. If "visible and walkable" (§31) is later desired, opening each plot's south perimeter +
 aligning the avenue is the follow-up.
+
+**Session 7 campus build-out (map; Studio-only).** The plaza was developed into a coherent
+**"the plaza is an atom"** design where every element carries meaning:
+- **Atomic floor medallion** (`Hub.PlazaInlay`) — bronze nucleus ring + 8 **bond-lines** from the
+  monument (nucleus) to the 8 pylons, each pylon standing on a **district coin** in its element's hue.
+- **Element identity** — the 8 pylons/coins/gardens are branded as the 8 **Elements** (C, S, Cl, Co,
+  I, Li, Cu, Na — all real compounds in `Compounds.luau`), color-matched (e.g. cobalt = blue).
+- **Pavilion forecourts + grandeur** (`Hub.Forecourts`, per-pavilion `Grandeur` model) — apron +
+  bronze threshold + bollard-lights + planters + a function-colored banner, plus a stone **attic +
+  crown lantern + name cartouche** so each civic function reads as a landmark. **Board/Prompt wiring
+  untouched** (`StationController.bindHubPavilions` still works).
+- **Element gardens** (`WorldGround.GardenWedges.ElementMarkers` + `GardenDetail`) — named plaque
+  plinth + glowing specimen + bench + hedge arc per wedge; blooms tinted to the element.
+- **Lab gateways** (`Hub.LabGateways`) — flanking pylons + lintel + "LABORATORIES" wayfinding at each
+  spoke head, pointing to the player plots.
+- **Element avenues** (`Hub.ElementAvenues`) — each spoke is lined with its element's colored
+  pennants (spoke angle = pylon angle), so the walk out to a lab travels that element's avenue.
+- **Commons** (`Hub.Commons`) — element-tinted topiary planters in the plaza ring + bold **PRECIPICE**
+  institute flag pairs at the 4 cardinal exit-spokes.
+- **World-edge frame** (`WorldGround.Perimeter`) — grass berms + retaining curbs + a clustered
+  tree-line along the slab edge, hiding the void so the world reads finished from ground level.
+- **Ring road rebuilt** to the 580/370 layout (vertices r370, spokes plaza→r358), with **junction
+  node pads** at the 8 octagon vertices that cap the corner seam (the old `RingEdge` coplanar note).
+  Floor z-fighting on new floor plates audited → **0**; road-corner overlaps are hidden under pads.
 
 **What is / isn't source-controlled:** the **plot-ring placement logic** lives in
 `PlotService.luau` (committed). The **hub geometry + campus** live only in the Studio place

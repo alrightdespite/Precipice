@@ -2,8 +2,30 @@
 
 ## Current phase: Phase B (full UI restyle) DONE. Phase A + Phase 14 backend complete.
 
-**Last updated:** 2026-06-22 (Session 5 — Phase B UI overhaul)
+**Last updated:** 2026-06-25 (Session 6 — World map: hub + plot formation)
 
+> **Session 6 summary (in-world MAP build-out, all CODE pushed to `main`; 525 tests green, selene 0/0):**
+> built out the physical world around the gameplay. The map itself is **gitignored / Studio-only**
+> (Workspace is not Rojo-synced, iron rule #5) — it persists only via the user's Ctrl+S; these docs +
+> `IR-DIV-01` are the source-controlled record. Done:
+> - **Equal-distance plot formation** (`PlotService`, `0193f3d`): 8 plots ring the hub in a regular
+>   **octagon** at `PLOT_RING_RADIUS = 620` around `HUB_CENTER = (1145,0,40)`, each `CFrame.lookAt`-turned
+>   to face the hub. Absolute placement; the unused `PLOT_TEMPLATE` is parked off-stage (~8000,8000).
+> - **Central Hub = Civic Plaza** (owner-directed override of §31, see `IR-DIV-01`): a clean circular
+>   plaza (R230) with a molecule monument (reflecting pool + particles), a ring of 8 glowing **element
+>   pylons**, 4 feature **pavilions** (Hall of Fame / Leaderboards / Shop / Events — open-front, readable
+>   per-line boards), N/S-style entry arches + banners, seat-wall, benches, garden wedges, festoon
+>   lights. Warm corporate palette, teal only on the molecule.
+> - **Roads** match the plot road system **exactly** (asphalt `(42,42,46)`, dashes `0.6×0.12×4`, curbs
+>   `0.6×0.6`, plot-style 22-stud road lamps): a hub-and-spoke network — 8 spokes + an octagon ring road
+>   whose vertices sit at the plot fronts.
+> - **Hub pavilions wired** (`StationController.bindHubPavilions`, `e152d62`) — Leaderboard/Event/Shop
+>   prompts open their HUD screens (Shop had no in-world presence; unknown screens warn-no-op safely).
+> - **Detailed landscaping** — oak/pine/blossom trees (layered crowns, branches, root flare), spaced
+>   formally; clean grass terrain (Baseplate removed). Floor z-fighting audited → 0 pairs.
+> - Map ≈ 4.7k parts, 63 lights (shadow-free). **Open follow-ups:** wire the leaderboard/Hall-of-Fame
+>   board SurfaceGuis to live data; build the `Shop` HUD screen; optional: thin hub road-lamp lights.
+>
 > **Session 5 summary (Phase B — Modern sim-game UI overhaul, all pushed to `main`; 525 tests green,
 > selene 0/0):** restyled the entire frontend to a cohesive custom look — one honey/indigo palette,
 > a signature 3D pill button everywhere, soft drop-shadows, gradient backdrops, Fredoka display

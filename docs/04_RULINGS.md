@@ -62,28 +62,33 @@ so the unused `PLOT_TEMPLATE` no longer anchors spacing and is parked off-stage 
 `HUB_CENTER` / `PLOT_RING_RADIUS` in code **must stay in sync** with the Studio-built hub geometry.
 
 **What was built (map) — the Civic Plaza.** Rebuilt clean from scratch (2026-06): a circular
-**Civic Plaza** (`workspace.Hub`, ~2.3k parts) centred on the ring, themed as a real corporate
+**Civic Plaza** (`workspace.Hub`, ~4.7k parts) centred on the ring, themed as a real corporate
 research campus — warm stone / charcoal / bronze / glass / greenery, with the brand **teal used only
 on the central molecule** sculpture. Layout (all symmetric about `HUB_CENTER`):
-- **Central molecule monument** — tiered stone base + reflecting pool + bronze-banded pillar, crowned
-  by the game's icon, a glowing teal **molecule** (the single teal accent), with a bronze halo + warm
-  uplights.
-- **Four feature pavilions** (`Pavilions/`) facing centre — stone colonnade + roof + board, one each
-  for **Hall of Fame** (world-first patents, §15, display-only), **Leaderboards** (Researchers +
-  Syndicates), **Shop** (gamepass/cosmetics — its only in-world presence; the 5 plot stations don't
-  include Shop), and **Events** (Cascade Protocol). The latter three carry a `Screen` attribute + a
-  `Prompt`, wired by `StationController.bindHubPavilions()` (commit `e152d62`).
-- **N/S gateways** over the boulevard carrying an **announcement marquee**; a continuous **seat-wall
-  ring** with cardinal openings; **benches, lamp posts**; four manicured **garden parterres**.
-- **Roads** (`Roads/`) — a **hub-and-spoke** network matching the **plot road style exactly**
-  (asphalt `(42,42,46)`, yellow dashes `(224,182,32)`, light curbs `(120,120,124)`): eight **spokes**
-  from the plaza out to an **octagon ring road** whose eight vertices sit at the plot fronts, so every
-  plot connects to the plaza identically. The plaza is **R230** (enlarged) with eight seat-wall
-  openings, one per spoke.
+- **Central molecule monument** — tiered stone base + reflecting pool (water jets) + bronze-banded
+  fluted pillar, crowned by the game's icon, a glowing teal **molecule** that **emits energy
+  particles** (ParticleEmitters; jets emit mist), bronze halo + warm uplights.
+- **Ring of 8 "element pylons"** (`ElementPylons/`) between the monument and pavilions — each a stone
+  pylon topped with a small glowing **mini-molecule** in a distinct jewel tone (teal/amber/emerald/
+  sapphire/amethyst/ruby/aqua/topaz), lit + particle-emitting. The plaza's main "exciting" feature.
+- **Four feature pavilions** (`Pavilions/`) facing centre — open-front stone colonnade + roof +
+  readable per-line board, one each for **Hall of Fame** (world-first patents, §15, display-only),
+  **Leaderboards** (Researchers + Syndicates), **Shop** (gamepass/cosmetics — its only in-world
+  presence; the 5 plot stations don't include Shop), and **Events** (Cascade Protocol). The latter
+  three carry a `Screen` attribute + a `Prompt`, wired by `StationController.bindHubPavilions()`
+  (commit `e152d62`).
+- **8 entry arches** (`Entries/`) at the plaza openings with **colour-matched hanging banners** + an
+  announcement marquee theme; **festoon string-lights** (`Festoon/`) between the pylons; a continuous
+  **seat-wall ring** with 8 spoke openings; **benches + lamp posts**.
+- **Roads** (`Roads/`) — a **hub-and-spoke** network replicating the **plot road system exactly**:
+  asphalt `(42,42,46)`, dashes `0.6×0.12×4` `(224,182,32)`, curbs `0.6×0.6` `(120,120,124)`, and the
+  plot's **22-stud road lamps** (pole + arm + warm neon lamp + light). Eight **spokes** from the plaza
+  to an **octagon ring road** whose vertices sit at the plot fronts. Plaza **R230** with 8 openings.
 - **Terrain + landscaping** (`WorldGround/`) — one clean grass slab (plot grass colour, Baseplate
-  removed); **detailed trees** (tapered trunk + branch stubs + 7-blob irregular crown, not balls) in
-  formal **spoke allées**, eight hedge-bordered **garden wedges** between the spokes, and a light
-  perimeter ring.
+  removed); **detailed trees** of three types — **oak** (root flare, branches with tip-foliage, full
+  layered crown + highlights), **conifer** (tapered tiered cone), **blossom** (pink/white) — placed in
+  formal spoke allées + spaced clusters; eight hedge-bordered **garden wedges**; perimeter ring.
+  Floor z-fighting audited programmatically → **0 coplanar pairs**.
 
 Board text uses per-line rows (title + spaced body lines, capped `UITextSizeConstraint`) and the
 pavilions have an **open-front colonnade** so the boards read cleanly.

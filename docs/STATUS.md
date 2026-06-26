@@ -17,6 +17,9 @@
 >   (per-spoke element pennants); **commons** (topiary planters + PRECIPICE flags); **world-edge berm +
 >   tree-line**; ring road **rebuilt** to 580/370 with **junction node pads** (caps the old RingEdge
 >   corner seam). New floor plates audited → 0 coplanar.
+> - **Depth/verticality pass** (map was too flat): 8 **element-crystal spires** (~63 tall, r330);
+>   monument lifted onto a **3-tier podium** (ascend to the nucleus); **Terrain hill** backdrop across
+>   the water (`workspace.Terrain`). Theme held ("the plaza is an atom", element crystals).
 > - **Open:** wire leaderboard/Hall-of-Fame SurfaceGuis to live data; build the `Shop` HUD screen.
 
 

@@ -130,6 +130,12 @@ aligning the avenue is the follow-up.
 - **Ring road rebuilt** to the 580/370 layout (vertices r370, spokes plaza→r358), with **junction
   node pads** at the 8 octagon vertices that cap the corner seam (the old `RingEdge` coplanar note).
   Floor z-fighting on new floor plates audited → **0**; road-corner overlaps are hidden under pads.
+- **Verticality / depth pass** (the map had read too flat): **8 element-crystal spires**
+  (`Hub.ElementSpires`, ~63 tall, at r330 on the vertex/element angles — Carbon's is a diamond);
+  the monument lifted **+11 onto a 3-tier stepped podium** (`Hub.MonumentPodium`, you ascend to the
+  nucleus; medallion bonds rebuilt podium→coins); and a **backdrop of smooth Terrain hills**
+  (`workspace.Terrain`, rolling green/rock ridges beyond the slab across the water — campus-on-a-
+  peninsula). New plaza-floor plates re-audited → 0 coplanar.
 
 **What is / isn't source-controlled:** the **plot-ring placement logic** lives in
 `PlotService.luau` (committed). The **hub geometry + campus** live only in the Studio place

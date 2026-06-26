@@ -20,6 +20,8 @@
 > - **Depth/verticality pass** (map was too flat): 8 **element-crystal spires** (~63 tall, r330);
 >   monument lifted onto a **3-tier podium** (ascend to the nucleus); **Terrain hill** backdrop across
 >   the water (`workspace.Terrain`). Theme held ("the plaza is an atom", element crystals).
+> - **Pro-polish:** energy **Beams** nucleus→spires, ambient atmosphere **motes**, and 4 **holo info
+>   kiosks** (FEATURED COMPOUND screens w/ real compounds + molecule holograms) at the cardinal entries.
 > - **Open:** wire leaderboard/Hall-of-Fame SurfaceGuis to live data; build the `Shop` HUD screen.
 
 

@@ -136,6 +136,11 @@ aligning the avenue is the follow-up.
   nucleus; medallion bonds rebuilt podium→coins); and a **backdrop of smooth Terrain hills**
   (`workspace.Terrain`, rolling green/rock ridges beyond the slab across the water — campus-on-a-
   peninsula). New plaza-floor plates re-audited → 0 coplanar.
+- **Pro-polish pass** (`Hub.Atmosphere`, `Hub.HoloKiosks`): glowing **energy Beams** from the nucleus
+  molecule out to each element-crystal spire ("the nucleus powers the 8 Elements", element-colored);
+  ambient **atmosphere motes** (ParticleEmitters) drifting across the plaza; and 4 **holographic info
+  kiosks** at the cardinal entries — glowing "FEATURED COMPOUND" data screens (real compounds: NaCl /
+  CuSO4 / CoCl2 / KI with demand stats) + a floating molecule hologram. High-tech research-lab read.
 
 **What is / isn't source-controlled:** the **plot-ring placement logic** lives in
 `PlotService.luau` (committed). The **hub geometry + campus** live only in the Studio place

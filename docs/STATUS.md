@@ -2,7 +2,37 @@
 
 ## Current phase: Phase B (full UI restyle) DONE. Phase A + Phase 14 backend complete.
 
-**Last updated:** 2026-06-26 (Session 7 — World map: campus build-out + plots pulled in)
+**Last updated:** 2026-06-28 (Session 8 — World map: FLOATING ISLAND conversion + plot markers)
+
+> **Session 8 summary (MAP overhaul + one CODE change pushed). Supersedes parts of Session 7 below.**
+> The map is still **gitignored / Studio-only** (persists only via the user's Ctrl+S). Big changes:
+> - **World is now a FLOATING CIRCULAR ISLAND** (`workspace.WorldGround.Island`): round grass disc
+>   **R870** (top Y4) + tapered rock **underbelly** (8 stacked tiers to ~Y−388) + hanging stalactites,
+>   in **open sky** with `workspace.Terrain` **Clouds**. **Removed:** the old square 2048² `GroundSlab`,
+>   the square `Perimeter` berms/curbs, all Terrain hills + water, and the distant backdrop islands.
+> - **CODE (committed `c7cc822`, pushed):** `PlotService` now hides a plot's **blueprint marker** while
+>   its slot is occupied and restores it on leave. `PLOT_RING_RADIUS` stays **580**. 525 tests, selene 0/0.
+> - **Plot markers (NEW, map):** 8 concrete "surveyed blueprint" footprints in
+>   `workspace.WorldGround.PlotMarkers` (`PlotMarker_0..7`) at the EXACT PlotService placement (radius
+>   580, 262×410, −Z faces hub) — grid + white survey lines + corner stakes + "RESEARCH PLOT / AVAILABLE"
+>   holo-sign. They mark where each plot spawns; PlotService hides them per occupied slot.
+> - **Plaza tweaks:** floor is now **Concrete** (`PlazaMarble`, was Marble); **pavilions pulled in**
+>   to r137 (from 155); **element pylons + festoon moved out to r188** (behind pavilions), festoon
+>   rebuilt as **hanging string-lights** between pylons; monument on a **3-tier podium**; plaza furniture
+>   (Commons planters + PlazaFurnish) pulled inward; **lamps rebuilt as connected top-lanterns** (no
+>   floating parts); 8 **element gardens** rebuilt bigger (50×42 hedge planter, readable sign at front,
+>   bench, flower beds, corner lanterns).
+> - **Trees:** 33 detailed **mixed-shape** trees (ball/wedge/corner-wedge/cylinder canopies, fruit,
+>   glow spores; 6 types oak/blossom/pine/willow/maple/birch) in the gardens + a ring along the island
+>   edge (~r805). The old `BoundaryTrees` + scattered plot-zone trees were removed.
+> - **Plot template:** the standard plot's `Grass` lawn shrunk 262×410 → **196×300** (Studio template).
+> - **Intentional DELETIONS (owner cleanup):** Element spires, holo kiosks, energy beams + atmosphere
+>   motes, monument halo + water jets, entry banners, most Commons flags.
+> - **History note:** mid-session an accidental Studio **Ungroup** flattened the whole hierarchy (Hub/
+>   WorldGround/Plots gone, ~2448 loose parts, trees dissolved). It was rebuilt **programmatically** —
+>   containers recreated, all parts re-parented by name+radius, trees + pavilions re-clustered, GroundSlab
+>   recreated. Lesson: don't select-all + ungroup; the structure is the contract.
+> - **Open:** wire leaderboard/Hall-of-Fame SurfaceGuis to live data; build the `Shop` HUD screen.
 
 > **Session 7 summary (in-world MAP build-out; one CODE change pushed):** developed the plaza into a
 > coherent **"the plaza is an atom"** campus where every element has narrative meaning. Map is still

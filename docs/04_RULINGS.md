@@ -47,6 +47,21 @@ See design doc Parts E and F. All 13 rulings are implemented verbatim. No confli
 **Status:** Owner-directed override (2026-06-23). The owner explicitly chose to add a central
 hub against the design doc's recommendation; recorded here per the delta-log contract.
 
+> **CURRENT STATE NOTE (Session 8, 2026-06-28) — read this first; it supersedes details below.**
+> The world is now a **floating circular island** (`workspace.WorldGround.Island`: grass disc R870 +
+> tapered rock underbelly to ~Y−388 + stalactites, in open sky with `Terrain` Clouds). The old square
+> `GroundSlab`, square `Perimeter` berms, Terrain hills/water, and distant islands were **removed**.
+> `PLOT_RING_RADIUS = 580` (plots front at r375). Plaza floor is **Concrete**; pavilions at r137;
+> element pylons + festoon (now **hanging string-lights**) at r188; monument on a **3-tier podium**.
+> **8 plot markers** (`workspace.WorldGround.PlotMarkers/PlotMarker_0..7`) — concrete blueprint
+> footprints at the exact PlotService placement (radius 580, 262×410, facing hub); `PlotService` hides
+> each while its slot is occupied. Trees = 33 mixed-shape (6 types) in gardens + island-edge ring.
+> **Intentionally deleted (owner cleanup):** element spires, holo kiosks, energy beams/atmosphere,
+> monument halo+jets, entry banners, most flags. The map was once accidentally flattened by a Studio
+> Ungroup and rebuilt programmatically. The hub geometry remains Studio-only (Ctrl+S), with
+> `HUB_CENTER (1145,0,40)` / `PLOT_RING_RADIUS 580` the code↔map contract. Sections below are the
+> historical build record and are partly out of date.
+
 **Design says (§31, *Why plots, and not the alternatives*):** the world is per-plot with **no
 shared room** — "A single shared room makes simultaneous reveals collide and gives the player
 nothing that is theirs… Plots are the cheapest model in which the reveal moment happens in a

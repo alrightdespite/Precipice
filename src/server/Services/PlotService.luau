@@ -59,6 +59,27 @@ local function placementForSlot(_template: Model, slot: number): CFrame
 	return CFrame.lookAt(Vector3.new(x, y, z), Vector3.new(HUB_CENTER.X, y, HUB_CENTER.Z))
 end
 
+-- Plot footprint markers (Studio-built blueprint pads in workspace.WorldGround.PlotMarkers,
+-- one per slot: "PlotMarker_<slot>"). They show where each plot WILL spawn; we hide a marker
+-- while its slot is occupied and restore it when the player leaves. Gracefully no-ops if the
+-- markers are absent (headless / tests).
+local MARKERS_FOLDER = "PlotMarkers"
+local function setMarkerVisible(slot: number, visible: boolean)
+	local wg = workspace:FindFirstChild("WorldGround")
+	local markers = wg and wg:FindFirstChild(MARKERS_FOLDER)
+	local marker = markers and markers:FindFirstChild("PlotMarker_" .. slot)
+	if not marker then
+		return
+	end
+	for _, d in ipairs(marker:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.Transparency = visible and (d.Name == "HoloSign" and 0.35 or 0) or 1
+		elseif d:IsA("SurfaceGui") then
+			d.Enabled = visible
+		end
+	end
+end
+
 function PlotService.spawnPlot(player: Player)
 	local userId = player.UserId
 	if _plots[userId] then
@@ -81,6 +102,7 @@ function PlotService.spawnPlot(player: Player)
 
 	local slot = claimSlot()
 	_slotByUser[userId] = slot
+	setMarkerVisible(slot, false) -- hide the "available" blueprint while this slot is occupied
 
 	local plot = (template :: Model):Clone()
 	plot.Name = tostring(userId)
@@ -115,6 +137,7 @@ function PlotService.destroyPlot(player: Player)
 	end
 	local slot = _slotByUser[userId]
 	if slot ~= nil then
+		setMarkerVisible(slot, true) -- restore the "available" blueprint marker
 		_usedSlots[slot] = nil
 		_slotByUser[userId] = nil
 	end

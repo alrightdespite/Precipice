@@ -2,7 +2,27 @@
 
 ## Current phase: Phase B (full UI restyle) DONE. Phase A + Phase 14 backend complete.
 
-**Last updated:** 2026-06-28 (Session 8 — World map: FLOATING ISLAND conversion + plot markers)
+**Last updated:** 2026-06-29 (Session 9 — map cleanup/polish: plots, roads, markers, trees)
+
+> **Session 9 summary (MAP polish + one CODE change. Supersedes Session 8 plot/road/tree details.)**
+> Map is still **gitignored / Studio-only** (persists only via Ctrl+S). Changes:
+> - **CODE:** `PlotService.PLOT_RING_RADIUS` **580 → 545** (plots a bit closer; front at r340 abuts the
+>   ring road). 525 tests green, selene 0/0.
+> - **`PLOT_TEMPLATE` (map):** set **`PrimaryPart = PlotBounds`** — fixes a ~67-stud placement skew so
+>   plots spawn centred on their marker. Removed the glitching `Exterior.Grass`; `PlotBounds` is now the
+>   **visible concrete floor** (262×4×410, top Y4).
+> - **Plot markers (map):** rebuilt to **190×190** cyan blueprint squares = the plot's **fenced
+>   buildable area** (was the full 262×410 pad), at the fence location; cyan grid + white frame + posts.
+> - **Roads (map):** ring road + lab gateways + lamp posts pulled **inward 35** to match the radius; the
+>   8 spokes **rebuilt** as one clean straight road each (plaza→plot through the gateway) — the old
+>   dead-end Y-fork dashes were removed; ring dashes re-added.
+> - **Trees (map):** all 33 **rebuilt** as real trees (tapered trunk + branches + roots + species
+>   canopy: oak/pine/blossom/maple/birch) with mixed shapes, on raycast-found ground.
+> - **Plaza floor (map):** concentric bands re-toned into a readable medallion. Removed empty
+>   `WorldGround.Perimeter` folder.
+> - **Studio-only preview:** `workspace.PlotPreview` (a live clone of a plot at slot 0) is an editing
+>   aid — **delete it before publishing** or it overlaps the first player's spawned plot.
+> - **Open:** wire leaderboard/Hall-of-Fame SurfaceGuis to live data; build the `Shop` HUD screen.
 
 > **Session 8 summary (MAP overhaul + one CODE change pushed). Supersedes parts of Session 7 below.**
 > The map is still **gitignored / Studio-only** (persists only via the user's Ctrl+S). Big changes:

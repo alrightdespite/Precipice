@@ -52,10 +52,12 @@ hub against the design doc's recommendation; recorded here per the delta-log con
 > tapered rock underbelly to ~Y−388 + stalactites, in open sky with `Terrain` Clouds). The old square
 > `GroundSlab`, square `Perimeter`, Terrain hills/water, and distant islands were **removed** (the now-
 > empty `WorldGround.Perimeter` folder was deleted Session 9).
-> **`PLOT_RING_RADIUS = 545`** (Session 9, was 580) — plots pulled in a bit; front sits at radius−205 =
-> **340**, abutting the octagon ring road. The Studio **ring road + lab gateways + lamp posts were
-> pulled inward 35** to match, and the **8 spoke roads were rebuilt** as one clean straight road each
-> (plaza → plot, through the gateway) — the old dead-end Y-fork dashes were removed.
+> **`PLOT_RING_RADIUS = 510`** (Session 9, was 580) — plots pulled in close to the plaza (510 is below
+> the no-overlap floor ~539, so the 262-wide concrete *pads* touch at front corners — thin same-colour
+> floor, invisible; the 190-wide facilities stay clear). The Studio **lab gateways + octagon ring road
+> + messy curbs were removed**; roads rebuilt as **8 clean straight radial roads** (plaza r232 → plot).
+> Added `WorldGround.Decor` (~105 rock/shrub/flower/grass clusters) to fill the grass. All sign
+> `SurfaceGui`s set `LightInfluence=0` (full-bright/readable).
 > Plaza floor = **Concrete** with readable concentric medallion rings (Session 9); pavilions at r137;
 > element pylons + festoon (hanging string-lights) at r188; monument on a 3-tier podium.
 > **8 plot markers** (`workspace.WorldGround.PlotMarkers/PlotMarker_0..7`) — Session 9 rebuilt to
@@ -71,7 +73,7 @@ hub against the design doc's recommendation; recorded here per the delta-log con
 > **Intentionally deleted (owner cleanup):** element spires, holo kiosks, energy beams/atmosphere,
 > monument halo+jets, entry banners, most flags. The map was once accidentally flattened by a Studio
 > Ungroup and rebuilt programmatically. The hub geometry remains Studio-only (Ctrl+S), with
-> `HUB_CENTER (1145,0,40)` / `PLOT_RING_RADIUS 545` the code↔map contract. Sections below are the
+> `HUB_CENTER (1145,0,40)` / `PLOT_RING_RADIUS 510` the code↔map contract. Sections below are the
 > historical build record and are partly out of date.
 
 **Design says (§31, *Why plots, and not the alternatives*):** the world is per-plot with **no

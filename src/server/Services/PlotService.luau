@@ -12,13 +12,13 @@ local PLOTS_FOLDER = "Plots"
 -- World centre of the shared hub (matches workspace.Hub). Keep in sync with the
 -- Studio-built hub geometry.
 local HUB_CENTER = Vector3.new(1145, 0, 40)
--- Radius from hub centre to each plot centre. 545 places the inward-facing fronts
--- (lot is 262 wide, front sits at radius-205 = 340) right at the hub's octagon ring
--- road side (~r342), so each plot's entrance apron abuts the ring with no grass gap.
--- Fronts still clear: front circumference 2π·340 ≈ 2136 / 8 = 267 > 262. The Studio
--- ring road, lab gateways, plot markers + spoke roads are built to match this radius
--- (keep them in sync).
-local PLOT_RING_RADIUS = 545
+-- Radius from hub centre to each plot centre. 510 pulls the plots in close to the
+-- plaza. The 262-wide concrete *pads* overlap slightly at their front corners at this
+-- radius, but that is just thin floor (Y4, same colour) and reads as invisible; the
+-- actual facilities (190-wide fences/buildings) stay well clear of each other. The
+-- Studio ring road, plot markers + spoke roads are built to match this radius (keep
+-- them in sync).
+local PLOT_RING_RADIUS = 510
 
 local _plots: { [number]: Model } = {}
 local _slotByUser: { [number]: number } = {}

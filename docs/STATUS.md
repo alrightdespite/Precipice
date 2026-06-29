@@ -6,16 +6,21 @@
 
 > **Session 9 summary (MAP polish + one CODE change. Supersedes Session 8 plot/road/tree details.)**
 > Map is still **gitignored / Studio-only** (persists only via Ctrl+S). Changes:
-> - **CODE:** `PlotService.PLOT_RING_RADIUS` **580 → 545** (plots a bit closer; front at r340 abuts the
->   ring road). 525 tests green, selene 0/0.
+> - **CODE:** `PlotService.PLOT_RING_RADIUS` **580 → 510** (plots pulled in close to the plaza; 510 is
+>   below the no-overlap floor so the 262-wide concrete *pads* touch at front corners, but that is thin
+>   same-colour floor and the 190-wide facilities stay clear). 525 tests green, selene 0/0.
 > - **`PLOT_TEMPLATE` (map):** set **`PrimaryPart = PlotBounds`** — fixes a ~67-stud placement skew so
 >   plots spawn centred on their marker. Removed the glitching `Exterior.Grass`; `PlotBounds` is now the
 >   **visible concrete floor** (262×4×410, top Y4).
 > - **Plot markers (map):** rebuilt to **190×190** cyan blueprint squares = the plot's **fenced
 >   buildable area** (was the full 262×410 pad), at the fence location; cyan grid + white frame + posts.
-> - **Roads (map):** ring road + lab gateways + lamp posts pulled **inward 35** to match the radius; the
->   8 spokes **rebuilt** as one clean straight road each (plaza→plot through the gateway) — the old
->   dead-end Y-fork dashes were removed; ring dashes re-added.
+> - **Roads (map):** **removed the LABORATORIES lab gateways + the octagon ring road + all the messy
+>   overlapping curbs and dead-end Y-fork dashes.** Rebuilt as **8 clean straight radial roads**
+>   (plaza edge r232 → plot), asphalt + centre dashes. Junctions are clean.
+> - **Signs (map):** all pavilion-board / nameplate / marker `SurfaceGui`s set **`LightInfluence=0`**
+>   (full-bright, readable in any lighting) + non-ASCII tofu glyphs stripped from labels.
+> - **Terrain/decor (map):** new `WorldGround.Decor` folder — ~105 scattered clusters (rock piles,
+>   boulders, shrubs, flower beds, grass tufts) across the empty grass, avoiding roads/plots/gardens.
 > - **Trees (map):** all 33 **rebuilt** as real trees (tapered trunk + branches + roots + species
 >   canopy: oak/pine/blossom/maple/birch) with mixed shapes, on raycast-found ground.
 > - **Plaza floor (map):** concentric bands re-toned into a readable medallion. Removed empty

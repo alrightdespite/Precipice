@@ -26,6 +26,12 @@
 >   `ColorCorrectionEffect` (sat +.22/contrast +.12/warm tint), `Sky`. Big appeal jump.
 > - **Branding/centerpiece (map):** 4 "PRECIPICE / CHEMISTRY TYCOON" standing signs around the monument
 >   (`Hub.Monument.Branding`, full-bright); fountain `PoolWater` recoloured vivid blue.
+> - **Cohesion pass ("not built by AI", Fredoka One):** all map sign `TextLabel`s converted from legacy
+>   `Enum.Font` (Gotham*) to `FontFace` matching the UI `Theme.Font` — **FredokaOne** titles (x40) +
+>   **BuilderSans** body (x29); 0 stale. (UI already used FredokaOne via `Theme.luau:58-68` — no src
+>   change.) Sign plate bases unified to navy (22,24,32). `WorldGround.Decor` **rebuilt as intentional
+>   landscaping** (was 105 random clusters → 16 road-flanking flower beds + 8 mid rock outcrops + 8
+>   island-edge outcrops + edge/plaza shrub clumps, all tied to the 8-fold symmetry).
 > - **Trees (map):** all 33 **rebuilt** as real trees (tapered trunk + branches + roots + species
 >   canopy: oak/pine/blossom/maple/birch) with mixed shapes, on raycast-found ground.
 > - **Plaza floor (map):** concentric bands re-toned into a readable medallion. Removed empty

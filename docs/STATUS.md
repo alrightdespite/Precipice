@@ -21,6 +21,11 @@
 >   (full-bright, readable in any lighting) + non-ASCII tofu glyphs stripped from labels.
 > - **Terrain/decor (map):** new `WorldGround.Decor` folder — ~105 scattered clusters (rock piles,
 >   boulders, shrubs, flower beds, grass tufts) across the empty grass, avoiding roads/plots/gardens.
+> - **Lighting/atmosphere (Studio-only, `Lighting`):** Future tech, ClockTime 14.6, Brightness 2.2,
+>   warm ambient; added `Atmosphere` (density .27/haze 1.1), `BloomEffect`, `SunRaysEffect`,
+>   `ColorCorrectionEffect` (sat +.22/contrast +.12/warm tint), `Sky`. Big appeal jump.
+> - **Branding/centerpiece (map):** 4 "PRECIPICE / CHEMISTRY TYCOON" standing signs around the monument
+>   (`Hub.Monument.Branding`, full-bright); fountain `PoolWater` recoloured vivid blue.
 > - **Trees (map):** all 33 **rebuilt** as real trees (tapered trunk + branches + roots + species
 >   canopy: oak/pine/blossom/maple/birch) with mixed shapes, on raycast-found ground.
 > - **Plaza floor (map):** concentric bands re-toned into a readable medallion. Removed empty

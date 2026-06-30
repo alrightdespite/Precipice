@@ -6,6 +6,15 @@
 
 > **Session 9 summary (MAP polish + one CODE change. Supersedes Session 8 plot/road/tree details.)**
 > Map is still **gitignored / Studio-only** (persists only via Ctrl+S). Changes:
+> - **Owner manual cleanup (Studio, latest — current truth):** grouped the lamp posts into a
+>   `Hub.Roads.RoadLamps` Model; **deleted `Hub.Monument.Branding`** (the PRECIPICE / CHEMISTRY TYCOON
+>   plaques are gone); **simplified the centerpiece bottle** (`Hub.Monument.Flask` — removed the
+>   labels/hanging-tag/graduation/meniscus/highlight/core detail → clean glass body + teal reagent +
+>   bubbles + brass bands/collar/lip/cork); removed the island stalactites (kept the 9 stacked-slate-disc
+>   underbelly); removed the thin flower **stems** from the decor beds (blooms kept); trimmed
+>   `Hub.Forecourts`. Verified clean: **0 unanchored, 0 loose parts at root, markers 8/8 keep
+>   `HoloSign`+`SurfaceGui`, `PLOT_TEMPLATE.PrimaryPart = PlotBounds`**. (`Hub.LabGateways` is an empty
+>   leftover folder — delete it in Edit mode.)
 > - **CODE:** `PlotService.PLOT_RING_RADIUS` **580 → 510** (plots pulled in close to the plaza; 510 is
 >   below the no-overlap floor so the 262-wide concrete *pads* touch at front corners, but that is thin
 >   same-colour floor and the 190-wide facilities stay clear). 525 tests green, selene 0/0.

@@ -49,7 +49,7 @@ hub against the design doc's recommendation; recorded here per the delta-log con
 
 > **CURRENT STATE NOTE (Session 9, 2026-06-29) — read this first; it supersedes details below.**
 > The world is a **floating circular island** (`workspace.WorldGround.Island`: grass disc R870 +
-> tapered rock underbelly to ~Y−388 + stalactites, in open sky with `Terrain` Clouds). The old square
+> tapered stacked-slate-disc underbelly to ~Y−388, in open sky with `Terrain` Clouds). The old square
 > `GroundSlab`, square `Perimeter`, Terrain hills/water, and distant islands were **removed** (the now-
 > empty `WorldGround.Perimeter` folder was deleted Session 9).
 > **`PLOT_RING_RADIUS = 510`** (Session 9, was 580) — plots pulled in close to the plaza (510 is below
@@ -60,8 +60,8 @@ hub against the design doc's recommendation; recorded here per the delta-log con
 > `SurfaceGui`s set `LightInfluence=0` (full-bright/readable).
 > Plaza floor = **Concrete** with readable concentric medallion rings (Session 9); pavilions at r137;
 > element pylons + festoon (hanging string-lights) at r188; centerpiece = a crafted **glass lab flask**
-> with glowing teal reagent + brass cradle + orbiting-atom nod on the 3-tier podium (`Hub.Monument.Flask`;
-> replaced the old molecule). **Display font is Oswald** (`src/client/UI/Theme.luau`; map sign titles use
+> with glowing teal reagent + bubbles + brass bands/collar/lip/cork on the 3-tier podium
+> (`Hub.Monument.Flask`; replaced the old molecule; owner later removed the labels/tag/atoms detail). **Display font is Oswald** (`src/client/UI/Theme.luau`; map sign titles use
 > Oswald FontFace, body BuilderSans). Plot signs are crafted **wooden signposts** (still keep `HoloSign`
 > + `SurfaceGui` for `setMarkerVisible`).
 > **8 plot markers** (`workspace.WorldGround.PlotMarkers/PlotMarker_0..7`) — Session 9 rebuilt to

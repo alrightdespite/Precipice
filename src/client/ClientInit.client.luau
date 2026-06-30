@@ -3,6 +3,7 @@
 
 local StateController = require(script.Parent.Controllers.StateController)
 local RemoteController = require(script.Parent.Controllers.RemoteController)
+local SoundController = require(script.Parent.Controllers.SoundController)
 local SlotController = require(script.Parent.Controllers.SlotController)
 local VaultController = require(script.Parent.Controllers.VaultController)
 local LabController = require(script.Parent.Controllers.LabController)
@@ -20,11 +21,14 @@ local HintController = require(script.Parent.Controllers.HintController)
 local RevealController = require(script.Parent.Controllers.RevealController)
 local StationController = require(script.Parent.Controllers.StationController)
 local HubBoardController = require(script.Parent.Controllers.HubBoardController)
+local TickerController = require(script.Parent.Controllers.TickerController)
+local WorldDressController = require(script.Parent.Controllers.WorldDressController)
 local UIController = require(script.Parent.Controllers.UIController)
 
 -- Dependency-ordered init
 StateController.init()
 RemoteController.init() -- resolves remotes + wires all S2C events
+SoundController.init() -- SoundGroups + audio prefs (no-op until audio ids set)
 SlotController.init()
 VaultController.init()
 LabController.init()
@@ -42,6 +46,8 @@ HintController.init()
 RevealController.init()
 StationController.init()
 HubBoardController.init()
+TickerController.init()
+WorldDressController.init()
 UIController.init()
 
 -- Wait for server to confirm all initial state has been sent before showing Home.
@@ -52,6 +58,8 @@ RemoteController.connect("PlayerReady", function()
 	StationController.bindStations()
 	StationController.bindHubPavilions()
 	HubBoardController.bindBoards()
+	TickerController.bindTicker()
+	WorldDressController.bindWorld()
 	-- Pull the full formula log once (incremental LabDiscovery only appends this
 	-- session; returning players need the existing discoveries hydrated).
 	task.spawn(LabController.hydrateFormulaLog)

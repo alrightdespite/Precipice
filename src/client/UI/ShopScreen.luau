@@ -15,6 +15,7 @@ local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
+local SoundController = require(script.Parent.Parent.Controllers.SoundController)
 
 local Children = Fusion.Children
 local doCleanup = Fusion.doCleanup
@@ -96,6 +97,7 @@ local function promptProduct(productKey: string)
 	if not lp then
 		return
 	end
+	SoundController.playSfx("purchase")
 	local ok, err = pcall(function()
 		MarketplaceService:PromptProductPurchase(lp, id)
 	end)
@@ -114,6 +116,7 @@ local function promptGamepass(passKey: string)
 	if not lp then
 		return
 	end
+	SoundController.playSfx("purchase")
 	local ok, err = pcall(function()
 		MarketplaceService:PromptGamePassPurchase(lp, id)
 	end)

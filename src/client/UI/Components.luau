@@ -205,8 +205,12 @@ function Components.Button(scope, props)
 			if typeof(dis) == "table" then
 				dis = peek(dis)
 			end
-			if not dis and props.OnClick then
-				props.OnClick()
+			if not dis then
+				-- Lazy require avoids a UI→controller load-order coupling at module load.
+				require(script.Parent.Parent.Controllers.SoundController).playSfx("uiClick")
+				if props.OnClick then
+					props.OnClick()
+				end
 			end
 		end,
 	})

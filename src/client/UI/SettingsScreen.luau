@@ -4,6 +4,7 @@ local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local StateController = require(script.Parent.Parent.Controllers.StateController)
+local SoundController = require(script.Parent.Parent.Controllers.SoundController)
 
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
@@ -27,8 +28,8 @@ function SettingsScreen.open(uiController)
 	local scope = _scope
 	local st = StateController.get()
 
-	local musicEnabled = scope:Value(true)
-	local sfxEnabled = scope:Value(true)
+	local musicEnabled = scope:Value(SoundController.isMusicEnabled())
+	local sfxEnabled = scope:Value(SoundController.isSfxEnabled())
 	local gamepassesValue = scope:Value(st.gamepasses)
 
 	table.insert(
@@ -40,7 +41,7 @@ function SettingsScreen.open(uiController)
 		end)
 	)
 
-	local function makeToggle(label: string, stateValue)
+	local function makeToggle(label: string, stateValue, onChange: ((boolean) -> ())?)
 		local isOn = stateValue
 		return scope:New("Frame")({
 			Size = UDim2.new(1, 0, 0, 52),
@@ -88,7 +89,11 @@ function SettingsScreen.open(uiController)
 						}),
 					},
 					[OnEvent("Activated")] = function()
-						isOn:set(not peek(isOn))
+						local nextOn = not peek(isOn)
+						isOn:set(nextOn)
+						if onChange then
+							onChange(nextOn)
+						end
 					end,
 				}),
 			},
@@ -192,8 +197,8 @@ function SettingsScreen.open(uiController)
 								FillDirection = Enum.FillDirection.Vertical,
 								Padding = UDim.new(0, 4),
 							}),
-							makeToggle("Music", musicEnabled),
-							makeToggle("Sound Effects", sfxEnabled),
+							makeToggle("Music", musicEnabled, SoundController.setMusicEnabled),
+							makeToggle("Sound Effects", sfxEnabled, SoundController.setSfxEnabled),
 						},
 					}),
 					-- Gamepasses section

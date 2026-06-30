@@ -7,6 +7,7 @@ local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local Theme = require(script.Parent.Parent.UI.Theme)
 
 local StateController = require(script.Parent.StateController)
+local SoundController = require(script.Parent.SoundController)
 
 local LoadingScreen = require(script.Parent.Parent.UI.LoadingScreen)
 local HomeScreen = require(script.Parent.Parent.UI.HomeScreen)
@@ -229,6 +230,11 @@ end
 function UIController.openScreen(name: string, ...)
 	-- Close drawer on any nav
 	closeDrawer()
+
+	-- Nav SFX: a soft close when returning Home, an open chime otherwise.
+	if name ~= _current then
+		SoundController.playSfx(name == "Home" and "uiClose" or "uiOpen")
+	end
 
 	if _current and _current ~= name and _screens[_current] then
 		_screens[_current].close()

@@ -19,7 +19,10 @@
 >   Verified live in Play: Hall of Fame rendered `#1 … 6.0M`; Sprint showed "No entries yet".
 > - 525 tests green, selene 0/0. **Known latent bug (separate):** `LeaderboardScreen` requests board
 >   `"chief"` but `LeaderboardService` only accepts `"chiefs"` → the screen's Chief tab returns empty.
-> - **MAP polish pass** (Studio, Ctrl+S to persist) — see Session 10 map note below.
+> - **MAP polish pass** (Studio-only, Ctrl+S to persist): per-prop organic **yaw + small XZ jitter**
+>   on the 33 trees + Decor rock/boulder/shrub (idempotent via a `polishV10` attribute) to break the
+>   mirrored-clone look. Base Y preserved (yaw is vertical-axis + horizontal nudge only). The deliberate
+>   8-fold beds/hedges/gardens/markers/plaza/roads were left untouched.
 
 > **Session 9 summary (MAP polish + one CODE change. Supersedes Session 8 plot/road/tree details.)**
 > Map is still **gitignored / Studio-only** (persists only via Ctrl+S). Changes:

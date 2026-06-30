@@ -74,7 +74,7 @@ local function setMarkerVisible(slot: number, visible: boolean)
 	end
 	for _, d in ipairs(marker:GetDescendants()) do
 		if d:IsA("BasePart") then
-			d.Transparency = visible and (d.Name == "HoloSign" and 0.35 or 0) or 1
+			d.Transparency = visible and (d.Name == "HoloSign" and 0.55 or 0) or 1
 		elseif d:IsA("SurfaceGui") then
 			d.Enabled = visible
 		end

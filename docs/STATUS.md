@@ -39,6 +39,13 @@
 >     `PlotService.setMarkerVisible` still hides/shows them. 8/8 verified.
 >   - Materials were already crafted (Concrete/Metal/WoodPlanks) — kept the cohesion pass light (no
 >     forced material sweep) per "don't overdo".
+>   - **Cleanup pass (map):** centerpiece rebuilt again into a proper **detailed bottle** (glass body +
+>     teal reagent + meniscus/bubbles, brass foot/collar/lip, glass neck, cork, parchment label) — the
+>     orbiting-atom version was scrapped. **Trees** given a clean **flared base** (scattered wedge "roots"
+>     removed) + reseated flush to ground everywhere (fixed the floating-tree look). **Gardens** fixed:
+>     hedge borders rebuilt aligned to each lawn + the planter tree centered on its lawn. Pavilion boards
+>     + brand plates set translucent (tr 0.35) to match the marker signs. Float/glitch sweep: 0 real
+>     floaters (0 unanchored, decor/trees/signposts all ground-seated).
 > - **(superseded) Earlier Fredoka cohesion pass:** all map sign `TextLabel`s converted from legacy
 >   `Enum.Font` (Gotham*) to `FontFace` matching the UI `Theme.Font` — **FredokaOne** titles (x40) +
 >   **BuilderSans** body (x29); 0 stale. (UI already used FredokaOne via `Theme.luau:58-68` — no src

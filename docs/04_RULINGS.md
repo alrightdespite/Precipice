@@ -59,7 +59,11 @@ hub against the design doc's recommendation; recorded here per the delta-log con
 > Added `WorldGround.Decor` (~105 rock/shrub/flower/grass clusters) to fill the grass. All sign
 > `SurfaceGui`s set `LightInfluence=0` (full-bright/readable).
 > Plaza floor = **Concrete** with readable concentric medallion rings (Session 9); pavilions at r137;
-> element pylons + festoon (hanging string-lights) at r188; monument on a 3-tier podium.
+> element pylons + festoon (hanging string-lights) at r188; centerpiece = a crafted **glass lab flask**
+> with glowing teal reagent + brass cradle + orbiting-atom nod on the 3-tier podium (`Hub.Monument.Flask`;
+> replaced the old molecule). **Display font is Oswald** (`src/client/UI/Theme.luau`; map sign titles use
+> Oswald FontFace, body BuilderSans). Plot signs are crafted **wooden signposts** (still keep `HoloSign`
+> + `SurfaceGui` for `setMarkerVisible`).
 > **8 plot markers** (`workspace.WorldGround.PlotMarkers/PlotMarker_0..7`) — Session 9 rebuilt to
 > **190×190** cyan "surveyed blueprint" squares matching the plot's **fenced buildable area** (not the
 > full 262×410 pad), positioned at the fence location (local centre slot+75 outward); `PlotService`

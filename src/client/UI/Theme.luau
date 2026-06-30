@@ -56,10 +56,10 @@ Theme.Colors = {
 }
 
 Theme.Font = {
-	-- chunky rounded display face for headers + big numbers (signature)
-	Display = Font.new("rbxasset://fonts/families/FredokaOne.json", Enum.FontWeight.Regular),
-	Header = Font.new("rbxasset://fonts/families/FredokaOne.json", Enum.FontWeight.Regular),
-	HeaderBold = Font.new("rbxasset://fonts/families/FredokaOne.json", Enum.FontWeight.Regular),
+	-- condensed editorial display face for headers + big numbers (signature)
+	Display = Font.new("rbxasset://fonts/families/Oswald.json", Enum.FontWeight.Bold),
+	Header = Font.new("rbxasset://fonts/families/Oswald.json", Enum.FontWeight.Medium),
+	HeaderBold = Font.new("rbxasset://fonts/families/Oswald.json", Enum.FontWeight.Bold),
 	-- clean UI face for body / labels / values
 	Label = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.SemiBold),
 	Body = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.Regular),

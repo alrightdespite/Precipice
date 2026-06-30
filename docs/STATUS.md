@@ -26,7 +26,20 @@
 >   `ColorCorrectionEffect` (sat +.22/contrast +.12/warm tint), `Sky`. Big appeal jump.
 > - **Branding/centerpiece (map):** 4 "PRECIPICE / CHEMISTRY TYCOON" standing signs around the monument
 >   (`Hub.Monument.Branding`, full-bright); fountain `PoolWater` recoloured vivid blue.
-> - **Cohesion pass ("not built by AI", Fredoka One):** all map sign `TextLabel`s converted from legacy
+> - **"Human-made" premium pass (CODE + map):** display font switched **Fredoka One → Oswald**
+>   (condensed editorial; Fredoka reads "AI") in `src/client/UI/Theme.luau` (Display/Header/HeaderBold;
+>   body stays BuilderSans) — single choke-point restyles all UI; map sign titles re-swept to Oswald
+>   FontFace (40 titles / 29 BuilderSans body, 0 stale). 525 tests green, selene 0/0.
+>   - **Centerpiece reimagined (map):** the molecule-on-pillar is now a crafted **glass lab flask** with
+>     glowing teal reagent (translucent-neon sphere + meniscus + bubbles), brass cradle/neck/cork, and a
+>     small orbiting-atom nod, on the kept fluted column + podium; pool recoloured teal.
+>     (`Hub.Monument.Flask`; old `CoreAtom`/`Sat`/`Bond` removed.)
+>   - **Plot signs reimagined (map):** flat floating boards → crafted **wooden signposts** (timber posts +
+>     framed hanging board + brass caps/brackets). Kept `HoloSign` + `SurfaceGui` so
+>     `PlotService.setMarkerVisible` still hides/shows them. 8/8 verified.
+>   - Materials were already crafted (Concrete/Metal/WoodPlanks) — kept the cohesion pass light (no
+>     forced material sweep) per "don't overdo".
+> - **(superseded) Earlier Fredoka cohesion pass:** all map sign `TextLabel`s converted from legacy
 >   `Enum.Font` (Gotham*) to `FontFace` matching the UI `Theme.Font` — **FredokaOne** titles (x40) +
 >   **BuilderSans** body (x29); 0 stale. (UI already used FredokaOne via `Theme.luau:58-68` — no src
 >   change.) Sign plate bases unified to navy (22,24,32). `WorldGround.Decor` **rebuilt as intentional

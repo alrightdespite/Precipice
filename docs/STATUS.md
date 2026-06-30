@@ -2,7 +2,24 @@
 
 ## Current phase: Phase B (full UI restyle) DONE. Phase A + Phase 14 backend complete.
 
-**Last updated:** 2026-06-29 (Session 9 — map cleanup/polish: plots, roads, markers, trees)
+**Last updated:** 2026-06-30 (Session 10 — open follow-ups cleared + map polish)
+
+> **Session 10 summary (CODE + MAP).** Cleared the three open follow-ups:
+> - **`Hub.LabGateways`** empty leftover folder **deleted** (Edit mode).
+> - **`ShopScreen`** HUD built (`src/client/UI/ShopScreen.luau`, registered as `Shop` in `UIController`):
+>   Phase B styling, two tabs — **Boosts** (dev products: Timer Skip / Rush ×3 / Catalyst Pack / Crate)
+>   and **Passes** (Expanded Lab / Extended Offline / Compound Archive / Event Pass, with Owned badge).
+>   Buy pills call `MarketplaceService:Prompt{Product,GamePass}Purchase`; IDs read from `GameConfig`
+>   (still placeholder `0` → warn-no-op until real Robux IDs ship). The hub Shop prompt now opens it.
+> - **Hub info boards wired** (`src/client/Controllers/HubBoardController.luau`, init in `ClientInit`,
+>   bound at PlayerReady): the **Leaderboards** pavilion board shows the weekly **Sprint** top-5, the
+>   **Hall of Fame** board shows the all-time **Chief's Board** top-5, via `LeaderboardController`.
+>   Controller owns the `Board` SurfaceGui (rebuilds it live; map only needs a `Board` part + SurfaceGui),
+>   names resolved via `GetNameFromUserIdAsync`, polled ~60s staggered to respect the 1-req/2s rate limit.
+>   Verified live in Play: Hall of Fame rendered `#1 … 6.0M`; Sprint showed "No entries yet".
+> - 525 tests green, selene 0/0. **Known latent bug (separate):** `LeaderboardScreen` requests board
+>   `"chief"` but `LeaderboardService` only accepts `"chiefs"` → the screen's Chief tab returns empty.
+> - **MAP polish pass** (Studio, Ctrl+S to persist) — see Session 10 map note below.
 
 > **Session 9 summary (MAP polish + one CODE change. Supersedes Session 8 plot/road/tree details.)**
 > Map is still **gitignored / Studio-only** (persists only via Ctrl+S). Changes:

@@ -19,6 +19,7 @@ local EventController = require(script.Parent.Controllers.EventController)
 local HintController = require(script.Parent.Controllers.HintController)
 local RevealController = require(script.Parent.Controllers.RevealController)
 local StationController = require(script.Parent.Controllers.StationController)
+local HubBoardController = require(script.Parent.Controllers.HubBoardController)
 local UIController = require(script.Parent.Controllers.UIController)
 
 -- Dependency-ordered init
@@ -40,6 +41,7 @@ EventController.init()
 HintController.init()
 RevealController.init()
 StationController.init()
+HubBoardController.init()
 UIController.init()
 
 -- Wait for server to confirm all initial state has been sent before showing Home.
@@ -49,6 +51,7 @@ RemoteController.connect("PlayerReady", function()
 	SlotController.bindRevealPrompts()
 	StationController.bindStations()
 	StationController.bindHubPavilions()
+	HubBoardController.bindBoards()
 	-- Pull the full formula log once (incremental LabDiscovery only appends this
 	-- session; returning players need the existing discoveries hydrated).
 	task.spawn(LabController.hydrateFormulaLog)

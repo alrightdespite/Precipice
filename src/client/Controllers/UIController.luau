@@ -21,6 +21,7 @@ local CosmeticsScreen = require(script.Parent.Parent.UI.CosmeticsScreen)
 local ContractsScreen = require(script.Parent.Parent.UI.ContractsScreen)
 local EventScreen = require(script.Parent.Parent.UI.EventScreen)
 local VaultScreen = require(script.Parent.Parent.UI.VaultScreen)
+local ShopScreen = require(script.Parent.Parent.UI.ShopScreen)
 
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
@@ -41,6 +42,7 @@ local _screens = {
 	Contracts = ContractsScreen,
 	Event = EventScreen,
 	Vault = VaultScreen,
+	Shop = ShopScreen,
 }
 
 local _current: string? = nil

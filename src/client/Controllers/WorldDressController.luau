@@ -189,10 +189,19 @@ local function bindPlinths()
 	if not h or not (h:FindFirstChild("Plinth1", true)) then
 		return
 	end
+	fillPlinths()
+	-- Refill the moment leaderboard data lands (HubBoardController warms the chiefs cache shortly
+	-- after join); the cache mirrors StateController.leaderboard, so a patch.leaderboard means new rows.
+	StateController.Changed:Connect(function(patch)
+		if patch.leaderboard ~= nil then
+			fillPlinths()
+		end
+	end)
+	-- Slow safety poll for name re-resolution / late joins.
 	task.spawn(function()
 		while true do
-			fillPlinths()
 			task.wait(PLINTH_POLL)
+			fillPlinths()
 		end
 	end)
 end

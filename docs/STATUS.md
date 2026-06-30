@@ -23,6 +23,25 @@
 >   on the 33 trees + Decor rock/boulder/shrub (idempotent via a `polishV10` attribute) to break the
 >   mirrored-clone look. Base Y preserved (yaw is vertical-axis + horizontal nudge only). The deliberate
 >   8-fold beds/hedges/gardens/markers/plaza/roads were left untouched.
+>
+> **Session 10 cont. — "perfect map" pass (8 ideas approved). CODE (committed) + MAP (Ctrl+S).**
+> CODE foundations (`feat(world)`): `ElementMeta.luau` (8 elements C,S,Cl,Co,I,Li,Cu,Na — symbol/atomic#/
+> name/colour, single source of truth); `SoundController.luau` (Music+SFX SoundGroups, one-shot SFX
+> catalog + music loop; wires the previously-dead Settings Music/SFX toggles; UI SFX hooks in
+> UIController/Components.Button/ShopScreen — **audio asset ids are placeholder `0`, every call no-ops
+> until real ids are approved**); `TickerController.luau` (in-world news marquee fed by
+> `StateController.announcements`, renders onto a `TickerBoard` SurfaceGui); `WorldDressController.luau`
+> (element plaques from ElementMeta via `ElementIndex` attr; flask `Reagent` tints to live Flux season +
+> pulses on world-first; 3 Hall-of-Fame plinths from the cached Chief's Board, refilled on
+> `patch.leaderboard`). All binders no-op when their map parts are absent. selene 0/0, 525 tests green;
+> verified live (ticker scrolls; Plinth1 = `alrightdespite / 6.0M`; garden symbols tinted; no errors).
+> MAP (Studio, **press Ctrl+S**): 8 element-garden markers upgraded to periodic-tile look (atomic number
+> added, labels renamed to Symbol/ElementName/AtomicNumber, symbol tinted, `ElementIndex` 1–8 set);
+> 3 HoF podium plinths (gold/silver/bronze) in front of the HallOfFame pavilion; off-spoke **ticker
+> ribbon** (`Hub.Ticker.TickerBoard`) at ang 112.5°; **glass parapet** ring at R858 (144 parts,
+> `Hub`→`WorldGround.EdgeRail`) + **overlook deck + telescope** at ang −90° (`WorldGround.Overlook`);
+> flask material pass (Body/Shoulder/Neck→Glass, brass bands→Metal, Reagent/Bubbles→Neon, Cork→Wood).
+> `StreamingEnabled` already on. **Pending:** audio asset ids for `SoundController`/env Sounds (B1).
 
 > **Session 9 summary (MAP polish + one CODE change. Supersedes Session 8 plot/road/tree details.)**
 > Map is still **gitignored / Studio-only** (persists only via Ctrl+S). Changes:

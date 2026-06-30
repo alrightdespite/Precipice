@@ -11,8 +11,8 @@ local peek = Fusion.peek
 local doCleanup = Fusion.doCleanup
 
 local TAB_SPRINT = "sprint"
-local TAB_CHIEF = "chief"
-local TAB_LABELS = { sprint = "Weekly Sprint", chief = "Chief's Board" }
+local TAB_CHIEF = "chiefs"
+local TAB_LABELS = { sprint = "Weekly Sprint", chiefs = "Chief's Board" }
 
 local function formatNum(n: number): string
 	if n >= 1e12 then

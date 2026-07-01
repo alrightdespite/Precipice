@@ -166,8 +166,26 @@ function PlotService.destroyPlot(player: Player)
 	end
 end
 
+-- Show every plot marker at boot, so an author can hide a marker in Studio (to preview a
+-- plot model sitting on it) without that hidden state leaking into the live game — occupied
+-- slots are re-hidden as players join.
+local function showAllMarkers()
+	local wg = workspace:FindFirstChild("WorldGround")
+	local markers = wg and wg:FindFirstChild(MARKERS_FOLDER)
+	if not markers then
+		return
+	end
+	for _, marker in ipairs(markers:GetChildren()) do
+		local slot = tonumber((marker.Name:match("PlotMarker_(%d+)")))
+		if slot then
+			setMarkerVisible(slot, true)
+		end
+	end
+end
+
 function PlotService.init()
-	-- Boot-time: no-op. PlayerAdded/Removing wired in GameInit.
+	-- Reset all markers to visible; occupancy hides them again per player.
+	showAllMarkers()
 end
 
 return PlotService

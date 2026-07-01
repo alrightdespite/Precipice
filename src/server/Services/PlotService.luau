@@ -20,11 +20,29 @@ local HUB_CENTER = Vector3.new(1145, 0, 40)
 -- them in sync).
 local PLOT_RING_RADIUS = 510
 
+-- Far off-map spot the template is moved to at runtime so it never shows in-game,
+-- regardless of where it was authored in Studio (only its Y matters for plot height,
+-- so authors can drop it on a marker to edit it in place — see parkTemplate).
+local TEMPLATE_PARK = Vector3.new(8000, 0, 8000)
+
 local _plots: { [number]: Model } = {}
 local _slotByUser: { [number]: number } = {}
 local _usedSlots: { [number]: boolean } = {}
+local _templateParked = false
 
 local PlotService = {}
+
+-- Move the template far off-stage once, preserving its authored Y (plot spawn height
+-- reads from template.pivot.Y). Clones are PivotTo'd onto markers regardless, so the
+-- template's X/Z are irrelevant to gameplay; this only hides the source model.
+local function parkTemplate(template: Model)
+	if _templateParked then
+		return
+	end
+	_templateParked = true
+	local y = template:GetPivot().Position.Y
+	template:PivotTo(CFrame.new(TEMPLATE_PARK.X, y, TEMPLATE_PARK.Z))
+end
 
 local function getOrCreatePlotsFolder(): Folder
 	local existing = workspace:FindFirstChild(PLOTS_FOLDER)
@@ -93,6 +111,10 @@ function PlotService.spawnPlot(player: Player)
 		warn("[PlotService] PLOT_TEMPLATE not found in workspace.Plots — plot skipped for userId", userId)
 		return
 	end
+
+	-- Hide the source template off-stage (once) so an author can park it on a marker
+	-- in Studio to edit it without it ever appearing in the live game.
+	parkTemplate(template :: Model)
 
 	-- The template's own SpawnLocation sits at the origin; disable it once so no
 	-- player ever spawns on the (non-play) template. Each clone keeps its own.
